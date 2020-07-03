@@ -68,7 +68,7 @@ def parse(BAM,BED):
 
 	bamfile=pysam.AlignmentFile(BAM, "rb")
 	bed=pybedtools.BedTool(BED)
-	bedsrtd=regions.sort()
+	bedsrtd=bed.sort()
 	ivf=bedsrtd.as_intervalfile()
 
 	for read in bamfile.fetch():
