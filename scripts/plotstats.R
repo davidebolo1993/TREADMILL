@@ -25,7 +25,7 @@ option_list = list(
   make_option(c("-m", "--minimap2"), action="store", type='character', help=".json file with informations from a minimap2-generated alignment"),
   make_option(c("-n", "--ngmlr"), action="store", type='character', help=".json file with informations from a ngmlr-generated alignment"),
   make_option(c("-l", "--last"), action="store", type='character', help=".json file with informations from a last-generated alignment")
-  )
+)
 
 opt = parse_args(OptionParser(option_list=option_list))
 
@@ -34,100 +34,114 @@ listall<-list()
 listerr<-list()
 listcov<-list()
 
-if (file.exists(file.path(opt$minimap2))) {
-  mjson<-fromJSON(file = file.path(opt$minimap2))
-  mkeyall<-c("unmapped", "supplementary", "secondary", "primary", "on-target", "off-target")
-  mvalueall<-c(mjson$BAM_UNMAP,mjson$BAM_SUPP,mjson$BAM_SEC,mjson$BAM_PRIM,mjson$BAM_ONTARGET,mjson$BAM_OFFTARGET)
-  malignerall<-rep('minimap2',length(mkeyall))
-
-  mall<-data.frame(x=mkeyall,y=mvalueall,z=malignerall,stringsAsFactors = FALSE)
-  listall[['m']]<-mall
+if (! is.null(opt$minimap2)) {
   
-  
-  mkeyerr<-c("match", "mismatch", "deletion", "insertion", "soft-clipped")
-  mvalueerr<-c(mjson$BAM_CMATCH, mjson$BAM_CDIFF, mjson$BAM_CDEL, mjson$BAM_CINS, mjson$BAM_CSOFT_CLIP)
-  malignererr<-rep('minimap2',length(mkeyerr))
-
-  merror<-data.frame(x=malignererr,y=mvalueerr,z=mkeyerr,stringsAsFactors = FALSE)
-  listerr[['m']]<-merror
-  
-  mcovkeys<-grep(":", names(mjson), value=TRUE)
-  mtmplist<-list()
-  
-  for (mk in mcovkeys) {
+  if (file.exists(file.path(opt$minimap2))) {
+    mjson<-fromJSON(file = file.path(opt$minimap2))
+    mkeyall<-c("unmapped", "supplementary", "secondary", "primary", "on-target", "off-target")
+    mvalueall<-c(mjson$BAM_UNMAP,mjson$BAM_SUPP,mjson$BAM_SEC,mjson$BAM_PRIM,mjson$BAM_ONTARGET,mjson$BAM_OFFTARGET)
+    malignerall<-rep('minimap2',length(mkeyall))
     
-    y<-as.numeric(as.character(unlist(mjson[mk])))
-    x<-rep(mk, length(y))
-    z<-rep('minimap2',length(y))       
-    mtmplist[[mk]]<-data.frame(x=x,y=y,z=z,stringsAsFactors = FALSE)
+    mall<-data.frame(x=mkeyall,y=mvalueall,z=malignerall,stringsAsFactors = FALSE)
+    listall[['m']]<-mall
+    
+    
+    mkeyerr<-c("match", "mismatch", "deletion", "insertion", "soft-clipped")
+    mvalueerr<-c(mjson$BAM_CMATCH, mjson$BAM_CDIFF, mjson$BAM_CDEL, mjson$BAM_CINS, mjson$BAM_CSOFT_CLIP)
+    malignererr<-rep('minimap2',length(mkeyerr))
+    
+    merror<-data.frame(x=malignererr,y=mvalueerr,z=mkeyerr,stringsAsFactors = FALSE)
+    listerr[['m']]<-merror
+    
+    mcovkeys<-grep(":", names(mjson), value=TRUE)
+    mtmplist<-list()
+    
+    for (mk in mcovkeys) {
+      
+      y<-as.numeric(as.character(unlist(mjson[mk])))
+      x<-rep(mk, length(y))
+      z<-rep('minimap2',length(y))       
+      mtmplist[[mk]]<-data.frame(x=x,y=y,z=z,stringsAsFactors = FALSE)
+    }
+    
+    listcov[['m']]<-do.call(rbind,mtmplist)
   }
-  
-  listcov[['m']]<-do.call(rbind,mtmplist)
 }
 
-
-
-if (file.exists(file.path(opt$ngmlr))) {
-  njson<-fromJSON(file = file.path(opt$ngmlr))
-  nkeyall<-c("unmapped", "supplementary", "secondary", "primary", "on-target", "off-target")
-  nvalueall<-c(njson$BAM_UNMAP,njson$BAM_SUPP,njson$BAM_SEC,njson$BAM_PRIM,njson$BAM_ONTARGET,njson$BAM_OFFTARGET)
-  nalignerall<-rep('ngmlr',length(nkeyall))
-
-  nall<-data.frame(x=nkeyall,y=nvalueall,z=nalignerall,stringsAsFactors = FALSE)
-  listall[['n']]<-nall
+if (! is.null(opt$ngmlr)) {
   
-  nkeyerr<-c("match", "mismatch", "deletion", "insertion", "soft-clipped")
-  nvalueerr<-c(njson$BAM_CMATCH, njson$BAM_CDIFF, njson$BAM_CDEL, njson$BAM_CINS, njson$BAM_CSOFT_CLIP)
-  nalignererr<-rep('ngmlr',length(nkeyerr))
   
-  nerror<-data.frame(x=nalignererr,y=nvalueerr,z=nkeyerr,stringsAsFactors = FALSE)
-  listerr[['n']]<-nerror
-  
-  ncovkeys<-grep(":", names(njson), value=TRUE)
-  ncovkeys<-list()
-  
-  for (nk in ncovkeys) {
+  if (file.exists(file.path(opt$ngmlr))) {
+    njson<-fromJSON(file = file.path(opt$ngmlr))
+    nkeyall<-c("unmapped", "supplementary", "secondary", "primary", "on-target", "off-target")
+    nvalueall<-c(njson$BAM_UNMAP,njson$BAM_SUPP,njson$BAM_SEC,njson$BAM_PRIM,njson$BAM_ONTARGET,njson$BAM_OFFTARGET)
+    nalignerall<-rep('ngmlr',length(nkeyall))
     
-    y<-as.numeric(as.character(unlist(njson[nk])))
-    x<-rep(nk, length(y))
-    z<-rep('ngmlr',length(y))       
-    ntmplist[[nk]]<-data.frame(x=x,y=y,z=z,stringsAsFactors = FALSE)
+    nall<-data.frame(x=nkeyall,y=nvalueall,z=nalignerall,stringsAsFactors = FALSE)
+    listall[['n']]<-nall
+    
+    nkeyerr<-c("match", "mismatch", "deletion", "insertion", "soft-clipped")
+    nvalueerr<-c(njson$BAM_CMATCH, njson$BAM_CDIFF, njson$BAM_CDEL, njson$BAM_CINS, njson$BAM_CSOFT_CLIP)
+    nalignererr<-rep('ngmlr',length(nkeyerr))
+    
+    nerror<-data.frame(x=nalignererr,y=nvalueerr,z=nkeyerr,stringsAsFactors = FALSE)
+    listerr[['n']]<-nerror
+    
+    ncovkeys<-grep(":", names(njson), value=TRUE)
+    ntmplist<-list()
+    
+    for (nk in ncovkeys) {
+      
+      y<-as.numeric(as.character(unlist(njson[nk])))
+      x<-rep(nk, length(y))
+      z<-rep('ngmlr',length(y))       
+      ntmplist[[nk]]<-data.frame(x=x,y=y,z=z,stringsAsFactors = FALSE)
+    }
+    
+    listcov[['n']]<-do.call(rbind,ntmplist)
+    
   }
-  
-  listcov[['n']]<-do.call(rbind,ntmplist)
-
 }
 
-if (file.exists(file.path(opt$last))) {
-  ljson<-fromJSON(file = file.path(opt$minimap2))
-  lkeyall<-c("unmapped", "supplementary", "secondary", "primary", "on-target", "off-target")
-  lvalueall<-c(ljson$BAM_UNMAP,ljson$BAM_SUPP,ljson$BAM_SEC,ljson$BAM_PRIM,ljson$BAM_ONTARGET,ljson$BAM_OFFTARGET)
-  lalignerall<-rep('last',length(lkeyall))
+if (! is.null(opt$last)) {
   
-  lall<-data.frame(x=lkeyall,y=lvalueall,z=lalignerall,stringsAsFactors = FALSE)
-  listall[['l']]<-lall
   
-  lkeyerr<-c("match", "mismatch", "deletion", "insertion", "soft-clipped")
-  lvalueerr<-c(ljson$BAM_CMATCH, ljson$BAM_CDIFF, ljson$BAM_CDEL, ljson$BAM_CINS, ljson$BAM_CSOFT_CLIP)
-  lalignererr<-rep('ngmlr',length(lkeyerr))
-  
-  lerror<-data.frame(x=lalignererr,y=lvalueerr,z=lkeyerr,stringsAsFactors = FALSE)
-  listerr[['l']]<-lerror
-
-  lcovkeys<-grep(":", names(ljson), value=TRUE)
-  lcovkeys<-list()
-  
-  for (lk in lcovkeys) {
+  if (file.exists(file.path(opt$last))) {
+    ljson<-fromJSON(file = file.path(opt$minimap2))
+    lkeyall<-c("unmapped", "supplementary", "secondary", "primary", "on-target", "off-target")
+    lvalueall<-c(ljson$BAM_UNMAP,ljson$BAM_SUPP,ljson$BAM_SEC,ljson$BAM_PRIM,ljson$BAM_ONTARGET,ljson$BAM_OFFTARGET)
+    lalignerall<-rep('last',length(lkeyall))
     
-    y<-as.numeric(as.character(unlist(ljson[lk])))
-    x<-rep(lk, length(y))
-    z<-rep('last',length(y))       
-    ltmplist[[lk]]<-data.frame(x=x,y=y,z=z,stringsAsFactors = FALSE)
+    lall<-data.frame(x=lkeyall,y=lvalueall,z=lalignerall,stringsAsFactors = FALSE)
+    listall[['l']]<-lall
+    
+    lkeyerr<-c("match", "mismatch", "deletion", "insertion", "soft-clipped")
+    lvalueerr<-c(ljson$BAM_CMATCH, ljson$BAM_CDIFF, ljson$BAM_CDEL, ljson$BAM_CINS, ljson$BAM_CSOFT_CLIP)
+    lalignererr<-rep('ngmlr',length(lkeyerr))
+    
+    lerror<-data.frame(x=lalignererr,y=lvalueerr,z=lkeyerr,stringsAsFactors = FALSE)
+    listerr[['l']]<-lerror
+    
+    lcovkeys<-grep(":", names(ljson), value=TRUE)
+    ltmplist<-list()
+    
+    for (lk in lcovkeys) {
+      
+      y<-as.numeric(as.character(unlist(ljson[lk])))
+      x<-rep(lk, length(y))
+      z<-rep('last',length(y))       
+      ltmplist[[lk]]<-data.frame(x=x,y=y,z=z,stringsAsFactors = FALSE)
+    }
+    
+    listcov[['l']]<-do.call(rbind,ltmplist)
+    
   }
-  
-  listcov[['l']]<-do.call(rbind,ltmplist)
-  
 }
+
+if (length(listall) == 0) {
+  stop('[Error] [Usage] Rscript plotstats.R -m <minimap2.json> -n <ngmlr.json> -l <last.json>. At least one argument is required')
+}
+
 
 #overall
 
@@ -183,3 +197,4 @@ print(pall, vp = vplayout(1, 1))
 print(perr, vp = vplayout(1, 2))
 print(pcov, vp = vplayout(2, 1:2))
 dev.off()
+
