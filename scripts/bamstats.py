@@ -142,7 +142,14 @@ def main():
 	Execute the code and dump json to stdout
 	'''
 
-	assert(len(sys.argv) == 3)
+	try:
+		
+		assert(len(sys.argv) == 3)
+
+	except:
+
+		print("[Usage] python bamstats.py <input.bam> <queries.bed>")
+		sys.exit(1)
 
 	BAM=os.path.abspath(sys.argv[1])
 
@@ -169,4 +176,3 @@ def main():
 if __name__=='__main__':
 
 	main()
-
