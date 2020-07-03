@@ -155,7 +155,7 @@ def main():
 
 	BED=os.path.abspath(sys.argv[2])
 
-	is not os.path.isfile(BED):
+	if not os.path.isfile(BED):
 
 		print('[Error] Invalid BED file <queries.bed>')
 		print("[Usage] python bamstats.py <input.bam> <queries.bed>")
