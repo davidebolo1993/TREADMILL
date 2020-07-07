@@ -10,7 +10,7 @@ while getopts "hd:r:g:t:o:l:" opt; do
         d)
             d=$(readlink -f ${OPTARG})
             ;;
-        
+
         r)
             r=$(readlink -f ${OPTARG})
             ;;
@@ -120,11 +120,11 @@ now=$(date +"%T")
 
 echo "[${now}] [samtools index] Done"
 
-# call methylation
+#call methylation
 
 echo "[${now}] [nanopolish call-methylation]"
 
-docker run -v $(dirname ${g})/:/genome/ -v ${o}/minimap2/:/$(basename ${o})/minimap2/ -v ${o}/nanopolish/:/$(basename ${o})/nanopolish/ -v ${r}/:/$(basename ${r})/ -ti davidebolo1993/treadmill nanopolish call-methylation -v --progress -r /$(basename ${r})/${l}.fastq -b /$(basename ${o})/minimap2/${l}.srt.bam -g /genome/$(basename ${g}) -q cpg -t ${t} > /$(basename ${o})/nanopolish/${l}.methylation_calls.tsv
+docker run -v $(dirname ${g})/:/genome/ -v ${o}/minimap2/:/$(basename ${o})/minimap2/ -v ${o}/nanopolish/:/$(basename ${o})/nanopolish/ -v ${d}/:/$(basename ${d})/ -v ${r}/:/$(basename ${r})/ -ti davidebolo1993/treadmill nanopolish call-methylation -v --progress -r /$(basename ${r})/${l}.fastq -b /$(basename ${o})/minimap2/${l}.srt.bam -g /genome/$(basename ${g}) -q cpg -t ${t} > ${o}/nanopolish/${l}.methylation_calls.tsv
 
 now=$(date +"%T")
 
