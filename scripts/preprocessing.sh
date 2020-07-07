@@ -56,11 +56,7 @@ now=$(date +"%T")
 
 echo "[${now}] [cat]"
 
-set -x
-
 cat ${r}/*.fastq > ${r}/${l}.fastq
-
-set +x
 
 now=$(date +"%T")
 
@@ -70,11 +66,7 @@ echo "[${now}] [cat] Done"
 
 echo "[${now}] [nanopolish index]"
 
-set -x
-
-docker run -v ${r}/:/$(basename ${r})/ -v ${d}/:/$(basename ${d})/ -ti davidebolo1993/treadmill nanopolish index -v -d /$(basename ${d})/ /$(basename ${r})/${l}.fastq
-
-set +x
+docker run -v ${r}/:/$(basename ${r})/ -v ${d}/:/$(basename ${d})/ -ti davidebolo1993/treadmill nanopolish index -v -d /$(basename ${d})/ /$(basename ${r})/${l}.fastq)
 
 now=$(date +"%T")
 
@@ -88,11 +80,7 @@ now=$(date +"%T")
 
 echo "[${now}] [minimap2]"
 
-set -x
-
-docker run -v $(dirname ${g})/:/genome/ -v ${r}/:/$(basename ${r})/ -v ${o}/minimap2/:/$(basename ${o})/minimap2/ -ti davidebolo1993/treadmill minimap2 -ax map-ont -o /$(basename ${o})/minimap2/${l}.sam --MD -t {t} /genome/$(basename ${g}) /$(basename ${r})/${l}.fastq
-
-set +x
+docker run -v $(dirname ${g})/:/genome/ -v ${r}/:/$(basename ${r})/ -v ${o}/minimap2/:/$(basename ${o})/minimap2/ -ti davidebolo1993/treadmill minimap2 -ax map-ont -o /$(basename ${o})/minimap2/${l}.sam --MD -t ${t} /genome/$(basename ${g}) /$(basename ${r})/${l}.fastq
 
 now=$(date +"%T")
 
