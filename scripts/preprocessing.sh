@@ -136,6 +136,9 @@ then
 
 	done < ${b}
 
+    awk 'FNR==1 && NR!=1 { while (/^chromosome/) getline;} 1 {print}' ${o}/nanopolish/*.tsv > ${o}/nanopolish/${l}.methylation_calls.tsv
+
+
 else
 
 	docker run -v $(dirname ${g})/:/genome/ -v ${o}/minimap2/:/$(basename ${o})/minimap2/ -v ${o}/nanopolish/:/$(basename ${o})/nanopolish/ -v ${d}/:/$(basename ${d})/ -v ${r}/:/$(basename ${r})/ davidebolo1993/treadmill nanopolish call-methylation -v --progress -r /$(basename ${r})/${l}.fastq -b /$(basename ${o})/minimap2/${l}.srt.bam -g /genome/$(basename ${g}) -q cpg -t ${t} > ${o}/nanopolish/${l}.methylation_calls.tsv 2> /dev/null
@@ -145,3 +148,12 @@ fi
 now=$(date +"%T")
 
 echo "[${now}] [nanopolish call-methylation] Done"
+
+#call variants for later phasing
+
+
+
+
+
+
+
