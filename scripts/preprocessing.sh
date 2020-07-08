@@ -19,9 +19,9 @@ while getopts "hd:r:g:b:t:o:l:" opt; do
             g=$(readlink -f ${OPTARG})
             ;;
 
-	b)
-	    b=$(readlink -f ${OPTARG})
-	    ;;
+        b)
+            b=$(readlink -f ${OPTARG})
+            ;;
 
         t)
             t=${OPTARG}
