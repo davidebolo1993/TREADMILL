@@ -2,7 +2,7 @@
 
 #parse command line options
 
-usage() { echo "Usage: $0 [-d <fast5.dir>] [-r <fastq.dir>] [-g <genome.fa>] [-b <regions.optional.bed>] [-t <threads.int>] [-o <output.dir>] [-l <label>]" 1>&2; exit 1;}
+usage() { echo "Usage: $0 [-d <fast5.dir>] [-r <fastq.dir>] [-g <genome.fa>] [-b <regions.bed>] [-t <threads.int>] [-o <output.dir>] [-l <label.str>]" 1>&2; exit 1;}
 
 while getopts "hd:r:g:b:t:o:l:" opt; do
     case "${opt}" in
