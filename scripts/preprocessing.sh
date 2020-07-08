@@ -2,7 +2,7 @@
 
 #parse command line options
 
-usage() { echo "Usage: $0 [-d <fast5.dir>] [-r <fastq.dir>] [-g <genome.fa>] [-b <regions.bed>] [-t <threads.int>] [-o <output.dir>] [-l <label.str>]" 1>&2; exit 1;}
+usage() { echo "Usage: $0 [-d <fast5.dir>] [-r <fastq.dir>] [-g <genome.fa>] [-t <threads.int>] [-o <output.dir>] [-l <label.str>] [-b <regions.bed>]" 1>&2; exit 1;}
 
 while getopts "hd:r:g:b:t:o:l:" opt; do
     case "${opt}" in
@@ -138,7 +138,6 @@ then
 
     awk 'FNR==1 && NR!=1 { while (/^chromosome/) getline;} 1 {print}' ${o}/nanopolish/*.tsv > ${o}/nanopolish/${l}.methylation_calls.tsv
 
-
 else
 
 	docker run -v $(dirname ${g})/:/genome/ -v ${o}/minimap2/:/$(basename ${o})/minimap2/ -v ${o}/nanopolish/:/$(basename ${o})/nanopolish/ -v ${d}/:/$(basename ${d})/ -v ${r}/:/$(basename ${r})/ davidebolo1993/treadmill nanopolish call-methylation -v --progress -r /$(basename ${r})/${l}.fastq -b /$(basename ${o})/minimap2/${l}.srt.bam -g /genome/$(basename ${g}) -q cpg -t ${t} > ${o}/nanopolish/${l}.methylation_calls.tsv 2> /dev/null
@@ -148,6 +147,16 @@ fi
 now=$(date +"%T")
 
 echo "[${now}] [nanopolish call-methylation] Done"
+
+#calculate methylation frequencies
+
+echo "[${now}] [nanopolish calculate methylation-frequency]"
+
+docker run -v ${o}/nanopolish/:/$(basename ${o})/nanopolish/ davidebolo1993/treadmill calculate_methylation_frequency.py /$(basename ${o})/nanopolish/${l}.methylation_calls.tsv > ${o}/nanopolish/${l}.methylation_frequency.tsv 2> /dev/null
+
+now=$(date +"%T")
+
+echo "[${now}] [nanopolish calculate methylation-frequency] Done"
 
 #call variants for later phasing
 
