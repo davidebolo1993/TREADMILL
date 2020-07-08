@@ -2,9 +2,9 @@
 
 #parse command line options
 
-usage() { echo "Usage: bash $0 [-d <fast5.dir>] [-r <fastq.dir>] [-g <genome.fa>] [-t <threads.int>] [-o <output.dir>] [-l <label.str>] [-b <regions.bed>]" 1>&2; exit 1;}
+usage() { echo "Usage: bash $0 [-d <fast5.dir>] [-r <fastq.dir>] [-g <genome.fa>] [-t <threads.int>] [-o <output.dir>] [-l <label.str>] [-b <regions.bed>] [-f <genes.gtf>]" 1>&2; exit 1;}
 
-while getopts "hd:r:g:b:t:o:l:" opt; do
+while getopts "hd:r:g:b:f:t:o:l:" opt; do
     case "${opt}" in
 
         d)
@@ -22,6 +22,10 @@ while getopts "hd:r:g:b:t:o:l:" opt; do
         b)
             b=$(readlink -f ${OPTARG})
             ;;
+
+	f)
+	    f=$(readlink -f ${OPTARG})
+	    ;;
 
         t)
             t=${OPTARG}
@@ -158,11 +162,28 @@ now=$(date +"%T")
 
 echo "[${now}] [nanopolish calculate methylation-frequency] Done"
 
+#if bed and gtf, plot methylation
+
+#if [[ -f "${b}" && -f "${f}" ]]
+
+#then
+
+	#echo "[${now}] [methplotlib]"
+
+	#while IFS=$'\t' read -r chrom start end; do
+
+		#docker run -v $(dirname ${f})/:/gtf/ -v ${o}/nanopolish/:/$(basename ${o})/nanopolish/ davidebolo1993/treadmill methplotlib -m /$(basename ${o})/nanopolish/${l}.methylation_frequency.tsv -g /gtf/$(basename ${f}) -w "${chrom}":"$(printf "%'d" ${start})"-"$(printf "%'d" ${end})" -o  /$(basename ${o})/nanopolish/${l}.${chrom}":"${start}"-"${end}.methylation_track.html -n ${l} --simplify --split
+
+	#done < ${b}
+
+	#now=$(date +"%T")
+
+	#echo "[${now}] [methplotlib] Done"
+
+#else
+
+	#echo "[${now}] [methplotlib] Skipped"
+
+#fi
+
 #call variants for later phasing
-
-
-
-
-
-
-
