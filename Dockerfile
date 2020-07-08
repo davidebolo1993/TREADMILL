@@ -13,18 +13,20 @@ RUN bash Miniconda-latest-Linux-x86_64.sh -p /miniconda -b
 RUN rm Miniconda-latest-Linux-x86_64.sh
 ENV PATH=/miniconda/bin:${PATH}
 RUN conda update -y conda
-RUN conda create -y -n treadmillenv python=3
+RUN conda create -y -n treadmillenv python=3.6
 RUN echo "source activate treadmillenv" > ~/.bashrc
 ENV PATH /miniconda/envs/treadmillenv/bin:$PATH
 RUN git clone --recursive https://github.com/jts/nanopolish.git && cd nanopolish && make all
 ENV PATH nanopolish:$PATH
-RUN conda install -y -n treadmillenv -c bioconda samtools bcftools bedtools bedops minimap2 ngmlr last pysam pyfaidx cyvcf2 pybedtools numpy longshot whatshap mosdepth
+ENV PATH nanopolish/scripts:$PATH
+RUN conda install -y -n treadmillenv -c bioconda samtools bcftools bedtools bedops minimap2 ngmlr last pysam pyfaidx cyvcf2 pybedtools numpy longshot mosdepth
 RUN conda install -y -n treadmillenv -c r r
+RUN pip install --user whatshap
+ENV PATH /root/.local/bin:$PATH
+RUN pip install cython
+RUN pip install methplotlib
 
 #more to go
 
 #Pull with:
 #sudo docker pull davidebolo1993/treadmill
-
-#Then run:
-#sudo docker run davidebolo1993/treadmill <command>
