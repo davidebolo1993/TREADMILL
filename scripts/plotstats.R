@@ -24,7 +24,8 @@ vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
 option_list = list(
   make_option(c("-m", "--minimap2"), action="store", type='character', help=".json file with informations from a minimap2-generated alignment"),
   make_option(c("-n", "--ngmlr"), action="store", type='character', help=".json file with informations from a ngmlr-generated alignment"),
-  make_option(c("-l", "--last"), action="store", type='character', help=".json file with informations from a last-generated alignment")
+  make_option(c("-l", "--last"), action="store", type='character', help=".json file with informations from a last-generated alignment"),
+  make_option(c("-o", "--output"), action="store", type='character', help="output .pdf file with calculated stats")
 )
 
 opt = parse_args(OptionParser(option_list=option_list))
@@ -190,7 +191,7 @@ pcov<-ggplot(dfcov, aes(x=x, y=y, fill=z)) +
   theme(legend.title=element_blank(),plot.title = element_text(hjust = 0.5)) +
   ggtitle('Coverage on targets')
 
-pdf('summary.pdf', height=10, width=15, onefile=TRUE)
+pdf(file.path(opt$output), height=10, width=15, onefile=TRUE)
 grid.newpage()
 pushViewport(viewport(layout = grid.layout(2, 2)))
 print(pall, vp = vplayout(1, 1))
