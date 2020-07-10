@@ -23,9 +23,6 @@ RUN conda install -y -n treadmillenv -c bioconda samtools bcftools bedtools bedo
 RUN conda install -y -n treadmillenv -c r r
 RUN pip install --user whatshap
 ENV PATH /root/.local/bin:$PATH
-RUN pip install cython
-RUN pip install methplotlib
-
 #more to go
 
 #Pull with:
