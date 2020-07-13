@@ -23,7 +23,7 @@ option_list = list(
   make_option(c("-o", "--outputdir"), action="store", type='character', help="output directory [required]"),
   make_option(c("-r", "--release"), action="store", type='character', help="genome release [hg38]", default = "hg38"),
   make_option(c("-w", "--window"), action="store", type='numeric', help="window size for binning on methylation frequencies [50000]", default = 50000),
-  make_option(c("-b", "-bed"), action="store", type='character', help=".bed file with regions to restrict the analysis to [NULL]", default = NULL)
+  make_option(c("-b", "--bed"), action="store", type='character', help=".bed file with regions to restrict the analysis to [NULL]", default = NULL)
 )
 
 opt = parse_args(OptionParser(option_list=option_list))
