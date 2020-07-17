@@ -1,4 +1,4 @@
 # TREADMILL
-![alt text](TREADMILL.png)
+![alt text](TREADMILL.pdf)
 
 ###DEVELOPING
