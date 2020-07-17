@@ -1,5 +1,4 @@
 # TREADMILL
-Tandem REpeats AnD MethylatIon caLLing
-
+![alt text](TREADMILL.png)
 
 ###DEVELOPING
