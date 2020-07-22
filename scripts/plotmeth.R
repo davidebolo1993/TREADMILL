@@ -41,7 +41,6 @@ if (opt$release == "hg38") {
   annots <-'hg38_cpg_islands'
   cpgs <-build_annotations(genome = 'hg38', annotations = annots)
 } else if (opt$release == "hg19") {
-  
   chromosomes<-c(paste0("chr", c(1:22)), "chrX", "chrY")
   starts<-rep(1,24)
   ends<-c(249250621, 243199373, 198022430, 191154276, 180915260, 171115067, 159138663, 146364022, 141213431, 135534747, 135006516, 133851895, 115169878, 107349540, 102531392, 90354753, 81195210, 78077248, 59128983, 63025520, 48129895, 51304566, 155270560, 59373566)
@@ -50,7 +49,6 @@ if (opt$release == "hg38") {
   annots <-'hg19_cpg_islands'
   cpgs <-build_annotations(genome = 'hg19', annotations = annots)
 } else {
-  
   stop("Cannot process ", opt$release, ". Supported releases are: hg38,hg19")
 }
 
@@ -84,18 +82,14 @@ if (is.null(opt$bed)) { #plot entire chromosomes
   for (chr in chrs) {
     
     intervals<-tile(dimrange[ref[[chr]],], width=opt$window)[[1]]
-    
-    dflist1<-list()
-    dflist2<-list()
+
+    dfmeth1<-data.table(chromosome=data.frame(intervals)$seqnames, start=data.frame(intervals)$start,end=data.frame(intervals)$end, y=rep(0,length(intervals)))
+    dfmeth2<-dfmeth1
     
     for (i in 1:length(intervals)) {
       
       ov1<-data.frame(findOverlaps(intervals[i], m1rg))
       ov2<-data.frame(findOverlaps(intervals[i], m2rg))
-      
-      int1<-data.frame(intervals[i])
-      int1mod<-data.frame(chromosome=int1$seqnames, start=int1$start, end=int1$end)
-      int2mod<-int1mod
       
       #haplotype1
       
@@ -121,19 +115,12 @@ if (is.null(opt$bed)) { #plot entire chromosomes
         
       }
       
-      #store in list
+      #store in data.table
       
-      int1mod$y<-meanmeth1
-      dflist1[[i]]<-int1mod
-      
-      int2mod$y<-meanmeth2
-      dflist2[[i]]<-int2mod
-      
+      set(dfmeth1,i,4L,meanmeth1)
+      set(dfmeth2,i,4L,meanmeth2)
       
     }
-    
-    dfmeth1<-do.call(rbind,dflist1)
-    dfmeth2<-do.call(rbind,dflist2)
     
     grmeth1<-makeGRangesFromDataFrame(dfmeth1, keep.extra.columns = TRUE)
     grmeth2<-makeGRangesFromDataFrame(dfmeth2, keep.extra.columns = TRUE)
@@ -178,24 +165,19 @@ if (is.null(opt$bed)) { #plot entire chromosomes
     bedregion$V1<-paste0("chr",bedregion$V1)
   }
   
-  for (i in 1:nrow(bedregion)) {
+  for (l in 1:nrow(bedregion)) {
     
-    region<-bedregion[i,]
+    region<-bedregion[l,]
     regionrg<-makeGRangesFromDataFrame(data.frame(chromosome=region$V1,start=region$V2,end=region$V3))
-    
     intervals<-tile(regionrg, width=opt$window)[[1]]
     
-    dflist1<-list()
-    dflist2<-list()
+    dfmeth1<-data.table(chromosome=data.frame(intervals)$seqnames, start=data.frame(intervals)$start,end=data.frame(intervals)$end, y=rep(0,length(intervals)))
+    dfmeth2<-dfmeth1
     
     for (i in 1:length(intervals)) {
       
       ov1<-data.frame(findOverlaps(intervals[i], m1rg))
       ov2<-data.frame(findOverlaps(intervals[i], m2rg))
-      
-      int1<-data.frame(intervals[i])
-      int1mod<-data.frame(chromosome=int1$seqnames, start=int1$start, end=int1$end)
-      int2mod<-int1mod
       
       #haplotype1
       
@@ -221,19 +203,11 @@ if (is.null(opt$bed)) { #plot entire chromosomes
         
       }
       
-      #store in list
-      
-      int1mod$y<-meanmeth1
-      dflist1[[i]]<-int1mod
-      
-      int2mod$y<-meanmeth2
-      dflist2[[i]]<-int2mod
-      
-      
+      #store in data.table
+      set(dfmeth1,i,4L,meanmeth1)
+      set(dfmeth2,i,4L,meanmeth2)
+
     }
-    
-    dfmeth1<-do.call(rbind,dflist1)
-    dfmeth2<-do.call(rbind,dflist2)
     
     grmeth1<-makeGRangesFromDataFrame(dfmeth1, keep.extra.columns = TRUE)
     grmeth2<-makeGRangesFromDataFrame(dfmeth2, keep.extra.columns = TRUE)
