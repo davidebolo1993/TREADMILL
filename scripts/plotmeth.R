@@ -11,11 +11,11 @@ if (!requireNamespace("annotatr", quietly = TRUE))
 if (!requireNamespace("karyoploteR", quietly = TRUE))
   BiocManager::install("karyoploteR")
 
+
 suppressPackageStartupMessages(library(optparse))
 suppressPackageStartupMessages(library(data.table))
 suppressPackageStartupMessages(library(annotatr))
 suppressPackageStartupMessages(library(karyoploteR))
-
 
 option_list = list(
   make_option(c("-p", "--haplotype1"), action="store", type='character', help=".tsv file containing methylation frequencies for haplotype 1 [required]"),
@@ -40,21 +40,39 @@ if (opt$release == "hg38") {
   dimrange<-makeGRangesFromDataFrame(data.frame(chromosome=chromosomes,start=starts,end=ends))
   annots <-'hg38_cpg_islands'
   cpgs <-build_annotations(genome = 'hg38', annotations = annots)
+} else if (opt$release == "hg19") {
   
+  chromosomes<-c(paste0("chr", c(1:22)), "chrX", "chrY")
+  starts<-rep(1,24)
+  ends<-c(249250621, 243199373, 198022430, 191154276, 180915260, 171115067, 159138663, 146364022, 141213431, 135534747, 135006516, 133851895, 115169878, 107349540, 102531392, 90354753, 81195210, 78077248, 59128983, 63025520, 48129895, 51304566, 155270560, 59373566)
+  ref<-as.list(setNames(c(1:24), chromosomes))
+  dimrange<-makeGRangesFromDataFrame(data.frame(chromosome=chromosomes,start=starts,end=ends))
+  annots <-'hg19_cpg_islands'
+  cpgs <-build_annotations(genome = 'hg19', annotations = annots)
 } else {
   
-  stop("Cannot process ", opt$release, ". Supported releases are: hg38")
-  
+  stop("Cannot process ", opt$release, ". Supported releases are: hg38,hg19")
 }
 
 #read methylation frequencies
 
 #haplotype 1
 meth1<-fread(file.path(opt$haplotype1), sep="\t", header=TRUE)
+if ( ! startsWith(meth1$chromosome[1], "chr")) {
+  
+  meth1$chromosome<-paste0("chr",meth1$chromosome)
+}
+
 m1rg<-makeGRangesFromDataFrame(meth1)
 
 #haplotype 2
 meth2<-fread(file.path(opt$haplotype2), sep="\t", header=TRUE)
+
+if ( ! startsWith(meth2$chromosome[1], "chr")) {
+  
+  meth2$chromosome<-paste0("chr",meth2$chromosome)
+}
+
 m2rg<-makeGRangesFromDataFrame(meth2)
 
 #get regions
@@ -127,24 +145,27 @@ if (is.null(opt$bed)) { #plot entire chromosomes
     pdf(file.path(opt$output,paste0(chr,".pdf")), width=15, height=10)
     
     kp <- plotKaryotype(chromosomes=chr, plot.type=2, plot.params = pp,genome = opt$release, main="Haplotype-specific methylation frequencies")
-    kpAddBaseNumbers(kp, tick.dist = 10000000, minor.tick.dist = 100000, add.units = TRUE, cex=0.4, digits = 2)
-    
+    kpAddBaseNumbers(kp, tick.dist = 10000000, minor.tick.dist = 1000000, add.units = TRUE, cex=0.4, digits = 2)
+     
     #lower panel
     
     kpPlotRegions(kp, data=cpgs, col="#AAAAAA", border="#AAAAAA", data.panel=2)
     kpPlotDensity(kp, data=cpgs, col="#AA88FF", window.size = opt$window, r0=0, r1=1,data.panel=2)
-    
+
     #upper panels. h2 lower
     
     kpRect(kp, data=dimrange , y0=0, y1=1, col="#FFDDDD", border=NA, r0=0, r1=0.45)
     kpAxis(kp, ymin = 0, ymax = 1, r0=0, r1=0.45, numticks = 5, col="#666666", cex=0.5, data.panel = 1)
     kpPoints(kp, data=grmeth2, pch=16, cex=0.3, col="black", r0=0, r1=0.45, data.panel = 1)
-    
+    #add kpLines with segmentation
+    kpText(kp, chr=data.frame(regionrg)$seqnames, labels="haplotype 2", y=1.05, x=(data.frame(dimrange[ref[[chr]],])$end-data.frame(dimrange[ref[[chr]],])$start)/2, r0=0, r1=0.45, data.panel = 1, cex=.6)
     #h1 upper
     
-    kpRect(kp, data=dimrange , y0=0, y1=1, col="#ADD8E6", border=NA, r0=0.55, r1=1)
-    kpAxis(kp, ymin = 0, ymax = 1, r0=0.55, r1=1, numticks = 5, col="#666666", cex=0.5, data.panel = 1)
-    kpPoints(kp, data=grmeth2, pch=16, cex=0.3, col="black", r0=0.55, r1=1, data.panel = 1)
+    kpRect(kp, data=dimrange , y0=0, y1=1, col="#ADD8E6", border=NA, r0=0.50, r1=0.95)
+    kpAxis(kp, ymin = 0, ymax = 1, r0=0.50, r1=0.95, numticks = 5, col="#666666", cex=0.5, data.panel = 1)
+    kpPoints(kp, data=grmeth2, pch=16, cex=0.3, col="black", r0=0.50, r1=0.95, data.panel = 1)
+    #add kpLines with segmentation
+    kpText(kp, chr=data.frame(regionrg)$seqnames, labels="haplotype 1", y=1.05, x=(data.frame(dimrange[ref[[chr]],])$end-data.frame(dimrange[ref[[chr]],])$start)/2, r0=0.50, r1=0.95, data.panel = 1, cex=.6)
     
     dev.off()
     
@@ -152,6 +173,10 @@ if (is.null(opt$bed)) { #plot entire chromosomes
 } else {
   
   bedregion<-fread(file.path(opt$bed), sep="\t", header=FALSE)
+  if ( ! startsWith(bedregion$V1[1], "chr")) {
+    
+    bedregion$V1<-paste0("chr",bedregion$V1)
+  }
   
   for (i in 1:nrow(bedregion)) {
     
@@ -220,24 +245,25 @@ if (is.null(opt$bed)) { #plot entire chromosomes
     pdf(file.path(opt$output,paste0(region$V1,":",region$V2,"-",region$V3,".pdf")), width=15, height=10)
     
     kp <- plotKaryotype(zoom=regionrg, plot.type=2, plot.params = pp,genome = opt$release, main="Haplotype-specific methylation frequencies")
-    kpAddBaseNumbers(kp, tick.dist = 10000000, minor.tick.dist = 100000, add.units = TRUE, cex=0.4, digits = 2)
-    
+    kpAddBaseNumbers(kp, tick.dist = 10000000, minor.tick.dist = 1000000, add.units = TRUE, cex=0.4, digits = 2)
     #lower panel
     
-    kpPlotRegions(kp, data=cpgs, col="#AAAAAA", border="#AAAAAA", data.panel=2)
-    kpPlotDensity(kp, data=cpgs, col="#AA88FF", window.size = opt$window, r0=0, r1=1,data.panel=2)
-    
+    kpPlotRegions(kp, data=cpgs, col="#AAAAAA", border="#AAAAAA", data.panel=2, r0=0.0, r1=1)
+    kpPlotDensity(kp, data=cpgs, col="#AA88FF", window.size = opt$window, r0=0.0, r1=1,data.panel=2)
     #upper panels. h2 lower
     
     kpRect(kp, data=dimrange , y0=0, y1=1, col="#FFDDDD", border=NA, r0=0, r1=0.45)
     kpAxis(kp, ymin = 0, ymax = 1, r0=0, r1=0.45, numticks = 5, col="#666666", cex=0.5, data.panel = 1)
     kpPoints(kp, data=grmeth2, pch=16, cex=0.3, col="black", r0=0, r1=0.45, data.panel = 1)
-    
+    #add kpLines with segmentation
+    kpText(kp, chr=data.frame(regionrg)$seqnames, labels="haplotype 2", y=1.05, x=(data.frame(regionrg)$start+data.frame(regionrg)$end)/2, r0=0, r1=0.45, data.panel = 1, cex=.6)
     #h1 upper
     
-    kpRect(kp, data=dimrange , y0=0, y1=1, col="#ADD8E6", border=NA, r0=0.55, r1=1)
-    kpAxis(kp, ymin = 0, ymax = 1, r0=0.55, r1=1, numticks = 5, col="#666666", cex=0.5, data.panel = 1)
-    kpPoints(kp, data=grmeth2, pch=16, cex=0.3, col="black", r0=0.55, r1=1, data.panel = 1)
+    kpRect(kp, data=dimrange , y0=0, y1=1, col="#ADD8E6", border=NA, r0=0.50, r1=0.95)
+    kpAxis(kp, ymin = 0, ymax = 1, r0=0.50, r1=0.95, numticks = 5, col="#666666", cex=0.5, data.panel = 1)
+    kpPoints(kp, data=grmeth2, pch=16, cex=0.3, col="black", r0=0.50, r1=0.95, data.panel = 1)
+    #add kpLines with segmentation
+    kpText(kp, chr=data.frame(regionrg)$seqnames, labels="haplotype 1", y=1.05, x=(data.frame(regionrg)$start+data.frame(regionrg)$end)/2, r0=0.50, r1=0.95, data.panel = 1, cex=.6)
     
     dev.off()    
   }
