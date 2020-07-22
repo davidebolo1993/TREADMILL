@@ -19,7 +19,7 @@ ENV PATH /miniconda/envs/treadmillenv/bin:$PATH
 RUN git clone --recursive https://github.com/jts/nanopolish.git && cd nanopolish && make all
 ENV PATH nanopolish:$PATH
 ENV PATH nanopolish/scripts:$PATH
-RUN conda install -y -n treadmillenv -c bioconda samtools bcftools bedtools bedops minimap2 ngmlr last pysam pyfaidx cyvcf2 pybedtools numpy longshot mosdepth
+RUN conda install -y -n treadmillenv -c bioconda samtools bcftools bedtools bedops minimap2 ngmlr last pysam pyfaidx cyvcf2 pybedtools numpy longshot
 RUN conda install -y -n treadmillenv -c r r
 RUN pip install --user whatshap
 ENV PATH /root/.local/bin:$PATH
