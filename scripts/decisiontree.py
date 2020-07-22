@@ -9,15 +9,19 @@ from itertools import combinations
 import editdistance
 
 def similarity(worda,wordb):
+	
+	'''
+	Return the edit-distance based similarity score between 2 sequences
+	'''
 
 	return 100-100*editdistance.eval(worda,wordb)/(len(worda)+len(wordb))
 
 
 def decisiontree(wordslist, mingroupsize=1, treshold=85.0):
 
-	"""
+	'''
 	Group strings in list by similarity (edit distance score)
-	"""
+	'''
 	
 	#wordslist.sort()
 	paired ={c:{c} for c in wordslist}
