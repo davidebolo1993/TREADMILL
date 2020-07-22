@@ -62,7 +62,6 @@ def decisiontree(wordslist, mingroupsize=1, treshold=85.0):
 			break
 
 		ungrouped -= best
-
 		decision.append(best)
 
 	return decision
