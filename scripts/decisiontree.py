@@ -8,8 +8,9 @@ from itertools import combinations
 
 import editdistance
 
+
 def similarity(worda,wordb):
-	
+
 	'''
 	Return the edit-distance based similarity score between 2 sequences
 	'''
@@ -17,16 +18,17 @@ def similarity(worda,wordb):
 	return 100-100*editdistance.eval(worda,wordb)/(len(worda)+len(wordb))
 
 
-def decisiontree(wordslist, mingroupsize=1, treshold=85.0):
+def decisiontree(wordsdict, nameslist,mingroupsize=1, treshold=85.0):
 
 	'''
 	Group strings in list by similarity (edit distance score)
 	'''
 	
-	#wordslist.sort()
-	paired ={c:{c} for c in wordslist}
+	#wordsdict=dict(zip(rnames, sequences))
 
-	for worda,wordb in combinations(wordslist,2):
+	paired ={c:{c} for c in wordsdict.values()}
+
+	for worda,wordb in combinations(wordsdict.values(),2):
 
 		if similarity(worda,wordb) < treshold: 
 
@@ -39,7 +41,7 @@ def decisiontree(wordslist, mingroupsize=1, treshold=85.0):
 
 
 	decision = list()
-	ungrouped = set(wordslist)
+	ungrouped = set(wordsdict.values())
 	
 	while ungrouped:
 
@@ -62,7 +64,25 @@ def decisiontree(wordslist, mingroupsize=1, treshold=85.0):
 			break
 
 		ungrouped -= best
+
 		decision.append(best)
 
-	return decision
 
+	#retrive read names
+
+	winners = list()
+
+	for groups in decision:
+
+		groupkeys = set()
+
+		for elements in groups: #retrieve all the original keys
+
+			keys=set([k for k,v in wordsdict.items() if v == elements])
+
+			groupkeys.update(keys)
+
+		winners.append(groupkeys)
+
+
+	return decision,winners
