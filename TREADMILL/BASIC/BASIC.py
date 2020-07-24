@@ -66,7 +66,7 @@ def parse(BAM,BED):
 	S_dict['BAM_CDEL']=0 #bps
 	S_dict['BAM_CDIFF']=0 #bps
 
-	bamfile=pysam.AlignmentFile(BAM, "rb")
+	bamfile=pysam.AlignmentFile(BAM, 'rb')
 	bed=pybedtools.BedTool(BED)
 	bedsrtd=bed.sort()
 	ivf=bedsrtd.as_intervalfile()
