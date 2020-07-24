@@ -17,13 +17,13 @@ def main():
 
 	parser_basic = subparsers.add_parser('BASIC', help='BAm StatIstiCs. Calculate BAM statistics for on-target reads from a crispr-cas9 nanopore run')
 
-	required = parser_stats.add_argument_group('Required I/O arguments')
+	required = parser_basic.add_argument_group('Required I/O arguments')
 
 	required.add_argument('-bam', '--bamfile', help='sorted and MD-tagged BAM from minimap2/NGMLR', metavar='BAM', required=True)
 	required.add_argument('-bed', '--bedfile', help='on-target regions in BED format', metavar="BED", required=True)
 	required.add_argument('-o', '--output', help='gzipped JSON file', metavar='JSON.GZ', required=True)
 
-	parser_sensor.set_defaults(func=run_subtool)
+	parser_basic.set_defaults(func=run_subtool)
 
 	
 	#print help if no subcommand nor --help provided
