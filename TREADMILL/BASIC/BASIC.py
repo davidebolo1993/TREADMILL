@@ -168,15 +168,15 @@ def run(parser,args):
 	if args.gzipped:
 
 		with gzip.GzipFile(JSON+".gz", 'w') as gzout:
-   
-			gzout.write(json.dumps(S_dict).encode('utf-8')) 
-			gzout.write("\n") 
 
+			json.dump(S_dict, gzout, indent=4)
+			gzout.write("\n")
+   
 	else:
 
 		with open(JSON, 'w') as plainout:
 
-			plainout.write(json.dumps(S_dict).encode('utf-8'))
+			json.dump(S_dict, plainout, indent=4)
 			plainout.write("\n")
 
 	sys.exit(0)
