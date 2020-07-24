@@ -163,7 +163,7 @@ pall<-ggplot(dfall, aes(x=as.numeric(x), y=y, fill=z))+
   ggtitle('Overall statistics')+
   facet_zoom(xlim=c(4,6),ylim=c(0,dfall$y[which(dfall$x=="on-target")]+100), horizontal=FALSE )+
   scale_x_continuous(
-    breaks = 1:length(dfall$x),
+    breaks = 1:length(unique(dfall$x)),
     label = levels(dfall$x)
   )
 
