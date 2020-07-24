@@ -21,11 +21,14 @@ def main():
 
 	required.add_argument('-bam', '--bamfile', help='sorted and MD-tagged BAM from minimap2/NGMLR', metavar='BAM', required=True)
 	required.add_argument('-bed', '--bedfile', help='on-target regions in BED format', metavar="BED", required=True)
-	required.add_argument('-o', '--output', help='gzipped JSON file', metavar='JSON.GZ', required=True)
+	required.add_argument('-o', '--output', help='output JSON file', metavar='JSON', required=True)
+
+	additional = parser_basic.add_argument_group('Additional parameters')
+
+	additional.add_argument('-z', '--gzipped', help='output gzipped JSON file', action='store_true')
 
 	parser_basic.set_defaults(func=run_subtool)
 
-	
 	#print help if no subcommand nor --help provided
 	
 	if len(sys.argv)==1:
@@ -35,16 +38,12 @@ def main():
 
 	#case-insensitive submodules
 	
-	if sys.argv[1].lower() == "basic":
+	if sys.argv[1].lower() == 'basic':
 
 		sys.argv[1] = "BASIC"
 
 	args = parser.parse_args()
 	args.func(parser, args)
-
-
-
-## CLASS
 
 
 class CustomFormat(HelpFormatter):

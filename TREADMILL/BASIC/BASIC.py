@@ -165,8 +165,16 @@ def run(parser,args):
 
 	S_dict=parse(BAM,BED)
 
-	with gzip.GzipFile(JSON, 'w') as gzout:
+	if args.gzipped:
+
+		with gzip.GzipFile(JSON+".gz", 'w') as gzout:
    
-		gzout.write(json.dumps(S_dict).encode('utf-8'))  
+			gzout.write(json.dumps(S_dict).encode('utf-8'))  
+
+	else:
+
+		with open(JSON, 'w') as plainout:
+
+			palinout.write(json.dumps(S_dict).encode('utf-8'))  
 
 	sys.exit(0)

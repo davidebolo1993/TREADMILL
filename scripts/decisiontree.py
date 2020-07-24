@@ -18,7 +18,7 @@ def similarity(worda,wordb):
 	return 100-100*editdistance.eval(worda,wordb)/(len(worda)+len(wordb))
 
 
-def decisiontree(wordsdict, nameslist,mingroupsize=1, treshold=85.0):
+def decisiontree(wordsdict,mingroupsize=1, treshold=50):
 
 	'''
 	Group strings in list by similarity (edit distance score)
