@@ -193,7 +193,7 @@ dfcov<-do.call(rbind,listcov)
 dfcov$x<-factor(dfcov$x,levels=unique(dfcov$x))
 
 pcov<-ggplot(dfcov, aes(x=x, y=y, fill=z)) +
-  geom_boxplot(position=position_dodge(), width=0.5/length(unique(dfcov$x)))+
+  geom_boxplot(position=position_dodge(), width=0.3/length(unique(dfcov$x)))+
   scale_fill_brewer(palette="Dark2") + theme_bw()+
   xlab('regions') + 
   ylab('coverage') +
