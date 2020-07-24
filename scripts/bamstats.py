@@ -126,7 +126,7 @@ def parse(BAM,BED):
 	for query in bedsrtd:
 
 		query_arr=bamfile.count_coverage(query.chrom,query.start,query.end,read_callback=check_read)
-		perbasecov=np.sum(query_arr,axis=0)
+		perbasecov=np.sum(query_arr,axis=0).tolist()
 		key=query.chrom+":"+str(query.start)+"-"+str(query.end)
 		S_dict[key]=perbasecov
 
