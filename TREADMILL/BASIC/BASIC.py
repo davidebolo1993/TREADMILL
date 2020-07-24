@@ -170,13 +170,13 @@ def run(parser,args):
 		with gzip.open(JSON+'.gz', 'wt') as gzout:
 
 			json.dump(S_dict, gzout, indent=4)
-			gzout.write("\n")
+			gzout.write('\n')
    
 	else:
 
 		with open(JSON, 'w') as plainout:
 
 			json.dump(S_dict, plainout, indent=4)
-			plainout.write("\n")
+			plainout.write('\n')
 
 	sys.exit(0)
