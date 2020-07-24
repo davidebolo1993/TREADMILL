@@ -169,12 +169,14 @@ def run(parser,args):
 
 		with gzip.GzipFile(JSON+".gz", 'w') as gzout:
    
-			gzout.write(json.dumps(S_dict).encode('utf-8'))  
+			gzout.write(json.dumps(S_dict).encode('utf-8')) 
+			gzout.write("\n") 
 
 	else:
 
 		with open(JSON, 'w') as plainout:
 
-			palinout.write(json.dumps(S_dict).encode('utf-8'))  
+			plainout.write(json.dumps(S_dict).encode('utf-8'))
+			plainout.write("\n")
 
 	sys.exit(0)
