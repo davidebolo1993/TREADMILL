@@ -21,7 +21,7 @@ def main():
 
 	required.add_argument('-bam', '--bamfile', help='sorted and MD-tagged BAM from minimap2/NGMLR', metavar='BAM', required=True)
 	required.add_argument('-bed', '--bedfile', help='on-target regions in BED format', metavar="BED", required=True)
-	required.add_argument('-o', '--output', help='JSON file', metavar='JSON', required=True)
+	required.add_argument('-o', '--output', help='gzipped JSON file', metavar='JSON.GZ', required=True)
 
 	parser_basic.set_defaults(func=run_subtool)
 
