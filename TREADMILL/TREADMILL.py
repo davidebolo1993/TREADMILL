@@ -40,7 +40,7 @@ def main():
 	
 	if sys.argv[1].lower() == 'basic':
 
-		sys.argv[1] = "BASIC"
+		sys.argv[1] = 'BASIC'
 
 	args = parser.parse_args()
 	args.func(parser, args)
