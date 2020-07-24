@@ -167,10 +167,10 @@ def run(parser,args):
 
 	if args.gzipped:
 
-		with gzip.open(JSON+'.gz', 'wt', encoding="ascii") as gzout:
+		with gzip.open(JSON+'.gz', 'wt') as gzout:
 
 			json.dump(S_dict, gzout, indent=4)
-			gzout.write("\n").encode("utf-8")
+			gzout.write("\n")
    
 	else:
 
