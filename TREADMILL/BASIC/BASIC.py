@@ -139,7 +139,7 @@ def parse(BAM,BED):
 def run(parser,args):
 
 	'''
-	Execute the code and dump json to stdout
+	Execute the code and dump json to file
 	'''
 
 	BAM=os.path.abspath(args.bamfile)
