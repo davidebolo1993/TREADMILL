@@ -108,40 +108,40 @@ if (! is.null(opt$ngmlr)) {
   }
 }
 
-if (! is.null(opt$last)) {
-  
-  
-  if (file.exists(file.path(opt$last))) {
-    ljson<-fromJSON(file = file.path(opt$minimap2))
-    lkeyall<-c("unmapped", "supplementary", "secondary", "primary", "on-target", "off-target")
-    lvalueall<-c(ljson$BAM_UNMAP,ljson$BAM_SUPP,ljson$BAM_SEC,ljson$BAM_PRIM,ljson$BAM_ONTARGET,ljson$BAM_OFFTARGET)
-    lalignerall<-rep('last',length(lkeyall))
-    
-    lall<-data.frame(x=lkeyall,y=lvalueall,z=lalignerall,stringsAsFactors = FALSE)
-    listall[['l']]<-lall
-    
-    lkeyerr<-c("match", "mismatch", "deletion", "insertion", "soft-clipped")
-    lvalueerr<-c(ljson$BAM_CMATCH, ljson$BAM_CDIFF, ljson$BAM_CDEL, ljson$BAM_CINS, ljson$BAM_CSOFT_CLIP)
-    lalignererr<-rep('ngmlr',length(lkeyerr))
-    
-    lerror<-data.frame(x=lalignererr,y=lvalueerr,z=lkeyerr,stringsAsFactors = FALSE)
-    listerr[['l']]<-lerror
-    
-    lcovkeys<-grep(":", names(ljson), value=TRUE)
-    ltmplist<-list()
-    
-    for (lk in lcovkeys) {
-      
-      y<-as.numeric(as.character(unlist(ljson[lk])))
-      x<-rep(lk, length(y))
-      z<-rep('last',length(y))       
-      ltmplist[[lk]]<-data.frame(x=x,y=y,z=z,stringsAsFactors = FALSE)
-    }
-    
-    listcov[['l']]<-do.call(rbind,ltmplist)
-    
-  }
-}
+# if (! is.null(opt$last)) {
+#   
+#   
+#   if (file.exists(file.path(opt$last))) {
+#     ljson<-fromJSON(file = file.path(opt$minimap2))
+#     lkeyall<-c("unmapped", "supplementary", "secondary", "primary", "on-target", "off-target")
+#     lvalueall<-c(ljson$BAM_UNMAP,ljson$BAM_SUPP,ljson$BAM_SEC,ljson$BAM_PRIM,ljson$BAM_ONTARGET,ljson$BAM_OFFTARGET)
+#     lalignerall<-rep('last',length(lkeyall))
+#     
+#     lall<-data.frame(x=lkeyall,y=lvalueall,z=lalignerall,stringsAsFactors = FALSE)
+#     listall[['l']]<-lall
+#     
+#     lkeyerr<-c("match", "mismatch", "deletion", "insertion", "soft-clipped")
+#     lvalueerr<-c(ljson$BAM_CMATCH, ljson$BAM_CDIFF, ljson$BAM_CDEL, ljson$BAM_CINS, ljson$BAM_CSOFT_CLIP)
+#     lalignererr<-rep('ngmlr',length(lkeyerr))
+#     
+#     lerror<-data.frame(x=lalignererr,y=lvalueerr,z=lkeyerr,stringsAsFactors = FALSE)
+#     listerr[['l']]<-lerror
+#     
+#     lcovkeys<-grep(":", names(ljson), value=TRUE)
+#     ltmplist<-list()
+#     
+#     for (lk in lcovkeys) {
+#       
+#       y<-as.numeric(as.character(unlist(ljson[lk])))
+#       x<-rep(lk, length(y))
+#       z<-rep('last',length(y))       
+#       ltmplist[[lk]]<-data.frame(x=x,y=y,z=z,stringsAsFactors = FALSE)
+#     }
+#     
+#     listcov[['l']]<-do.call(rbind,ltmplist)
+#     
+#   }
+# }
 
 if (length(listall) == 0) {
   stop('[Error] [Usage] Rscript plotstats.R -m <minimap2.json> -n <ngmlr.json> -l <last.json>. At least one argument is required')
