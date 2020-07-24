@@ -10,14 +10,18 @@ if (!requireNamespace("plyr", quietly = TRUE))
   install.packages("plyr",repos='http://cran.us.r-project.org')
 if (!requireNamespace("ggrepel", quietly = TRUE))
   install.packages("ggrepel",repos='http://cran.us.r-project.org')
+if (!requireNamespace("ggforce", quietly = TRUE))
+  install.packages("ggforce",repos='http://cran.us.r-project.org')
 
 
 suppressPackageStartupMessages(library(optparse))
 suppressPackageStartupMessages(library(rjson))
 suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(ggforce))
 suppressPackageStartupMessages(library(plyr))
 suppressPackageStartupMessages(library(ggrepel))
 suppressPackageStartupMessages(library(grid))
+
 
 vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
 
@@ -149,14 +153,19 @@ if (length(listall) == 0) {
 dfall<-do.call(rbind,listall)
 dfall$x<-factor(dfall$x,levels=unique(dfall$x))
 
-pall<-ggplot(dfall, aes(x=x, y=y, fill=z))+
+pall<-ggplot(dfall, aes(x=as.numeric(x), y=y, fill=z))+
   geom_bar(stat="identity",width = .3,position=position_dodge())+
-  theme_minimal()+
+  theme_bw()+
   scale_fill_brewer(palette="Dark2")+
   ylab('# reads') + 
   xlab('read type')+
   theme(legend.title = element_blank(), plot.title = element_text(hjust = 0.5))+
-  ggtitle('Overall statistics')
+  ggtitle('Overall statistics')+
+  facet_zoom(xlim=c(4,6),ylim=c(0,dfall$y[which(dfall$x=="on-target")]+100), horizontal=FALSE )+
+  scale_x_continuous(
+    breaks = 1:length(dfall$x),
+    label = levels(dfall$x)
+  )
 
 #on-target
 
@@ -169,7 +178,7 @@ dferr$label = paste0(sprintf("%.0f", dferr$percent), "%")
 
 perr<-ggplot(dferr, aes(x=x, y=y, fill=z)) +
   geom_bar(stat="identity",width = .1)+
-  theme_minimal()+
+  theme_bw()+
   scale_fill_brewer(palette="Dark2")+
   ylab('# bases') +
   xlab('aligner') +
@@ -185,7 +194,7 @@ dfcov$x<-factor(dfcov$x,levels=unique(dfcov$x))
 
 pcov<-ggplot(dfcov, aes(x=x, y=y, fill=z)) +
   geom_boxplot(position=position_dodge(), width=0.5/length(unique(dfcov$x)))+
-  scale_fill_brewer(palette="Dark2") + theme_minimal()+
+  scale_fill_brewer(palette="Dark2") + theme_bw()+
   xlab('regions') + 
   ylab('coverage') +
   theme(legend.title=element_blank(),plot.title = element_text(hjust = 0.5)) +
@@ -198,4 +207,3 @@ print(pall, vp = vplayout(1, 1))
 print(perr, vp = vplayout(1, 2))
 print(pcov, vp = vplayout(2, 1:2))
 dev.off()
-

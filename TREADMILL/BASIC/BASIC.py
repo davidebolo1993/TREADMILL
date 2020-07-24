@@ -165,8 +165,8 @@ def run(parser,args):
 
 	S_dict=parse(BAM,BED)
 
-	with open(JSON, 'w') as out:
+	with gzip.open(JSON, 'w') as gzipout:
    
-		json.dump(S_dict, out)
+		json.dump(S_dict, gzipout)
 
 	sys.exit(0)
