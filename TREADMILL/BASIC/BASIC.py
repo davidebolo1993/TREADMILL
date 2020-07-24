@@ -158,7 +158,7 @@ def run(parser,args):
 
 	JSON=os.path.abspath(args.output)
 
-	if not os.access(os.path.dirname(JSON),os.W_OK)
+	if not os.access(os.path.dirname(JSON),os.W_OK):
 
 		print('[Error] Missing write permissions on the output folder')
 		sys.exit(1)
