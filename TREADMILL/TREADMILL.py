@@ -37,7 +37,7 @@ def main():
 
 	required.add_argument('-bam', '--bamfile', help='sorted and MD-tagged BAM file from minimap2/NGMLR', metavar='BAM', required=True)
 	required.add_argument('-bed', '--bedfile', help='tandem repeats in BED format', metavar='BED', required=True)
-	required.add_argument('-o', '--output', help='output BIN object', metavar='BIN', required=True)
+	required.add_argument('-o', '--output', help='output binary map', metavar='BIN', required=True)
 
 	additional = parser_reader.add_argument_group('Additional parameters')
 
