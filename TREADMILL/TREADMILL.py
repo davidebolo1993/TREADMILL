@@ -41,8 +41,8 @@ def main():
 
 	additional = parser_reader.add_argument_group('Additional parameters')
 
-	additional.add_argument('--similarity', help='sequence similarity percentage (discriminate group of reads with different repeat content)', required=False, default=85.0, type=float)
-	additional.add_argument('--support', help='minimum group support (retain only groups with enough reads)', required=False, default=5, type=int)
+	additional.add_argument('--similarity', help='sequence similarity percentage (discriminate group of reads with different repeat content)', required=False, default=85.0, type=float, metavar='')
+	additional.add_argument('--support', help='minimum group support (retain only groups with enough reads)', required=False, default=5, type=int, metavar='')
 
 	parser_reader.set_defaults(func=run_subtool)
 
