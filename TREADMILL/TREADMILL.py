@@ -31,7 +31,7 @@ def main():
 
 	## READER ##
 
-	parser_reader = subparser.add_parser('READER', help='READ ExtRactor. Extract, group by similarity and genotype on-target reads from a crispr-cas9 nanopore run')
+	parser_reader = subparsers.add_parser('READER', help='READ ExtRactor. Extract, group by similarity and genotype on-target reads from a crispr-cas9 nanopore run')
 
 	required = parser_reader.add_argument_group('Required I/O arguments')
 
