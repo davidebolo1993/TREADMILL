@@ -124,7 +124,7 @@ def parseBAM(BAM,BED,mingroupsize,treshold):
 	
 	try:
 
-		bedsrtd=bedfile.sort() #this allows to also check for errors in the BED
+		bedsrtd=bedfile.sort() #this allows to also check for errors in BED file
 
 	except:
 
@@ -146,12 +146,12 @@ def parseBAM(BAM,BED,mingroupsize,treshold):
 				if read.reference_start <= query.start and read.reference_end >= query.end: #retain reads that span entire repetition
 
 					identifier=read.query_name
-					sequence=read.query_sequence #no need to reverse complement if read.is_reverse, as query_sequence always return forward
+					sequence=read.query_sequence #no need to reverse complement if read.is_reverse, as read.query_sequence always return the forward orientation
 					quality=read.query_qualities
 					coord=np.asarray(subnone(read.get_reference_positions(full_length=True)))
 					si,ei=find_nearest(coord,query.start),find_nearest(coord,query.end)
 					subsequence=sequence[si:ei+1]
-					suberror=10**(-(np.mean(quality[si:ei+1]))/10) #extract error probability
+					suberror=10**(-(np.mean(quality[si:ei+1]))/10) #extract error probability for the subsequence containing the repetition
 					sdict[identifier]=subsequence
 					qdict[identifier]=suberror
 
