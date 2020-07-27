@@ -37,7 +37,7 @@ class AutoVivification(dict):
 def subnone(coordinates):
 
 	'''
-	Substitute None (soft-clipped/insertions) coordinates with a negative value
+	Substitute None (soft-clipped/inserted) coordinates with a negative value
 	'''
 
 	return [-999999 if v is None else v for v in coordinates]
