@@ -113,7 +113,7 @@ def decisiontree(readsdict,mingroupsize,treshold):
 
 
 
-def parser(BAM,BED,mingroupsize,treshold):
+def parseBAM(BAM,BED,mingroupsize,treshold):
 
 	'''
 	Parse BAM file and group read by similarity
@@ -206,7 +206,7 @@ def run(parser,args):
 		print('[Error] Missing write permissions on the output folder')
 		sys.exit(1)
 
-	hierarchy=parser(BAM,BED,args.support,args.similarity)
+	hierarchy=parseBAM(BAM,BED,args.support,args.similarity)
 
 	binout=open(args.output,'wb')
 	data=pickle.dumps(hierarchy,protocol=pickle.HIGHEST_PROTOCOL)
