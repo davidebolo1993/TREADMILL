@@ -12,12 +12,7 @@ from collections import defaultdict
 
 import pysam
 import pybedtools
-from pybedtools import Interval
 import numpy as np
-
-#global
-
-S_dict=dict()
 
 def tuptodict(cigartuples):
 
@@ -52,7 +47,7 @@ def parse(BAM,BED):
 	Parse BAM and get overall and queries-specific statistics
 	'''
 
-	global S_dict
+	S_dict=dict()
 
 	S_dict['BAM_PRIM']=0 #reads
 	S_dict['BAM_SUPP']=0 #reads
@@ -67,8 +62,17 @@ def parse(BAM,BED):
 	S_dict['BAM_CDIFF']=0 #bps
 
 	bamfile=pysam.AlignmentFile(BAM, 'rb')
-	bed=pybedtools.BedTool(BED)
-	bedsrtd=bed.sort()
+	bedfile=pybedtools.BedTool(BED)
+	
+	try:
+		
+		bedsrtd=bedfile.sort()
+
+	except:
+
+		print('[Error] Invalid BED file format')
+		sys.exit(1)
+
 	ivf=bedsrtd.as_intervalfile()
 
 	for read in bamfile.fetch():
@@ -83,7 +87,7 @@ def parse(BAM,BED):
 
 						S_dict['BAM_PRIM']+=1
 
-						query=Interval(read.reference_name,read.reference_start,read.reference_end)
+						query=pybedtools.Interval(read.reference_name,read.reference_start,read.reference_end)
 						
 						if ivf.any_hits(query) >=1: #parse CIGAR only in targeted regions
 
@@ -149,6 +153,11 @@ def run(parser,args):
 		print('[Error] Invalid BAM file')
 		sys.exit(1)
 
+	if not os.path.isfile(BAM+'.bai'):
+
+		print('[Error] Missing BAM file index')
+		sys.exit(1)
+
 	BED=os.path.abspath(args.bedfile)
 
 	if not os.path.isfile(BED):
@@ -171,7 +180,7 @@ def run(parser,args):
 
 			json.dump(S_dict, gzout, indent=4)
 			gzout.write('\n')
-   
+
 	else:
 
 		with open(JSON, 'w') as plainout:
