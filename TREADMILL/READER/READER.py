@@ -204,7 +204,7 @@ def run(parser,args):
 		print('[Error] Invalid BED file')
 		sys.exit(1)
 
-	REF=os.path.abspath(args.genome)
+	REF=os.path.abspath(args.fastafile)
 
 	try:
 
