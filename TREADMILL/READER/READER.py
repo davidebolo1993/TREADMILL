@@ -13,6 +13,7 @@ import pysam
 import editdistance
 import pybedtools
 import numpy as np
+import pyfaidx
 
 
 class AutoVivification(dict):
@@ -113,7 +114,7 @@ def decisiontree(readsdict,mingroupsize,treshold):
 
 
 
-def parseBAM(BAM,BED,mingroupsize,treshold):
+def parseBAM(BAM,BED,mingroupsize,treshold,REF):
 
 	'''
 	Parse BAM file and group read by similarity
@@ -121,6 +122,7 @@ def parseBAM(BAM,BED,mingroupsize,treshold):
 
 	hierarchy=AutoVivification()
 	bedfile=pybedtools.BedTool(BED)
+	fastafile=pyfaidx.Fasta(REF)
 	
 	try:
 
@@ -150,8 +152,8 @@ def parseBAM(BAM,BED,mingroupsize,treshold):
 					quality=read.query_qualities
 					coord=np.asarray(subnone(read.get_reference_positions(full_length=True)))
 					si,ei=find_nearest(coord,query.start),find_nearest(coord,query.end)
-					subsequence=sequence[si:ei+1]
-					suberror=10**(-(np.mean(quality[si:ei+1]))/10) #extract error probability for the subsequence containing the repetition
+					subsequence=sequence[si:ei]
+					suberror=10**(-(np.mean(quality[si:ei]))/10) #extract error probability for the subsequence containing the repetition
 					sdict[identifier]=subsequence
 					qdict[identifier]=suberror
 
@@ -168,6 +170,9 @@ def parseBAM(BAM,BED,mingroupsize,treshold):
 				for k in keys:
 
 					hierarchy[key][group][k][sdict[k]]=qdict[k]
+
+		refsequence=fastafile[query.chrom][:len(fastafile[query.chrom])].seq[query.start-1:query.end]
+		hierarchy[key]['group0']['reference'][refsequence]=0.0
 
 	bamfile.close()
 
@@ -199,6 +204,19 @@ def run(parser,args):
 		print('[Error] Invalid BED file')
 		sys.exit(1)
 
+	REF=os.path.abspath(args.genome)
+
+	try:
+
+		with open(REF) as genome:
+
+			assert(genome.readline().startswith('>'))
+
+	except:
+
+		print('[Error] Invalid reference FASTA file')
+		sys.exit(1)
+
 	BIN=os.path.abspath(args.output)
 
 	if not os.access(os.path.dirname(BIN),os.W_OK):
@@ -206,7 +224,7 @@ def run(parser,args):
 		print('[Error] Missing write permissions on the output folder')
 		sys.exit(1)
 
-	hierarchy=parseBAM(BAM,BED,args.support,args.similarity)
+	hierarchy=parseBAM(BAM,BED,args.support,args.similarity,REF)
 
 	binout=open(args.output,'wb')
 	data=pickle.dumps(hierarchy,protocol=pickle.HIGHEST_PROTOCOL)
