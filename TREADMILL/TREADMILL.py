@@ -37,12 +37,13 @@ def main():
 
 	required.add_argument('-bam', '--bamfile', help='sorted and MD-tagged BAM file from minimap2/NGMLR', metavar='BAM', required=True)
 	required.add_argument('-bed', '--bedfile', help='tandem repeats in BED format', metavar='BED', required=True)
+	required.add_argument('-fa', '--fastafile', help='reference genome in FASTA format', metavar='FASTA', required=True)
 	required.add_argument('-o', '--output', help='output binary map', metavar='BIN', required=True)
 
 	additional = parser_reader.add_argument_group('Additional parameters')
 
-	additional.add_argument('--similarity', help='sequence similarity percentage (discriminate group of reads with different repeat content)', required=False, default=85.0, type=float, metavar='')
-	additional.add_argument('--support', help='minimum group support (retain only groups with enough reads)', required=False, default=5, type=int, metavar='')
+	additional.add_argument('--similarity', help='sequence similarity percentage (discriminate group of reads with different repeat content) [85.0]', required=False, default=85.0, type=float, metavar='')
+	additional.add_argument('--support', help='minimum group support (retain only groups with enough reads)[5]', required=False, default=5, type=int, metavar='')
 
 	parser_reader.set_defaults(func=run_subtool)
 
