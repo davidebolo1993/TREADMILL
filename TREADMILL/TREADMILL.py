@@ -142,7 +142,7 @@ def run_subtool(parser, args):
 
 	elif args.command == 'REEF': #ReferEncE modiFier
 
-		from .REEF import REEF as submbodule
+		from .REEF import REEF as submodule
 
 	else:
 
