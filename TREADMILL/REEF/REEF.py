@@ -89,13 +89,13 @@ def run(parser,args):
 
 	r=re.compile('.*:.*-.*')
 
-	if r.match(args.region) is None:
+	if r.match(args.region[0]) is None:
 
 		print('[Error] Wrong region format')
 		sys.exit(1)
 
 	shutil.copy2(REFIN,REFOUT)
-	sequence=modifyFasta(REF,args.region,args.repeat,args.maxsize,args.contig)
+	sequence=modifyFasta(REF,args.region[0],args.repeat,args.maxsize,args.contig)
 
 	with open(REFOUT, 'a') as fout:
 
