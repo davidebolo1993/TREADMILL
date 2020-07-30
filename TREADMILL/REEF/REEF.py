@@ -66,7 +66,7 @@ def run(parser,args):
 
 	try:
 
-		with open(REF) as genome:
+		with open(REFIN) as genome:
 
 			assert(genome.readline().startswith('>'))
 
