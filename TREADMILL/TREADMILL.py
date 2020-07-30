@@ -27,7 +27,7 @@ def main():
 
 	additional.add_argument('--repeat', help='repeated motif in region [CGG]', type=str, default="CGG", metavar='')
 	additional.add_argument('--maxsize', help='maximum number of repeated motifs [500]', type=int, default=500, metavar='')
-	additional.add_argument('--contigs', help='number of chromosomes with synthetic expansions (progressively longer) to generate [10]', type=int, default=10, metavar='')
+	additional.add_argument('--contig', help='number of chromosomes with synthetic expansions (progressively longer) to generate [10]', type=int, default=10, metavar='')
 
 	parser_reef.set_defaults(func=run_subtool)
 
