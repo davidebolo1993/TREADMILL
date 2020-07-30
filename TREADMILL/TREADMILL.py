@@ -21,12 +21,12 @@ def main():
 
 	required.add_argument('-fa', '--fastafile', help='reference genome in FASTA format', metavar='FASTA', required=True)
 	required.add_argument('-o', '--output', help='modified reference gnome in FASTA format', metavar='FASTA', required=True)
-	required.add_argument('region', help='repeat coordinates in RNAME[:STARTPOS[-ENDPOS]] format (samtools standard)', metavar='REGION', nargs=1)
+	required.add_argument('region', help='repeat coordinates in RNAME[:STARTPOS[-ENDPOS]] format (samtools standard)', metavar='region', nargs=1)
 
 	additional = parser_reef.add_argument_group('Additional parameters')
 
-	additional.add_argument('-r', '--repeat', help='repeated motif in region [CGG]', type=str, default="CGG")
-	additional.add_argument('-M', '--maxsize', help='maximum number of repetitions [500]', type=int, default=500)
+	additional.add_argument('-r', '--repeat', help='repeated motif in region [CGG]', type=str, default="CGG", metavar='')
+	additional.add_argument('-M', '--maxsize', help='maximum number of repetitions [500]', type=int, default=500, metavar='')
 
 	parser_reef.set_defaults(func=run_subtool)
 
