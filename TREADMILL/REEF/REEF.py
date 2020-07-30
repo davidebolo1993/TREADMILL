@@ -95,7 +95,7 @@ def run(parser,args):
 		sys.exit(1)
 
 	shutil.copy2(REFIN,REFOUT)
-	sequence=modifyFasta(REF,args.region[0],args.repeat,args.maxsize,args.contig)
+	sequence=modifyFasta(REFIN,args.region[0],args.repeat,args.maxsize,args.contig)
 
 	with open(REFOUT, 'a') as fout:
 
