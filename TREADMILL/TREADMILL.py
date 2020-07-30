@@ -21,7 +21,7 @@ def main():
 
 	required.add_argument('-fa', '--fastafile', help='reference genome in FASTA format', metavar='FASTA', required=True)
 	required.add_argument('-o', '--output', help='modified reference gnome in FASTA format', metavar='FASTA', required=True)
-	required.add_argument('region', help='repeat coordinates in RNAME[:STARTPOS[-ENDPOS]] format (samtools standard)', metavar='REGION', required=True, nargs=1)
+	required.add_argument('region', help='repeat coordinates in RNAME[:STARTPOS[-ENDPOS]] format (samtools standard)', metavar='REGION', nargs=1)
 
 	additional = parser_reef.add_argument_group('Additional parameters')
 
