@@ -40,7 +40,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend):
 				counter=0 #do not exceed an arbitraty treshold, otherwise consensus sequence computation becomes slow
 
 
-				with open(os.path.abaspath(OUTR + '/a'+str(i+1)+'.tmp.fa'), 'a') as fa:
+				with open(os.path.abspath(OUTR + '/a'+str(i+1)+'.tmp.fa'), 'a') as fa:
 
 					for keyS in dictR[keyR][keyG].keys():
 
