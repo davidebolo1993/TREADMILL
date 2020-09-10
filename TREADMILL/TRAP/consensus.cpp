@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 	auto graph = spoa::createGraph();
 
 
-	// as from LongShot use of SPOA, slightly modified (https://github.com/pjedge/longshot/blob/master/src/poa/poa_func.cpp)
+	// as from Longshot use of SPOA, slightly modified (https://github.com/pjedge/longshot/blob/master/src/poa/poa_func.cpp)
 
 	// seed the POA with a seed sequence (e.g. reference sequence)
 	// this is useful e.g. to reduce noise from noisy PacBio sequence reads.
