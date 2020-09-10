@@ -1,0 +1,3 @@
+[submodule "TREADMILL/spoa"]
+	path = TREADMILL/spoa
+	url = https://github.com/rvaser/spoa

@@ -11,29 +11,29 @@ def main():
 	
 	parser = argparse.ArgumentParser(prog='TREADMILL', description='''TREADMILL: Tandem REpeats AnD MethylatIon caLLing''', epilog='''This program was developed by Davide Bolognini (https://github.com/davidebolo1993)''', formatter_class=CustomFormat) 
 
-	subparsers = parser.add_subparsers(title='modules', dest='command', metavar='BASIC,READER')
+	subparsers = parser.add_subparsers(title='modules', dest='command', metavar='BASIC,READER,TRAP')
 
 	## REEF ##
 
-	parser_reef = subparsers.add_parser('REEF', help='ReferEncE modiFier. Add synthetic chromosomes harboring repeat expansions to a given reference (prior to alignment)')
+	#parser_reef = subparsers.add_parser('REEF', help='ReferEncE modiFier. Add synthetic chromosomes harboring repeat expansions to a given reference (prior to alignment)')
 
-	required = parser_reef.add_argument_group('Required I/O arguments')
+	#required = parser_reef.add_argument_group('Required I/O arguments')
 
-	required.add_argument('-fa', '--fastafile', help='reference genome in FASTA format', metavar='FASTA', required=True)
-	required.add_argument('-o', '--output', help='modified reference gnome in FASTA format', metavar='FASTA', required=True)
-	required.add_argument('region', help='repeat coordinates in RNAME[:STARTPOS[-ENDPOS]] format (samtools standard)', metavar='REGION', nargs=1)
+	#required.add_argument('-fa', '--fastafile', help='reference genome in FASTA format', metavar='FASTA', required=True)
+	#required.add_argument('-o', '--output', help='modified reference gnome in FASTA format', metavar='FASTA', required=True)
+	#required.add_argument('region', help='repeat coordinates in RNAME[:STARTPOS[-ENDPOS]] format (samtools standard)', metavar='REGION', nargs=1)
 
-	additional = parser_reef.add_argument_group('Additional parameters')
+	#additional = parser_reef.add_argument_group('Additional parameters')
 
-	additional.add_argument('--repeat', help='repeated motif in region [CGG]', type=str, default="CGG", metavar='')
-	additional.add_argument('--maxsize', help='maximum number of repeated motifs [500]', type=int, default=500, metavar='')
-	additional.add_argument('--contig', help='number of chromosomes with synthetic expansions (progressively longer) to generate [10]', type=int, default=10, metavar='')
+	#additional.add_argument('--repeat', help='repeated motif in region [CGG]', type=str, default="CGG", metavar='')
+	#additional.add_argument('--maxsize', help='maximum number of repeated motifs [500]', type=int, default=500, metavar='')
+	#additional.add_argument('--contig', help='number of chromosomes with synthetic expansions (progressively longer) to generate [10]', type=int, default=10, metavar='')
 
-	parser_reef.set_defaults(func=run_subtool)
+	#parser_reef.set_defaults(func=run_subtool)
 
 	## BASIC ##
 
-	parser_basic = subparsers.add_parser('BASIC', help='BAm StatIstiCs. Calculate BAM statistics for on-target reads from a crispr-cas9 nanopore run')
+	parser_basic = subparsers.add_parser('BASIC', help='BAm StatIstiCs. Calculate BAM statistics for on-target reads from a targeted nanopore experiment')
 
 	required = parser_basic.add_argument_group('Required I/O arguments')
 
@@ -49,12 +49,12 @@ def main():
 
 	## READER ##
 
-	parser_reader = subparsers.add_parser('READER', help='READ ExtRactor. Extract and group by similarity on-target reads from a crispr-cas9 nanopore run')
+	parser_reader = subparsers.add_parser('READER', help='READ ExtRactor. Extract on-target reads from a targeted nanopore experiment and group them by similarity')
 
 	required = parser_reader.add_argument_group('Required I/O arguments')
 
-	required.add_argument('-bam', '--bamfile', help='sorted and MD-tagged BAM file from minimap2/NGMLR', metavar='BAM', required=True)
-	required.add_argument('-bed', '--bedfile', help='tandem repeats in BED format', metavar='BED', required=True)
+	required.add_argument('-bam', '--bamfile', help='sorted BAM file from minimap2/NGMLR', metavar='BAM', required=True)
+	required.add_argument('-bed', '--bedfile', help='repeated regions in BED format', metavar='BED', required=True)
 	required.add_argument('-fa', '--fastafile', help='reference genome in FASTA format', metavar='FASTA', required=True)
 	required.add_argument('-o', '--output', help='output binary map', metavar='BIN', required=True)
 
@@ -64,6 +64,17 @@ def main():
 	additional.add_argument('--support', help='minimum group support (retain only groups with enough reads)[5]', required=False, default=5, type=int, metavar='')
 
 	parser_reader.set_defaults(func=run_subtool)
+
+	## TRAP ##
+
+	parser_trap = subparsers.add_parser('TRAP', help='Tandem RepeAts Profiler. Identify and genotype tandem repeats from clusters of reads created with READER')
+
+	required = parser_trap.add_argument_group('Required I/O arguments')
+
+	required.add_argument('-i', '--input', help='input binary map from READER', metavar='BIN', required=True)
+	required.add_argument('-o', '--output', help='output directory', metavar='DIR', required=True)
+
+	parser_trap.set_defaults(func=run_subtool)
 
 	#print help if no subcommand nor --help provided
 	
@@ -82,9 +93,13 @@ def main():
 
 		sys.argv[1] = 'READER'
 
-	elif sys.argv[1].lower() == 'reef':
+	elif sys.argv[1].lower() == 'trap':
 
-		sys.argv[1] = 'REEF'
+		sys.argv[1] = 'TRAP'
+
+	#elif sys.argv[1].lower() == 'reef':
+
+		#sys.argv[1] = 'REEF'
 
 	args = parser.parse_args()
 	args.func(parser, args)
@@ -140,9 +155,13 @@ def run_subtool(parser, args):
 
 		from .READER import READER as submodule
 
-	elif args.command == 'REEF': #ReferEncE modiFier
+	#elif args.command == 'REEF': #ReferEncE modiFier
 
-		from .REEF import REEF as submodule
+		#from .REEF import REEF as submodule
+
+	elif args.command == 'TRAP':
+
+		from .TRAP import TRAP as submodule
 
 	else:
 

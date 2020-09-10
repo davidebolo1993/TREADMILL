@@ -30,7 +30,7 @@ def modifyFasta(REF,region,repeat,maxsize,contig):
 
 	if len(seen) == 0:
 
-		print('[Error] Could not find  repeat in reference')
+		print('[Error] Could not find repeat in reference')
 		sys.exit(1)
 
 	else:

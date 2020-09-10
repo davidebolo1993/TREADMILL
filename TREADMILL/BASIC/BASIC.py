@@ -120,10 +120,9 @@ def parse(BAM,BED):
 
 		else:
 
-			print('[Error] BAM is missing required MD tag')
+			print('[Error] BAM misses the required MD tag')
 			bamfile.close()
 			sys.exit(1)
-
 
 	#calculate coverage in regions from BED
 
@@ -133,7 +132,6 @@ def parse(BAM,BED):
 		perbasecov=np.sum(query_arr,axis=0).tolist()
 		key=query.chrom+":"+str(query.start)+"-"+str(query.end)
 		S_dict[key]=perbasecov
-
 
 	bamfile.close()
 
