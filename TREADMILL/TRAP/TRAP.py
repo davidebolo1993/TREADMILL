@@ -56,9 +56,9 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend):
 
 				with open(os.path.abspath(OUTR + '/a'+str(i+1)+'.cs.fa'), 'w') as cs:
 
-					subprocess.call([CS_CPP, str(match), str(mismatch), str(gapopen), str(gapextend), os.path.asbpath(OUTR + '/r.tmp.fa'), os.path.asbpath(OUTR + '/a'+str(i+1)+'.tmp.fa')], stdout=cs, stderr=open(os.devnull, 'wb'))
+					subprocess.call([CS_CPP, str(match), str(mismatch), str(gapopen), str(gapextend), os.path.abspath(OUTR + '/r.tmp.fa'), os.path.abspath(OUTR + '/a'+str(i+1)+'.tmp.fa')], stdout=cs, stderr=open(os.devnull, 'wb'))
 
-				os.remove(os.path.abaspath(OUTR + '/a'+str(i+1)+'.tmp.fa')) #clean-up
+				os.remove(os.path.abspath(OUTR + '/a'+str(i+1)+'.tmp.fa')) #clean-up
 
 
 def run(parser,args):
