@@ -152,8 +152,8 @@ def parseBAM(BAM,BED,mingroupsize,treshold,REF):
 					quality=read.query_qualities
 					coord=np.asarray(subnone(read.get_reference_positions(full_length=True)))
 					si,ei=find_nearest(coord,query.start),find_nearest(coord,query.end)
-					subsequence=sequence[si:ei]
-					suberror=10**(-(np.mean(quality[si:ei]))/10) #extract error probability for the subsequence containing the repetition
+					subsequence=sequence[si-1:ei]
+					suberror=10**(-(np.mean(quality[si-1:ei]))/10) #extract error probability for the subsequence containing the repetition
 					sdict[identifier]=subsequence
 					qdict[identifier]=suberror
 
