@@ -140,6 +140,7 @@ def parseBAM(BAM,BED,mingroupsize,treshold,REF):
 		key=query.chrom+':'+str(query.start)+'-'+str(query.end)
 		sdict=dict()
 		qdict=dict()
+		counter=0
 
 		for read in bamfile.fetch(query.chrom,query.start,query.end):
 
@@ -147,6 +148,7 @@ def parseBAM(BAM,BED,mingroupsize,treshold,REF):
 
 				if read.reference_start <= query.start and read.reference_end >= query.end: #retain reads that span entire repetition
 
+					counter+=1
 					identifier=read.query_name
 					sequence=read.query_sequence #no need to reverse complement if read.is_reverse, as read.query_sequence always return the forward orientation
 					quality=read.query_qualities
@@ -158,6 +160,7 @@ def parseBAM(BAM,BED,mingroupsize,treshold,REF):
 					qdict[identifier]=suberror
 
 		decision=decisiontree(sdict,mingroupsize,treshold)
+		allerrors=[]
 
 		for i,groups in enumerate(decision):
 
@@ -169,10 +172,13 @@ def parseBAM(BAM,BED,mingroupsize,treshold,REF):
 				
 				for k in keys:
 
-					hierarchy[key][group][k][sdict[k]]=qdict[k]
+					hierarchy[key][group][k]=(sdict[k],qdict[k])
+					allerrors.append(qdict[k])
 
 		refsequence=fastafile[query.chrom][:len(fastafile[query.chrom])].seq[query.start-1:query.end]
-		hierarchy[key]['group0']['reference'][refsequence]=0.0
+		hierarchy[key]['reference']=refsequence
+		hierarchy[key]['coverage']=counter
+		hierarchy[key]['error']=np.mean(allerrors)
 
 	bamfile.close()
 

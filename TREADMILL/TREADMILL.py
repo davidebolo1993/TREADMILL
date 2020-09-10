@@ -74,6 +74,10 @@ def main():
 	required.add_argument('-i', '--input', help='input binary map from READER', metavar='BIN', required=True)
 	required.add_argument('-o', '--output', help='output directory', metavar='DIR', required=True)
 
+	additional = parser_trap.add_argument_group('Additional parameters')
+
+	additional.add_argument('--similarity', help='sequence similarity percentage (discriminate betwee reference and alternative alleles)', required=False, default=95.0, type=float, metavar='')
+
 	parser_trap.set_defaults(func=run_subtool)
 
 	#print help if no subcommand nor --help provided
