@@ -22,8 +22,7 @@ def GTLH(alleles,coverage,error,PHom,PHet):
 	Calculate log10-scaled GT likelihoods for consensus sequences. We do not have per-base quality of the consensus, thus we use the mean erro rate of each group to compute the error probability.
 	'''
 
-	listGT=[]
-
+	listGT=list()
 	dictGL=dict()
 
 	for combos in combinations_with_replacement(alleles.keys(),2):
@@ -42,7 +41,9 @@ def GTLH(alleles,coverage,error,PHom,PHet):
 
 	for i,key in enumerate(dictGL.keys()):
 
-		dictGL[key]=listGT[i]/sum(x for x in listGT)
+		dictGL[key]=np.log10(listGT[i]/sum(x for x in listGT))
+
+	return dictGL
 
 
 
@@ -120,6 +121,8 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold):
 
 		else: #if not, all alternative alleles
 
+			dictA['0'] = ('',0,0)
+
 			for i in range(len(sortlistA)):
 
 				dictA[str(i+1)] = sortlistA[i]
@@ -128,8 +131,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold):
 
 		PHom=1-(len(sortlistA)*dictR[keyR]['error'])
 		PHet=.5-dictR[keyR]['error']
-
-		GTLH(dictA,dictR[keyR]['coverage'],dictR[keyR]['error'],PHom,PHet)
+		GL=sorted(GTLH(dictA,dictR[keyR]['coverage'],dictR[keyR]['error'],PHom,PHet).items(),key=lambda x:x[1], reverse=True)
 
 
 
