@@ -252,7 +252,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 def run(parser,args):
 
 	'''
-	Execute the code and write variants to BCF
+	Execute the code and write variants to VCF.GZ
 	'''
 
 	BIN=os.path.abspath(args.input)
