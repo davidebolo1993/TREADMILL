@@ -74,9 +74,19 @@ def main():
 	required.add_argument('-i', '--input', help='input binary map from READER', metavar='BIN', required=True)
 	required.add_argument('-o', '--output', help='output directory', metavar='DIR', required=True)
 
+
+	algorithm = parser_trap.add_argument_group('Parameters of the repeat profiling algorithm')
+
+
+	algorithm.add_argument('-m', '--match', help='match reward for consensus computation [5]', metavar='', default=5, type=int)
+	algorithm.add_argument('-x', '--mismatch', help='mismatch penalty for consensus computation [-4]', metavar='', default=-4, type=int)
+	algorithm.add_argument('-o', '--gapopen', help='gap opening penalty for consensus computation [-8]', metavar='', default=-8, type=int)
+	algorithm.add_argument('-e', '--gapextend', help='gap extending penalty for consensus computation [-6]', metavar='', default=-6, type=int)
+	algorithm.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to READER)', nargs='+', action='append', required=True)
+	
 	additional = parser_trap.add_argument_group('Additional parameters')
 
-	additional.add_argument('--similarity', help='sequence similarity percentage (discriminate betwee reference and alternative alleles)', required=False, default=95.0, type=float, metavar='')
+	additional.add_argument('--similarity', help='sequence similarity percentage (discriminate between reference and alternative alleles)', required=False, default=95.0, type=float, metavar='')
 
 	parser_trap.set_defaults(func=run_subtool)
 
