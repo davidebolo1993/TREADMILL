@@ -52,6 +52,10 @@ def VCFH(ctgs):
 
 def VCFV(keyR,REF,ALT,MOTIF,RSIM,RN,RI,RALS,RALD,RALN,RALI,AL1N,AL1I,AL2N,AL2I,GT,GL,DP,AD):
 
+	'''
+	Write VCF variant
+	'''
+
 	variant=keyR.split(':')[0] + '\t' + keyR.split(':')[1].split('-')[0] + '\t' + '.\t' + REF + '\t' + ALT + '\t.\t.\tEND=' + keyR.split(':')[1].split('-')[1] + ';MOTIF=' + MOTIF +';RN='+ str(RN) + ';RI='+ RI + ';RALS=' + RALS + ';RALD='+ str(RALD) +  ';RALN=' + str(RALN) + ';RALI=' + RALI + ';ALTD='+ str(RSIM) + ';AL1N='+ str(AL1N) + ';AL1I='+ AL1I + ';AL2N='+ str(AL2N) + ';AL2I='+ AL2I + '\tGT:GL:DP:AD\t' + GT + ':' + GL + ':' + DP + ':' + AD + '\n'
 
 	return variant
