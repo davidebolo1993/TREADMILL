@@ -45,9 +45,38 @@ def VCFH(ctgs):
 	Write VCF header
 	'''
 
-	header='##fileformat=VCFv4.2\n##fileDate=' + ''.join(str(datetime.date.today()).split('-')) + '\n' + '##source=TREADMILL\n' + ''.join(x for x in ['##contig=<ID=' + x + '>\n'  for x in ctgs]) + '##INFO=<ID=END,Number=1,Type=Integer,Description="Repetition end">\n##INFO=<ID=MOTIF,Number=1,Type=String,Description="Repeat motif">\n##INFO=<ID=RN,Number=1,Type=Integer,Description="Number of repeats in the reference sequence">\n##INFO=<ID=RI,Number=1,Type=String,Description="Interruptions in the reference sequence">\n##INFO=<ID=RALS,Number=1,Type=String,Description="Reference allele sequence (if present)">\n##INFO=<ID=RALD,Number=1,Type=Float,Description="Sequence similarity (edit distance-based) between reference sequence and reference allele (if present)">\n##INFO=<ID=RALN,Number=1,Type=Integer,Description="Number of repeats in the reference allele (if present)">\n##INFO=<ID=RALI,Number=1,Type=String,Description="Interruptions in the reference allele (if present)">\n##INFO=<ID=ALTD,Number=1,Type=Float,Description="If a reference allele is not present, the highest similarity score (edit distance-based) between the alternative allele/s and the reference sequence">\n##INFO=<ID=AL1N,Number=1,Type=Integer,Description="Number of repeats in the 1st alternative allele (if present)">\n##INFO=<ID=AL1I,Number=1,Type=String,Description="Interruptions in the 1st alternative allele (if present)">\n##INFO=<ID=AL2N,Number=1,Type=Integer,Description="Number of repeats in the 2nd alternative allele (if present)">\n##INFO=<ID=AL2I,Number=1,Type=String,Description="Interruptions in the 2nd alternative allele (if present)">\n##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n##FORMAT=<ID=GL,Number=G,Type=Float,Description="Log10-scaled likelihoods for genotypes 0/0, 0/1, 1/1 or 0/0, 0/1, 1/1, 0/2, 1/2, 2/2>"\n##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">\n##FORMAT=<ID=AD,Number=G,Type=Integer,Description="Depth of alleles>"\n#CHROM' + '\t' + 'POS' '\t' + 'ID' + '\t' + 'REF' + '\t' + 'ALT' + '\t' + 'QUAL' + '\t' + 'FILTER' + '\t' + 'INFO' + '\t' + 'FORMAT' + '\t' + os.path.basename(BIN).split('.')[0].upper() +'\n'
+	#genmeral informations
 
-	return header
+	fileformat='##fileformat=VCFv4.2\n'
+	filedate='##fileDate=' + ''.join(str(datetime.date.today()).split('-')) + '\n'
+	source='##source=TREADMILL\n'
+	contigs=''.join(x for x in ['##contig=<ID=' + x + '>\n'  for x in ctgs])
+
+	#INFO field
+
+	end='##INFO=<ID=END,Number=1,Type=Integer,Description="Repetition end">\n'
+	motif='##INFO=<ID=MOTIF,Number=1,Type=String,Description="Repeat motif">\n'
+	refrep='##INFO=<ID=RN,Number=1,Type=Integer,Description="Number of repeats in the reference sequence">\n'
+	refint='##INFO=<ID=RI,Number=1,Type=String,Description="Interruptions in the reference sequence">\n'
+	allelerefseq='##INFO=<ID=RALS,Number=1,Type=String,Description="Reference allele sequence (if present)">\n'
+	alleledistance='##INFO=<ID=RALD,Number=1,Type=Float,Description="Sequence similarity (edit distance-based) between reference sequence and reference allele (if present)">\n'
+	allelerefnum='##INFO=<ID=RALN,Number=1,Type=Integer,Description="Number of repeats in the reference allele (if present)">\n'
+	allelerefint='##INFO=<ID=RALI,Number=1,Type=String,Description="Interruptions in the reference allele (if present)">\n'
+	altdist='##INFO=<ID=ALTD,Number=1,Type=Float,Description="If a reference allele is not present, the highest similarity score (edit distance-based) between the alternative allele/s and the reference sequence">\n'
+	allele1num='##INFO=<ID=AL1N,Number=1,Type=Integer,Description="Number of repeats in the 1st alternative allele (if present)">\n'
+	allele1int='##INFO=<ID=AL1I,Number=1,Type=String,Description="Interruptions in the 1st alternative allele (if present)">\n'
+	allele2num='##INFO=<ID=AL2N,Number=1,Type=Integer,Description="Number of repeats in the 2nd alternative allele (if present)">\n'
+	allele2int='##INFO=<ID=AL2I,Number=1,Type=String,Description="Interruptions in the 2nd alternative allele (if present)">\n'
+
+	#FORMAT field
+
+	gt='##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'
+	gl='##FORMAT=<ID=GL,Number=G,Type=Float,Description="Log10-scaled likelihoods for genotypes 0/0, 0/1, 1/1 or 0/0, 0/1, 1/1, 0/2, 1/2, 2/2>"\n'
+	dp='##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">\n'
+	ad='##FORMAT=<ID=AD,Number=G,Type=Integer,Description="Depth of alleles>"\n'
+	head='#CHROM' + '\t' + 'POS' '\t' + 'ID' + '\t' + 'REF' + '\t' + 'ALT' + '\t' + 'QUAL' + '\t' + 'FILTER' + '\t' + 'INFO' + '\t' + 'FORMAT' + '\t' + os.path.basename(BIN).split('.')[0].upper() + '\n'
+
+	return fileformat+filedate+source+contigs+end+motif+refrep+refint+allelerefseq+alleledistance+allelerefnum+allelerefint+altdist+allele1num+allele1int+allele2num+allele2int+gt+gl+dp+ad+head
 
 
 def VCFV(keyR,REF,ALT,MOTIF,RSIM,RN,RI,RALS,RALD,RALN,RALI,AL1N,AL1I,AL2N,AL2I,GT,GL,DP,AD):
