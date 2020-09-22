@@ -75,7 +75,7 @@ def main():
 	required.add_argument('-o', '--output', help='output directory', metavar='DIR', required=True)
 
 
-	algorithm = parser_trap.add_argument_group('Parameters of the repeat profiling algorithm')
+	algorithm = parser_trap.add_argument_group('Repeat profiling parameters')
 
 	algorithm.add_argument('-m', '--match', help='match reward for consensus computation [5]', metavar='', default=5, type=int)
 	algorithm.add_argument('-x', '--mismatch', help='mismatch penalty for consensus computation [-4]', metavar='', default=-4, type=int)
