@@ -12,3 +12,9 @@ then
     g++ consensus.cpp -std=c++11 -Iinclude/ -Lbuild/lib/ -lspoa -o consensus
     mv consensus ../../TREADMILL/TRAP/ && rm consensus.cpp
 fi
+
+#will be allowed in the end
+#fortran compilation (R-supervised)
+#cd ../../scripts
+#R CMD SHLIB JointSLMTruncI.f
+#cd ..
