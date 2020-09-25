@@ -51,7 +51,7 @@ def PyCoord(CIGOP,ref_pointer):
 
 
 	'''
-	Extract coords from cigar operations, in the style of pysam
+	Extract coords from cigar operations, in the style of pysam (i.e. read.get_reference_positions)
 	'''
 
 	s=ref_pointer
@@ -101,11 +101,11 @@ def Map(a_instance,map_dict,sequences):
 				w_en=hit.ctg_len-500 #rep end at reference length - 500 bp
 
 				clip = ['' if x == 0 else '{}S'.format(x) for x in (hit.q_st, len(seq) - hit.q_en)] #calculate soft clipped bases
-				cigstr = ''.join((clip[0], hit.cigar_str, clip[1])) #convert to cigarstring	
-				cig_split = [''.join(x) for _, x in groupby(cigstr, key=str.isdigit)]
-				cigop=[cig_split[n:n+2] for n in range(0,len(cig_split),2)]
-				cigop_conv=''.join([str(x[1])*int(x[0]) for x in cigop])
-				coord=np.asarray(subnone(PyCoord(cigop_conv,hit.r_st)))
+				cigstr = ''.join((clip[0], hit.cigar_str, clip[1])) #convert to cigarstring	with soft-clipped
+				cig_split = [''.join(x) for _, x in groupby(cigstr, key=str.isdigit)] #split by operation
+				cigop=[cig_split[n:n+2] for n in range(0,len(cig_split),2)] #group by operation
+				cigop_conv=''.join([str(x[1])*int(x[0]) for x in cigop]) #convert to string, one char for each operation
+				coord=np.asarray(subnone(PyCoord(cigop_conv,hit.r_st))) #convert to list of coords, in the style of pysam
 				si,ei=find_nearest(coord,w_st),find_nearest(coord,w_en)
 				subsequence=seq[si:ei]
 				suberror=10**(-(np.mean(qual[si:ei]))/10)
