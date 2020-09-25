@@ -200,8 +200,8 @@ def run(parser,args):
 
 	if not os.path.isfile(BAM+'.bai'):
 
-		print('[Error] Missing BAM file index')
-		sys.exit(1)
+		print('[Warning] Missing BAM file index. Indexing.')
+		pysam.index(BAM)
 
 	BED=os.path.abspath(args.bedfile)
 

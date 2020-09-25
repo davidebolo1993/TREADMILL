@@ -14,6 +14,7 @@ import pysam
 import pybedtools
 import numpy as np
 
+
 def tuptodict(cigartuples):
 
 	'''

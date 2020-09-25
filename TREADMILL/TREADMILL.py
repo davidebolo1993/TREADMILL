@@ -13,24 +13,6 @@ def main():
 
 	subparsers = parser.add_subparsers(title='modules', dest='command', metavar='BASIC,READER,TRAP')
 
-	## REEF ##
-
-	#parser_reef = subparsers.add_parser('REEF', help='ReferEncE modiFier. Add synthetic chromosomes harboring repeat expansions to a given reference (prior to alignment)')
-
-	#required = parser_reef.add_argument_group('Required I/O arguments')
-
-	#required.add_argument('-fa', '--fastafile', help='reference genome in FASTA format', metavar='FASTA', required=True)
-	#required.add_argument('-o', '--output', help='modified reference gnome in FASTA format', metavar='FASTA', required=True)
-	#required.add_argument('region', help='repeat coordinates in RNAME[:STARTPOS[-ENDPOS]] format (samtools standard)', metavar='REGION', nargs=1)
-
-	#additional = parser_reef.add_argument_group('Additional parameters')
-
-	#additional.add_argument('--repeat', help='repeated motif in region [CGG]', type=str, default="CGG", metavar='')
-	#additional.add_argument('--maxsize', help='maximum number of repeated motifs [500]', type=int, default=500, metavar='')
-	#additional.add_argument('--contig', help='number of chromosomes with synthetic expansions (progressively longer) to generate [10]', type=int, default=10, metavar='')
-
-	#parser_reef.set_defaults(func=run_subtool)
-
 	## BASIC ##
 
 	parser_basic = subparsers.add_parser('BASIC', help='BAm StatIstiCs. Calculate BAM statistics for on-target reads from a targeted nanopore experiment')
@@ -46,6 +28,27 @@ def main():
 	additional.add_argument('-z', '--gzipped', help='output gzipped JSON file', action='store_true')
 
 	parser_basic.set_defaults(func=run_subtool)
+
+	## REEF ##
+
+	#parser_reef = subparsers.add_parser('', help='')
+
+	#required = parser_reef.add_argument_group('Required I/O arguments')
+
+	#required.add_argument('-fa', '--fastafile', help='reference genome in FASTA format', metavar='FASTA', required=True)
+	#required.add_argument('-bam', '--bamfile', help='sorted BAM file from minimap2/NGMLR', metavar='BAM', required=True)
+	#required.add_argument('-o', '--output', help='output directory', metavar='DIR', required=True)
+	#required.add_argument('region', help='repeat coordinates in RNAME[:STARTPOS[-ENDPOS]] format (samtools standard)', metavar='REGION', nargs=1)
+
+	#additional = parser_reef.add_argument_group('Additional parameters')
+
+	#additional.add_argument('--motif', help='reference repeated motif in region [CGG]', type=str, default="CGG", metavar='')
+	#additional.add_argument('--maxsize', help='maximum number of repeated motifs [500]', type=int, default=500, metavar='')
+	#additional.add_argument('--similarity', help='sequence similarity percentage between generated (synthetic) reference sequences[85.0]', type=float, metavar='', default=85.0)
+	#additional.add_argument('--threads', help='number of threads to use for the re-alignment step [1]', type=int, metavar='', default=1)
+
+
+	#parser_reef.set_defaults(func=run_subtool)
 
 	## READER ##
 
