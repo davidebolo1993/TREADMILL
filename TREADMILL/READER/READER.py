@@ -41,7 +41,29 @@ def subnone(coordinates):
 	Substitute None (soft-clipped/inserted) coordinates with a negative value
 	'''
 
-	return [-999999 if v is None else v for v in coordinates]
+	return [-9999999 if v is None else v for v in coordinates]
+
+
+#def modc(coordinates):
+
+	'''
+	Modify coordinates from list
+	'''
+
+	#coordinates=[el+1 if el is not None else el for el in coordinates]
+	#start=next(ele for ele in coordinates if ele is not None)
+
+	#for ind, ele in enumerate(coordinates):
+		
+		#if ele is None:
+
+			#coordinates[ind] = start
+		
+		#else:
+
+			#start = ele
+
+	#return coordinates
 
 
 def find_nearest(array, value):
@@ -232,7 +254,7 @@ def run(parser,args):
 
 	hierarchy=parseBAM(BAM,BED,args.support,args.similarity,REF)
 
-	binout=open(args.output,'wb')
+	binout=open(BIN,'wb')
 	data=pickle.dumps(hierarchy,protocol=pickle.HIGHEST_PROTOCOL)
 	binout.write(data)
 	binout.close()

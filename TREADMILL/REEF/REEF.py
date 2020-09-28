@@ -5,16 +5,35 @@ import sys
 import re
 import multiprocessing
 import math
+import pickle
 from itertools import groupby
 
 #additional modules
 
 import pyfaidx
 import pysam
+import pybedtools
 import numpy as np
 import mappy as mp
 
 
+class AutoVivification(dict):
+
+	'''
+	Fast way to create nested dictionaries
+	'''
+
+	def __getitem__(self, item):
+		
+		try:
+			
+			return dict.__getitem__(self, item)
+		
+		except KeyError:
+			
+			value = self[item] = type(self)()
+			
+			return value
 
 
 def subnone(coordinates):
@@ -23,7 +42,7 @@ def subnone(coordinates):
 	Substitute None (soft-clipped/inserted) coordinates with a negative value
 	'''
 
-	return [-999999 if v is None else v for v in coordinates]
+	return [-9999999 if v is None else v for v in coordinates]
 
 
 def find_nearest(array, value):
@@ -35,16 +54,13 @@ def find_nearest(array, value):
 	return (np.abs(array - value)).argmin()
 
 
-
 def Chunks(l,n):
 
 	'''
-	Split list l in n sublists
+	Split list in sublists
 	'''
 
 	return [l[i:i+n] for i in range(0, len(l), n)]
-
-
 
 
 def PyCoord(CIGOP,ref_pointer):
@@ -55,7 +71,6 @@ def PyCoord(CIGOP,ref_pointer):
 	'''
 
 	s=ref_pointer
-
 	coords=[]
 
 	for op in list(CIGOP):
@@ -75,14 +90,11 @@ def PyCoord(CIGOP,ref_pointer):
 
 	return coords
 
-		
 
-
-
-def Map(a_instance,map_dict,sequences):
+def Map(a_instance,map_dict,sequences,flank):
 
 	'''
-	Map a list of sequences to a reference index
+	Map a list of reads to fake reference sequences
 	'''
 
 	for d in sequences:
@@ -97,8 +109,8 @@ def Map(a_instance,map_dict,sequences):
 
 			if hit.is_primary:
 
-				w_st=500 #rep start at 500 bp
-				w_en=hit.ctg_len-500 #rep end at reference length - 500 bp
+				w_st=flank #rep start at 500 bp
+				w_en=hit.ctg_len-flank #rep end at reference length - flank size
 
 				clip = ['' if x == 0 else '{}S'.format(x) for x in (hit.q_st, len(seq) - hit.q_en)] #calculate soft clipped bases
 				cigstr = ''.join((clip[0], hit.cigar_str, clip[1])) #convert to cigarstring	with soft-clipped
@@ -112,126 +124,163 @@ def Map(a_instance,map_dict,sequences):
 				l = map_dict[hit.ctg]
 				l.append((name,subsequence,suberror))
 				map_dict[hit.ctg]=l
-			
-				print(hit)
+				
+			#else:
 
-			else:
-
-				l = map_dict['notprimary']
-				l.append(name)
-				map_dict[hit.ctg]=l
+				#l = map_dict['notprimary']
+				#l.append(name)
+				#map_dict[hit.ctg]=l
 
 		except StopIteration: #unmapped sequence
 
-			l = map_dict['unmapped']
-			l.append(name)
-			map_dict[hit.ctg]=l
+			#l = map_dict['unmapped']
+			#l.append(name)
+			#map_dict[hit.ctg]=l
+			continue
 
 
-def ReMap(BAM,REF,REGION,OUT,repeat,maxsize,cores,similarity):
+def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,similarity):
 
 	'''
-
+	Create synthetic chromosomes harboring different set of repeat expansions and map original sequences to these chromosomes
 	'''
 
+	hierarchy=AutoVivification()
 	fastafile=pyfaidx.Fasta(REF)
 	bamfile=pysam.AlignmentFile(BAM, 'rb')
+	bedfile=pybedtools.BedTool(BED)
+	
+	try:
+		
+		bedsrtd=bedfile.sort()
 
-	CHROM,START,END=REGION.split(':')[0],int(REGION.split(':')[1].split('-')[0]),int(REGION.split(':')[1].split('-')[1])
+	except:
 
-	refseq=fastafile[CHROM][:len(fastafile[CHROM])].seq[START-1:END] #region containing the repetition strictly
-	leftflank=fastafile[CHROM][:len(fastafile[CHROM])].seq[START-501:END-1] #500 bps region flanking on the left side
-	rightflank=fastafile[CHROM][:len(fastafile[CHROM])].seq[START:END+500] #500 bps region flanking on the right side
-
-	r=re.compile(r'('  + repeat + r')\1+')
-	seen=set()
-
-	for match in r.finditer(refseq):
-
-		seen.add(match.group(0))
-
-	if len(seen) == 0:
-
-		print('[Error] Could not find repeat in reference')
+		print('[Error] Invalid BED file format')
 		sys.exit(1)
 
-	else:
+	if len(motifs) != len(bedsrtd):
 
-		min_=sum(el.count(repeat) for el in seen)
-		print('[Message] ' + str(min_) + ' ' + str(repeat) + ' in reference sequence')
+		print('[Error] The number of repeated motifs does not match the number of the regions in the BED file.')
+		sys.exit(1)	
 
-		seqdict=dict()
+	for i,query in enumerate(bedsrtd):
 
-		header='>treadmill_reef_' + REGION + '_' + repeat + '_' + str(min_)
-		sequence=leftflank+refseq+rightflank
-		seqdict[header]=sequence
-		reps=min_
+		CHROM,START,END,repeat=query.chrom, query.start,query.end,motifs[i]
+		REGION=CHROM + ':' + str(START) + '-' + str(END)
 
-		while maxsize - reps > min_:
+		print('[Message] Processing ' + REGION + ', with repeat ' + motifs[i])
 
-			seqtoadd=(len(sequence)/100)*(100-similarity)
-			reptoadd=round(seqtoadd/len(repeat))
-			reps+=reptoadd
-			header='>treadmill_reef_' + REGION + '_' + repeat + '_' + str(reps)
-			sequence=leftflank+refseq+(repeat*(reps-min_))+rightflank
+		refseq=fastafile[CHROM][:len(fastafile[CHROM])].seq[START-1:END] #region containing the repetition
+		leftflank=fastafile[CHROM][:len(fastafile[CHROM])].seq[START-(flank+1):END-1] #region flanking on the left side
+		rightflank=fastafile[CHROM][:len(fastafile[CHROM])].seq[START:END+flank] #region flanking on the right side
+
+		r=re.compile(r'('  + repeat + r')\1+')
+		seen=set()
+
+		for match in r.finditer(refseq):
+
+			seen.add(match.group(0))
+
+		if len(seen) == 0:
+
+			print('[Error] Could not find repeat in reference')
+			sys.exit(1)
+
+		else:
+
+			min_=sum(el.count(repeat) for el in seen)
+			print('[Message] ' + str(min_) + ' ' + str(repeat) + ' in reference sequence')
+
+			seqdict=dict()
+
+			header='>treadmill_reef_' + REGION + '_' + repeat + '_' + str(min_)
+			sequence=leftflank+refseq+rightflank
 			seqdict[header]=sequence
+			reps=min_
 
-		REFOUT=os.path.abspath(OUT + '/fake.fa')
+			while maxsize - reps > min_:
 
-		with open(REFOUT, 'w') as fout:
+				seqtoadd=(len(sequence)/100)*(100-similarity)
+				reptoadd=round(seqtoadd/len(repeat))
+				reps+=reptoadd
+				header='>treadmill_reef_' + REGION + '_' + repeat + '_' + str(reps)
+				sequence=leftflank+refseq+(repeat*(reps-min_))+rightflank
+				seqdict[header]=sequence
 
-			for key,value in seqdict.items():
+			REFOUT=os.path.abspath(os.path.dirname(BIN) + '/fake.tmp.fa')
 
-				fout.write(key+'\n'+value+'\n')
+			with open(REFOUT, 'w') as fout:
 
-		BAMseqs=list()
+				for key,value in seqdict.items():
 
-		for reads in bamfile.fetch(CHROM,START,END):
+					fout.write(key+'\n'+value+'\n')
 
-			if not reads.is_unmapped and not reads.is_supplementary and not reads.is_secondary: #just primary aligments
+			BAMseqs=list()
 
-				Rdict=dict()
+			for reads in bamfile.fetch(CHROM,START,END):
 
-				Rdict['name'] = reads.query_name
-				Rdict['seq'] = reads.query_sequence
-				Rdict['qual'] = reads.query_qualities
+				if not reads.is_unmapped and not reads.is_supplementary and not reads.is_secondary: #just primary aligments
 
-				BAMseqs.append(Rdict)
+					Rdict=dict()
 
-		chunk_size=len(BAMseqs)/cores
-		slices=Chunks(BAMseqs,math.ceil(chunk_size))
-		manager=multiprocessing.Manager()
-		Adict=manager.dict()
+					Rdict['name'] = reads.query_name
+					Rdict['seq'] = reads.query_sequence
+					Rdict['qual'] = reads.query_qualities
 
-		for key in seqdict.keys(): #intialize empty
+					BAMseqs.append(Rdict)
 
-			Adict[key[1:]] = []
+			chunk_size=len(BAMseqs)/cores
+			slices=Chunks(BAMseqs,math.ceil(chunk_size))
+			manager=multiprocessing.Manager()
+			Adict=manager.dict()
 
-		Adict['unmapped'] = []
-		Adict['notprimary'] = []
+			for key in seqdict.keys(): #intialize empty
 
-		processes=[]
-		a=mp.Aligner(REFOUT, preset='map-ont')
+				Adict[key[1:]] = []
 
-		for s in slices:
+			#Adict['unmapped'] = []
+			#Adict['notprimary'] = []
 
-			p=multiprocessing.Process(target=Map, args=(a,Adict,s))
-			p.start()
-			processes.append(p)
+			processes=[]
+			a=mp.Aligner(REFOUT, preset='map-ont')
 
-		for p in processes:
-			
-				p.join()
+			for s in slices:
+
+				p=multiprocessing.Process(target=Map, args=(a,Adict,s,flank))
+				p.start()
+				processes.append(p)
+
+			for p in processes:
+				
+					p.join()
+
+			os.remove(REFOUT)
+
+			allerrors=[]
+			coverage=0
+
+			for i,key in enumerate(Adict.keys()):
+
+				if not Adict[key] == []: #group not empty
+
+					for el in Adict[key]:
+
+						coverage+=1
+						hierarchy[REGION]['group' + str(i+1)][el[0]] = (el[1],el[2])
+						allerrors.append(el[2])
+
+			hierarchy[REGION]['reference'] = refseq
+			hierarchy[REGION]['coverage'] = coverage
+			hierarchy[REGION]['error'] = np.mean(allerrors)
+
+	return hierarchy
 
 		
-
-
-
-
 def run(parser,args):
 
 	'''
-	Execute the code and ....
+	Execute the code and and dump binary output to file
 	'''
 
 	BAM=os.path.abspath(args.bamfile)
@@ -246,6 +295,12 @@ def run(parser,args):
 		print('[Warning] Missing BAM file index. Indexing.')
 		pysam.index(BAM)
 
+	BED=os.path.abspath(args.bedfile)
+
+	if not os.path.isfile(BED):
+
+		print('[Error] Invalid BED file')
+		sys.exit(1)
 
 	REF=os.path.abspath(args.fastafile)
 
@@ -260,19 +315,24 @@ def run(parser,args):
 		print('[Error] Invalid reference FASTA file')
 		sys.exit(1)
 
-	r=re.compile('.*:.*-.*')
+	BIN=os.path.abspath(args.output)
 
-	if r.match(args.region[0]) is None:
+	if not os.access(os.path.dirname(BIN),os.W_OK):
 
-		print('[Error] Wrong region format')
+		print('[Error] Missing write permissions on the output folder')
 		sys.exit(1)
 
-	OUT=os.path.abspath(args.output)
+	hierarchy=ReMap(BAM,REF,BED,BIN,args.motif[0],args.flanking,args.maxsize,args.threads,args.similarity)
 
-	if not os.path.exists(OUT):
+	binout=open(BIN,'wb')
+	data=pickle.dumps(hierarchy,protocol=pickle.HIGHEST_PROTOCOL)
+	binout.write(data)
+	binout.close()
 
-		os.makedirs(OUT)
+	#reopening for checking routine
+	#binin=open(args.output,'rb')
+	#data = pickle.load(binin)
+	#binin.close()
 
-
-	ReMap(BAM,REF,args.region[0],OUT, args.repeat, args.maxsize,args.threads,args.similarity)
+	sys.exit(0)
 

@@ -305,3 +305,5 @@ def run(parser,args):
 		os.makedirs(OUT)
 
 	ParseGroups(BIN,OUT,args.match,args.mismatch,args.gapopen,args.gapextend,args.similarity,args.motif[0])
+
+	sys.exit(0)
