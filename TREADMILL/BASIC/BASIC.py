@@ -7,6 +7,7 @@ import os
 import json
 import gzip
 from collections import defaultdict
+from datetime import datetime
 
 #additional modules
 
@@ -62,6 +63,9 @@ def parse(BAM,BED):
 	S_dict['BAM_CDEL']=0 #bps
 	S_dict['BAM_CDIFF']=0 #bps
 
+
+	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
 	bamfile=pysam.AlignmentFile(BAM, 'rb')
 	bedfile=pybedtools.BedTool(BED)
 	
@@ -71,8 +75,10 @@ def parse(BAM,BED):
 
 	except:
 
-		print('[Error] Invalid BED file format')
+		print('[' + now + ']' + '[Error] Invalid BED file format')
 		sys.exit(1)
+
+	print('[' + now + ']' + '[Message] Parsing BAM file')
 
 	ivf=bedsrtd.as_intervalfile()
 
@@ -129,9 +135,12 @@ def parse(BAM,BED):
 
 	for query in bedsrtd:
 
+
+		key=query.chrom+":"+str(query.start)+"-"+str(query.end)
+		now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		print('[' + now + ']' + '[Message] Calculating coverage in region ' + key)
 		query_arr=bamfile.count_coverage(query.chrom,query.start,query.end,read_callback=check_read)
 		perbasecov=np.sum(query_arr,axis=0).tolist()
-		key=query.chrom+":"+str(query.start)+"-"+str(query.end)
 		S_dict[key]=perbasecov
 
 	bamfile.close()
@@ -145,46 +154,45 @@ def run(parser,args):
 	Execute the code and dump JSON to file
 	'''
 
+	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
 	BAM=os.path.abspath(args.bamfile)
 
 	if not os.path.isfile(BAM):
 
-		print('[Error] Invalid BAM file')
+		print('[' + now + ']' + '[Error] Invalid BAM file')
 		sys.exit(1)
 
 	if not os.path.isfile(BAM+'.bai'):
 
-		print('[Error] Missing BAM file index')
+		print('[' + now + ']' + '[Error] Missing BAM file index')
 		sys.exit(1)
 
 	BED=os.path.abspath(args.bedfile)
 
 	if not os.path.isfile(BED):
 
-		print('[Error] Invalid BED file')
+		print('[' + now + ']' + '[Error] Invalid BED file')
 		sys.exit(1)
 
 	JSON=os.path.abspath(args.output)
 
 	if not os.access(os.path.dirname(JSON),os.W_OK):
 
-		print('[Error] Missing write permissions on the output folder')
+		print('[' + now + ']' + '[Error] Missing write permissions on the output folder')
 		sys.exit(1)
 
 	S_dict=parse(BAM,BED)
 
-	if args.gzipped:
+	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	print('[' + now + ']' + '[Message] Writing output')
 
-		with gzip.open(JSON+'.gz', 'wt') as gzout:
+	with gzip.open(JSON+'.gz', 'wt') as gzout:
 
-			json.dump(S_dict, gzout, indent=4)
-			gzout.write('\n')
+		json.dump(S_dict, gzout, indent=4)
+		gzout.write('\n')
 
-	else:
-
-		with open(JSON, 'w') as plainout:
-
-			json.dump(S_dict, plainout, indent=4)
-			plainout.write('\n')
+	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	print('[' + now + ']' + '[Message] Done')
 
 	sys.exit(0)

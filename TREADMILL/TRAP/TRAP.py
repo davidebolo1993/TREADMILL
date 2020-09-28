@@ -6,7 +6,7 @@ import sys
 import os
 import re
 import pickle
-import datetime
+from datetime import datetime
 import subprocess
 import shutil
 from collections import OrderedDict,Counter
@@ -133,6 +133,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 	Generate POA-based consensus sequences for each input group and identify REF/ALT alleles
 	'''
 
+	now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 	binin=open(BIN,'rb')
 	dictR = pickle.load(binin)
 	binin.close()
@@ -140,7 +141,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 
 	if len(motifs) != len(dictR.keys()):
 
-		print('[Error] The number of repeated motifs does not match the number of the regions in the BIN file.')
+		print('[' + now + ']' + '[Error] The number of repeated motifs does not match the number of the regions in the BIN file.')
 		sys.exit(1)
 
 	#write header and append the other lines afterwards
@@ -150,6 +151,9 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 		vcfout.write(VCFH(ctgs))
 
 	for l,keyR in enumerate(dictR.keys()):
+
+		now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		print('[' + now + ']' + '[Message] Processing region ' + keyR)
 
 		sMotif=motifs[l]
 		OUTR=os.path.abspath(OUT + '/' + keyR)
@@ -274,14 +278,21 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 		WGL=','.join(str(GL[x]) for x in getCombos)
 		WAD=','.join([str(dictA[getKey.split('/')[0]][2]),str(dictA[getKey.split('/')[1]][2])]) 
 
+
+		now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		print('[' + now + ']' + '[Message] Writing VCF entry')
+
 		with open(os.path.abspath(OUT + '/TREADMILL.vcf'), 'a') as vcfout:
 
 			vcfout.write(VCFV(keyR,refsequence,altal,sMotif,RSIM,Rref,Iref,dictA['0'][0],dictA['0'][1],RALN,RALI,AL1N,AL1I,AL2N,AL2I,Wgenotype,WGL,str(dictR[keyR]['coverage']),WAD))
 
 		shutil.rmtree(OUTR)
 
-	#index and clean-up
+	#index
 
+	now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	print('[' + now + ']' + '[Message] Indexing')
+	
 	pysam.tabix_index(OUT + '/TREADMILL.vcf', preset='vcf', force=True)
 
 
@@ -291,19 +302,31 @@ def run(parser,args):
 	Execute the code and write variants to VCF.GZ
 	'''
 
+	now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
 	BIN=os.path.abspath(args.input)
 
 	if not os.path.isfile(BIN):
 
-		print('[Error] Invalid BIN file')
+		print('[' + now + ']' + '[Error] Invalid BIN file')
 		sys.exit(1)
 
 	OUT=os.path.abspath(args.output)
 
 	if not os.path.exists(OUT):
 
-		os.makedirs(OUT)
+		try:
+
+			os.makedirs(OUT)
+
+		except:
+
+			print('[' + now + ']' + '[Error] Cannot create the output folder')
+			sys.exit(1)
 
 	ParseGroups(BIN,OUT,args.match,args.mismatch,args.gapopen,args.gapextend,args.similarity,args.motif[0])
+
+	now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	print('[' + now + ']' + '[Message] Done')
 
 	sys.exit(0)

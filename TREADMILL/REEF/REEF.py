@@ -7,6 +7,7 @@ import multiprocessing
 import math
 import pickle
 from itertools import groupby
+from datetime import datetime
 
 #additional modules
 
@@ -139,11 +140,12 @@ def Map(a_instance,map_dict,sequences,flank):
 			continue
 
 
-def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,similarity):
+def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,similarity,support):
 
 	'''
 	Create synthetic chromosomes harboring different set of repeat expansions and map original sequences to these chromosomes
 	'''
+	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
 	hierarchy=AutoVivification()
 	fastafile=pyfaidx.Fasta(REF)
@@ -156,20 +158,20 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,similarity):
 
 	except:
 
-		print('[Error] Invalid BED file format')
+		print('[' + now + ']' + '[Error] Invalid BED file format')
 		sys.exit(1)
 
 	if len(motifs) != len(bedsrtd):
 
-		print('[Error] The number of repeated motifs does not match the number of the regions in the BED file.')
+		print('[' + now + ']' + '[Error] The number of repeated motifs does not match the number of regions in the BED file')
 		sys.exit(1)	
 
 	for i,query in enumerate(bedsrtd):
 
 		CHROM,START,END,repeat=query.chrom, query.start,query.end,motifs[i]
 		REGION=CHROM + ':' + str(START) + '-' + str(END)
-
-		print('[Message] Processing ' + REGION + ', with repeat ' + motifs[i])
+		now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		print('[' + now + ']' + '[Message] Processing region ' + REGION+ ', with repeat ' + motifs[i])
 
 		refseq=fastafile[CHROM][:len(fastafile[CHROM])].seq[START-1:END] #region containing the repetition
 		leftflank=fastafile[CHROM][:len(fastafile[CHROM])].seq[START-(flank+1):END-1] #region flanking on the left side
@@ -182,15 +184,17 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,similarity):
 
 			seen.add(match.group(0))
 
+		now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
 		if len(seen) == 0:
 
-			print('[Error] Could not find repeat in reference')
+			print('[' + now + ']' + '[Error] Could not find the specified repeat in reference')
 			sys.exit(1)
 
 		else:
 
 			min_=sum(el.count(repeat) for el in seen)
-			print('[Message] ' + str(min_) + ' ' + str(repeat) + ' in reference sequence')
+			print('[' + now + ']' + '[Message] ' + str(min_) + ' ' + str(repeat) + ' in reference sequence')
 
 			seqdict=dict()
 
@@ -217,6 +221,8 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,similarity):
 					fout.write(key+'\n'+value+'\n')
 
 			BAMseqs=list()
+			now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+			print('[' + now + ']' + '[Message] Parsing BAM file')
 
 			for reads in bamfile.fetch(CHROM,START,END):
 
@@ -245,6 +251,9 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,similarity):
 			processes=[]
 			a=mp.Aligner(REFOUT, preset='map-ont')
 
+			now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+			print('[' + now + ']' + '[Message] Re-mapping reads to the synthetic reference')
+
 			for s in slices:
 
 				p=multiprocessing.Process(target=Map, args=(a,Adict,s,flank))
@@ -262,7 +271,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,similarity):
 
 			for i,key in enumerate(Adict.keys()):
 
-				if not Adict[key] == []: #group not empty
+				if not Adict[key] == [] and len(Adict[key]) >= support: #skip empty groups and groups without enough reads
 
 					for el in Adict[key]:
 
@@ -283,23 +292,25 @@ def run(parser,args):
 	Execute the code and and dump binary output to file
 	'''
 
+	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
 	BAM=os.path.abspath(args.bamfile)
 
 	if not os.path.isfile(BAM):
 
-		print('[Error] Invalid BAM file')
+		print('[' + now + ']' + '[Error] Invalid BAM file')
 		sys.exit(1)
 
 	if not os.path.isfile(BAM+'.bai'):
 
-		print('[Warning] Missing BAM file index. Indexing.')
+		print('[' + now + ']' + '[Warning] Missing BAM file index. Indexing')
 		pysam.index(BAM)
 
 	BED=os.path.abspath(args.bedfile)
 
 	if not os.path.isfile(BED):
 
-		print('[Error] Invalid BED file')
+		print('[' + now + ']' + '[Error] Invalid BED file')
 		sys.exit(1)
 
 	REF=os.path.abspath(args.fastafile)
@@ -312,17 +323,20 @@ def run(parser,args):
 
 	except:
 
-		print('[Error] Invalid reference FASTA file')
+		print('[' + now + ']' + '[Error] Invalid reference FASTA file')
 		sys.exit(1)
 
 	BIN=os.path.abspath(args.output)
 
 	if not os.access(os.path.dirname(BIN),os.W_OK):
 
-		print('[Error] Missing write permissions on the output folder')
+		print('[' + now + ']' + '[Error] Missing write permissions on the output folder')
 		sys.exit(1)
 
-	hierarchy=ReMap(BAM,REF,BED,BIN,args.motif[0],args.flanking,args.maxsize,args.threads,args.similarity)
+	hierarchy=ReMap(BAM,REF,BED,BIN,args.motif[0],args.flanking,args.maxsize,args.threads,args.similarity,args.support)
+
+	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	print('[' + now + ']' + '[Message] Writing output')
 
 	binout=open(BIN,'wb')
 	data=pickle.dumps(hierarchy,protocol=pickle.HIGHEST_PROTOCOL)
@@ -334,5 +348,7 @@ def run(parser,args):
 	#data = pickle.load(binin)
 	#binin.close()
 
-	sys.exit(0)
+	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	print('[' + now + ']' + '[Message] Done')
 
+	sys.exit(0)

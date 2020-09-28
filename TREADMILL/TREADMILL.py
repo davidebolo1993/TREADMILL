@@ -19,23 +19,19 @@ def main():
 
 	required = parser_basic.add_argument_group('Required I/O arguments')
 
-	required.add_argument('-bam', '--bamfile', help='sorted and MD-tagged BAM file from minimap2/NGMLR', metavar='BAM', required=True)
+	required.add_argument('-bam', '--bamfile', help='sorted and MD-tagged BAM file', metavar='BAM', required=True)
 	required.add_argument('-bed', '--bedfile', help='on-target regions in BED format', metavar='BED', required=True)
-	required.add_argument('-o', '--output', help='output JSON file', metavar='JSON', required=True)
-
-	additional = parser_basic.add_argument_group('Additional parameters')
-
-	additional.add_argument('-z', '--gzipped', help='output gzipped JSON file', action='store_true')
+	required.add_argument('-o', '--output', help='output gzipped JSON file', metavar='JSON.GZ', required=True)
 
 	parser_basic.set_defaults(func=run_subtool)
 
 	## READER ##
 
-	parser_reader = subparsers.add_parser('READER', help='READ ExtRactor. Extract on-target reads from a targeted nanopore experiment and group them by similarity using a decision tree')
+	parser_reader = subparsers.add_parser('READER', help='READ ExtRactor. Extract on-target reads from a targeted nanopore experiment and group them by similarity using a decision tree (avoid the re-mapping step)')
 
 	required = parser_reader.add_argument_group('Required I/O arguments')
 
-	required.add_argument('-bam', '--bamfile', help='sorted BAM file from minimap2/NGMLR', metavar='BAM', required=True)
+	required.add_argument('-bam', '--bamfile', help='sorted BAM file', metavar='BAM', required=True)
 	required.add_argument('-bed', '--bedfile', help='repeated regions in BED format', metavar='BED', required=True)
 	required.add_argument('-fa', '--fastafile', help='reference genome in FASTA format', metavar='FASTA', required=True)
 	required.add_argument('-o', '--output', help='output binary map', metavar='BIN', required=True)
@@ -49,12 +45,12 @@ def main():
 
 	## REEF ##
 
-	parser_reef = subparsers.add_parser('REEF', help='REfErence modiFier. Extract on-target reads from a targeted nanopore experiment and group them by similarity by re-mapping the original reads to synthetic chromosomes harboring repeats expansions')
+	parser_reef = subparsers.add_parser('REEF', help='ReferEncE modiFier. Extract on-target reads from a targeted nanopore experiment and group them by similarity by re-mapping the original reads to synthetic chromosomes harboring repeat expansions')
 
 	required = parser_reef.add_argument_group('Required I/O arguments')
 
 	required.add_argument('-fa', '--fastafile', help='reference genome in FASTA format', metavar='FASTA', required=True)
-	required.add_argument('-bam', '--bamfile', help='sorted BAM file from minimap2/NGMLR', metavar='BAM', required=True)
+	required.add_argument('-bam', '--bamfile', help='sorted BAM file', metavar='BAM', required=True)
 	required.add_argument('-bed', '--bedfile', help='on-target regions in BED format', metavar='BED', required=True)
 	required.add_argument('-o', '--output', help='output binary map', metavar='BIN', required=True)
 
@@ -65,9 +61,9 @@ def main():
 	additional.add_argument('--similarity', help='sequence similarity percentage between generated (synthetic) reference sequences [85.0]', type=float, metavar='', default=85.0)
 	additional.add_argument('--flanking', help='number of bases flanking repeats in the (synthetic) reference sequences [1000]', type=int, metavar='', default=1000)
 	additional.add_argument('--threads', help='number of threads to use for the re-alignment step [1]', type=int, metavar='', default=1)
-
+	additional.add_argument('--support', help='minimum group support (retain only groups with enough reads)[5]', required=False, default=5, type=int, metavar='')
+	
 	parser_reef.set_defaults(func=run_subtool)
-
 
 	## TRAP ##
 
@@ -77,7 +73,6 @@ def main():
 
 	required.add_argument('-i', '--input', help='input binary map from READER', metavar='BIN', required=True)
 	required.add_argument('-o', '--output', help='output directory', metavar='DIR', required=True)
-
 
 	algorithm = parser_trap.add_argument_group('Repeat profiling parameters')
 
@@ -110,13 +105,13 @@ def main():
 
 		sys.argv[1] = 'READER'
 
+	elif sys.argv[1].lower() == 'reef':
+
+		sys.argv[1] = 'REEF'
+
 	elif sys.argv[1].lower() == 'trap':
 
 		sys.argv[1] = 'TRAP'
-
-	#elif sys.argv[1].lower() == 'reef':
-
-		#sys.argv[1] = 'REEF'
 
 	args = parser.parse_args()
 	args.func(parser, args)
@@ -172,11 +167,11 @@ def run_subtool(parser, args):
 
 		from .READER import READER as submodule
 
-	#elif args.command == 'REEF': #ReferEncE modiFier
+	elif args.command == 'REEF': #ReferEncE modiFier
 
-		#from .REEF import REEF as submodule
+		from .REEF import REEF as submodule
 
-	elif args.command == 'TRAP':
+	elif args.command == 'TRAP': #Tandem RepeAts Profiler 
 
 		from .TRAP import TRAP as submodule
 

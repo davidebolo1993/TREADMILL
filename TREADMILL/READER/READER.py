@@ -6,6 +6,7 @@ import sys
 import os
 import pickle
 from itertools import combinations
+from datetime import datetime
 
 #additional modules
 
@@ -145,6 +146,7 @@ def parseBAM(BAM,BED,mingroupsize,treshold,REF):
 	hierarchy=AutoVivification()
 	bedfile=pybedtools.BedTool(BED)
 	fastafile=pyfaidx.Fasta(REF)
+	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 	
 	try:
 
@@ -152,7 +154,7 @@ def parseBAM(BAM,BED,mingroupsize,treshold,REF):
 
 	except:
 
-		print('[Error] Invalid BED file format')
+		print('[' + now + ']' + '[Error] Invalid BED file format')
 		sys.exit(1)
 
 	bamfile=pysam.AlignmentFile(BAM, 'rb')
@@ -160,6 +162,9 @@ def parseBAM(BAM,BED,mingroupsize,treshold,REF):
 	for query in bedsrtd:
 
 		key=query.chrom+':'+str(query.start)+'-'+str(query.end)
+		now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		print('[' + now + ']' + '[Message] Processing region ' + key)
+
 		sdict=dict()
 		qdict=dict()
 		counter=0
@@ -213,23 +218,25 @@ def run(parser,args):
 	Execute the code and dump binary output to file
 	'''
 
+	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
 	BAM=os.path.abspath(args.bamfile)
 
 	if not os.path.isfile(BAM):
 
-		print('[Error] Invalid BAM file')
+		print('[' + now + ']' + '[Error] Invalid BAM file')
 		sys.exit(1)
 
 	if not os.path.isfile(BAM+'.bai'):
 
-		print('[Warning] Missing BAM file index. Indexing.')
+		print('[' + now + ']' + '[Warning] Missing BAM file index. Indexing.')
 		pysam.index(BAM)
 
 	BED=os.path.abspath(args.bedfile)
 
 	if not os.path.isfile(BED):
 
-		print('[Error] Invalid BED file')
+		print('[' + now + ']' + '[Error] Invalid BED file')
 		sys.exit(1)
 
 	REF=os.path.abspath(args.fastafile)
@@ -242,17 +249,20 @@ def run(parser,args):
 
 	except:
 
-		print('[Error] Invalid reference FASTA file')
+		print('[' + now + ']' + '[Error] Invalid reference FASTA file')
 		sys.exit(1)
 
 	BIN=os.path.abspath(args.output)
 
 	if not os.access(os.path.dirname(BIN),os.W_OK):
 
-		print('[Error] Missing write permissions on the output folder')
+		print('[' + now + ']' + '[Error] Missing write permissions on the output folder')
 		sys.exit(1)
 
 	hierarchy=parseBAM(BAM,BED,args.support,args.similarity,REF)
+
+	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	print('[' + now + ']' + '[Message] Writing output')
 
 	binout=open(BIN,'wb')
 	data=pickle.dumps(hierarchy,protocol=pickle.HIGHEST_PROTOCOL)
@@ -263,5 +273,8 @@ def run(parser,args):
 	#binin=open(args.output,'rb')
 	#data = pickle.load(binin)
 	#binin.close()
+
+	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	print('[' + now + ']' + '[Message] Done')
 
 	sys.exit(0)
