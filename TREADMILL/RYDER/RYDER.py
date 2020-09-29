@@ -333,6 +333,9 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support):
 
 			#fine tuning: re-group by similarity of sequences
 
+			now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+			print('[' + now + ']' + '[Message] Grouping reads by similarity')
+
 			decision=decisiontree(sdict,support,sim)
 			allerrors=[]
 
