@@ -9,6 +9,7 @@ import pickle
 import datetime
 import subprocess
 import shutil
+import gzip
 from collections import OrderedDict,Counter
 from itertools import combinations_with_replacement
 
@@ -16,6 +17,7 @@ from itertools import combinations_with_replacement
 
 import editdistance
 import numpy as np
+import pandas as pd
 import pysam
 
 CS_CPP=os.path.abspath(os.path.dirname(__file__) + '/consensus')
@@ -171,6 +173,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 
 			fr.write('>reference\n' + refsequence + '\n')
 
+
 		for i,keyG in enumerate(dictR[keyR].keys()):
 
 			if keyG != 'reference' and keyG != 'error' and keyG != 'coverage':
@@ -209,6 +212,13 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 				os.remove(os.path.abspath(OUTR + '/a'+str(i+1)+'.cs.fa')) #clean-up
 
 		sortlistA=sorted(listA, key=lambda x:x[1], reverse=True) #first is the most similar to the reference
+
+		corrdict=dict()
+
+		for i,el in enumerate(sortlistA):
+
+			corrdict['group'+str(listA.index(el)+1)] = 'group'+str(i+1)
+
 
 		if sortlistA[0][1] >= treshold:
 
@@ -273,9 +283,20 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 				AL1N,AL1I='.','.'
 				AL2N,AL2I='.','.'
 
+		#store read names in .tsv.gz
+
 		WGL=','.join(str(GL[x]) for x in getCombos)
 		WAD=','.join([str(dictA[getKey.split('/')[0]][2]),str(dictA[getKey.split('/')[1]][2])]) 
 
+		originalall1='group' + str(listA.index(dictA[getKey.split('/')[0]])+1) 
+		originalall2='group' + str(listA.index(dictA[getKey.split('/')[1]])+1)
+
+		names1=list(dictR[keyR][originalall1].keys())
+		names2=list(dictR[keyR][originalall2].keys())
+
+		allnames=names1+names2
+		allpos=['1']*len(names1) + ['2']*len(names2)
+		allreg=[str(keyR)]*len(allpos)
 
 		now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 		print('[' + now + ']' + '[Message] Writing VCF entry')
@@ -284,12 +305,18 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 
 			vcfout.write(VCFV(keyR,refsequence,altal,sMotif,RSIM,Rref,Iref,dictA['0'][0],dictA['0'][1],RALN,RALI,AL1N,AL1I,AL2N,AL2I,Wgenotype,WGL,str(dictR[keyR]['coverage']),WAD))
 
+		now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		print('[' + now + ']' + '[Message] Writing names to TSV')
+
+		tsv=pd.DataFrame({'Region':allreg, 'Name':allnames,'Allele':allpos})
+		tsv.to_csv(os.path.abspath(OUT + '/TREADMILL.tsv.gz') ,sep='\t',index=False, header=False, compression='gzip', mode='a')
+
 		shutil.rmtree(OUTR)
 
 	#index
 
 	now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-	print('[' + now + ']' + '[Message] Indexing')
+	print('[' + now + ']' + '[Message] Indexing VCF')
 	
 	pysam.tabix_index(OUT + '/TREADMILL.vcf', preset='vcf', force=True)
 

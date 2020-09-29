@@ -64,7 +64,6 @@ def main():
 	algorithm.add_argument('-go', '--gapopen', help='gap opening penalty for consensus computation [-8]', metavar='', default=-8, type=int)
 	algorithm.add_argument('-ge', '--gapextend', help='gap extending penalty for consensus computation [-6]', metavar='', default=-6, type=int)
 	
-	
 	additional = parser_trap.add_argument_group('Additional parameters')
 
 	additional.add_argument('--similarity', help='sequence similarity percentage (discriminate between reference and alternative alleles)[80.0]', required=False, default=80.0, type=float, metavar='')
