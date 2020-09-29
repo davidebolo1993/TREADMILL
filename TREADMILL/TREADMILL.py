@@ -35,7 +35,7 @@ def main():
 	required.add_argument('-bam', '--bamfile', help='sorted BAM file', metavar='BAM', required=True)
 	required.add_argument('-bed', '--bedfile', help='on-target regions in BED format', metavar='BED', required=True)
 	required.add_argument('-o', '--output', help='output binary map', metavar='BIN', required=True)
-	required.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to REEF)', nargs='+', action='append', required=True)
+	required.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to RYDER)', nargs='+', action='append', required=True)
 	
 	additional = parser_reef.add_argument_group('Additional parameters')
 
@@ -55,6 +55,7 @@ def main():
 
 	required.add_argument('-i', '--input', help='input binary map from READER', metavar='BIN', required=True)
 	required.add_argument('-o', '--output', help='output directory', metavar='DIR', required=True)
+	required.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to RYDER)', nargs='+', action='append', required=True)
 
 	algorithm = parser_trap.add_argument_group('Repeat profiling parameters')
 
@@ -62,7 +63,7 @@ def main():
 	algorithm.add_argument('-x', '--mismatch', help='mismatch penalty for consensus computation [-4]', metavar='', default=-4, type=int)
 	algorithm.add_argument('-go', '--gapopen', help='gap opening penalty for consensus computation [-8]', metavar='', default=-8, type=int)
 	algorithm.add_argument('-ge', '--gapextend', help='gap extending penalty for consensus computation [-6]', metavar='', default=-6, type=int)
-	algorithm.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to READER/REEF)', nargs='+', action='append', required=True)
+	
 	
 	additional = parser_trap.add_argument_group('Additional parameters')
 
