@@ -39,7 +39,7 @@ def RegExF(sequence,motif):
 	return len(occurences), ','.join(dictI.keys())+':'+','.join(str(x) for x in dictI.values())
 
 
-def VCFH(ctgs):
+def VCFH(ctgs,BIN):
 
 	'''
 	Write VCF header
@@ -148,7 +148,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 
 	with open(os.path.abspath(OUT + '/TREADMILL.vcf'), 'w') as vcfout:
 
-		vcfout.write(VCFH(ctgs))
+		vcfout.write(VCFH(ctgs,BIN))
 
 	for l,keyR in enumerate(dictR.keys()):
 
