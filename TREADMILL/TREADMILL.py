@@ -67,7 +67,7 @@ def main():
 	
 	additional = parser_trap.add_argument_group('Additional parameters')
 
-	additional.add_argument('--similarity', help='sequence similarity percentage (discriminate between reference and alternative alleles)', required=False, default=95.0, type=float, metavar='')
+	additional.add_argument('--similarity', help='sequence similarity percentage (discriminate between reference and alternative alleles)[80.0]', required=False, default=80.0, type=float, metavar='')
 
 	parser_trap.set_defaults(func=run_subtool)
 
