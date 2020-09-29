@@ -141,7 +141,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 
 	if len(motifs) != len(dictR.keys()):
 
-		print('[' + now + ']' + '[Error] The number of repeated motifs does not match the number of the regions in the BIN file.')
+		print('[' + now + ']' + '[Error] The number of repeated motifs does not match the number of regions in the BIN file.')
 		sys.exit(1)
 
 	#write header and append the other lines afterwards
