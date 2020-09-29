@@ -25,27 +25,9 @@ def main():
 
 	parser_basic.set_defaults(func=run_subtool)
 
-	## READER ##
+	## RYDER ##
 
-	parser_reader = subparsers.add_parser('READER', help='READ ExtRactor. Extract on-target reads from a targeted nanopore experiment and group them by similarity using a decision tree (avoid the re-mapping step)')
-
-	required = parser_reader.add_argument_group('Required I/O arguments')
-
-	required.add_argument('-bam', '--bamfile', help='sorted BAM file', metavar='BAM', required=True)
-	required.add_argument('-bed', '--bedfile', help='repeated regions in BED format', metavar='BED', required=True)
-	required.add_argument('-fa', '--fastafile', help='reference genome in FASTA format', metavar='FASTA', required=True)
-	required.add_argument('-o', '--output', help='output binary map', metavar='BIN', required=True)
-
-	additional = parser_reader.add_argument_group('Additional parameters')
-
-	additional.add_argument('--similarity', help='sequence similarity percentage (discriminate group of reads with different repeat content) [85.0]', required=False, default=85.0, type=float, metavar='')
-	additional.add_argument('--support', help='minimum group support (retain only groups with enough reads)[5]', required=False, default=5, type=int, metavar='')
-
-	parser_reader.set_defaults(func=run_subtool)
-
-	## REEF ##
-
-	parser_reef = subparsers.add_parser('REEF', help='ReferEncE modiFier. Extract on-target reads from a targeted nanopore experiment and group them by similarity by re-mapping the original reads to synthetic chromosomes harboring repeat expansions')
+	parser_reef = subparsers.add_parser('RYDER', help='gRoup bY DEcision tRee. Extract on-target reads from a targeted nanopore experiment and group them by similarity. This module (1) a re-maps the original reads to synthetic chromosomes harboring repeat expansions and (2) group reads by similarity using an edit distance-based decision tree')
 
 	required = parser_reef.add_argument_group('Required I/O arguments')
 
@@ -53,15 +35,15 @@ def main():
 	required.add_argument('-bam', '--bamfile', help='sorted BAM file', metavar='BAM', required=True)
 	required.add_argument('-bed', '--bedfile', help='on-target regions in BED format', metavar='BED', required=True)
 	required.add_argument('-o', '--output', help='output binary map', metavar='BIN', required=True)
-
+	required.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to REEF)', nargs='+', action='append', required=True)
+	
 	additional = parser_reef.add_argument_group('Additional parameters')
 
-	additional.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to REEF)', nargs='+', action='append', required=True)
 	additional.add_argument('--maxsize', help='approximate maximum number of repeated motifs in the (synthetic) reference sequences [500]', type=int, default=500, metavar='')
-	additional.add_argument('--similarity', help='sequence similarity percentage between generated (synthetic) reference sequences [85.0]', type=float, metavar='', default=85.0)
 	additional.add_argument('--flanking', help='number of bases flanking repeats in the (synthetic) reference sequences [1000]', type=int, metavar='', default=1000)
-	additional.add_argument('--threads', help='number of threads to use for the re-alignment step [1]', type=int, metavar='', default=1)
+	additional.add_argument('--similarity', help='sequence similarity percentage between generated (synthetic) reference sequences and between grouped reads [85.0]', type=float, metavar='', default=85.0)
 	additional.add_argument('--support', help='minimum group support (retain only groups with enough reads)[5]', required=False, default=5, type=int, metavar='')
+	additional.add_argument('--threads', help='number of threads to use for the re-alignment step [1]', type=int, metavar='', default=1)
 	
 	parser_reef.set_defaults(func=run_subtool)
 
@@ -101,13 +83,9 @@ def main():
 
 		sys.argv[1] = 'BASIC'
 
-	elif sys.argv[1].lower() == 'reader':
+	elif sys.argv[1].lower() == 'ryder':
 
-		sys.argv[1] = 'READER'
-
-	elif sys.argv[1].lower() == 'reef':
-
-		sys.argv[1] = 'REEF'
+		sys.argv[1] = 'RYDER'
 
 	elif sys.argv[1].lower() == 'trap':
 
@@ -163,13 +141,9 @@ def run_subtool(parser, args):
 
 		from .BASIC import BASIC as submodule
 
-	elif args.command == 'READER': #READ ExtRactor 
+	elif args.command == 'RYDER': #gRoup bY DEcision tRee
 
-		from .READER import READER as submodule
-
-	elif args.command == 'REEF': #ReferEncE modiFier
-
-		from .REEF import REEF as submodule
+		from .RYDER import RYDER as submodule
 
 	elif args.command == 'TRAP': #Tandem RepeAts Profiler 
 

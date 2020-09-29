@@ -6,7 +6,7 @@ import re
 import multiprocessing
 import math
 import pickle
-from itertools import groupby
+from itertools import groupby,combinations
 from datetime import datetime
 
 #additional modules
@@ -16,7 +16,7 @@ import pysam
 import pybedtools
 import numpy as np
 import mappy as mp
-
+import editdistance
 
 class AutoVivification(dict):
 
@@ -53,6 +53,65 @@ def find_nearest(array, value):
 	'''
 
 	return (np.abs(array - value)).argmin()
+
+
+def similarity(worda,wordb):
+
+	'''
+	Return the edit distance-based similarity score between 2 sequences
+	'''
+
+	return 100-100*editdistance.eval(worda,wordb)/(len(worda)+len(wordb))
+
+
+def decisiontree(readsdict,mingroupsize,treshold):
+
+	'''
+	Group strings in list by similarity (edit distance score)
+	'''
+
+	paired ={c:{c} for c in readsdict.values()}
+
+	for worda,wordb in combinations(readsdict.values(),2):
+
+		if similarity(worda,wordb) < treshold: 
+
+				continue
+
+		else:
+
+			paired[worda].add(wordb)
+			paired[wordb].add(worda)
+
+
+	decision = list()
+	ungrouped = set(readsdict.values())
+	
+	while ungrouped:
+
+		best = {}
+
+		for word in ungrouped:
+
+			g = paired[word] & ungrouped
+
+			for c in g.copy():
+			
+				g &= paired[c]
+
+			if len(g) > len(best):
+
+				best=g
+
+		if len(best) < mingroupsize:
+
+			break
+
+		ungrouped -= best
+
+		decision.append(best)
+
+	return decision
 
 
 def Chunks(l,n):
@@ -92,7 +151,7 @@ def PyCoord(CIGOP,ref_pointer):
 	return coords
 
 
-def Map(a_instance,map_dict,sequences,flank):
+def Map(a_instance,Slist,Qlist,sequences,flank):
 
 	'''
 	Map a list of reads to fake reference sequences
@@ -110,7 +169,7 @@ def Map(a_instance,map_dict,sequences,flank):
 
 			if hit.is_primary:
 
-				w_st=flank #rep start at 500 bp
+				w_st=flank #rep start at flank
 				w_en=hit.ctg_len-flank #rep end at reference length - flank size
 
 				clip = ['' if x == 0 else '{}S'.format(x) for x in (hit.q_st, len(seq) - hit.q_en)] #calculate soft clipped bases
@@ -120,27 +179,30 @@ def Map(a_instance,map_dict,sequences,flank):
 				cigop_conv=''.join([str(x[1])*int(x[0]) for x in cigop]) #convert to string, one char for each operation
 				coord=np.asarray(subnone(PyCoord(cigop_conv,hit.r_st))) #convert to list of coords, in the style of pysam
 				si,ei=find_nearest(coord,w_st),find_nearest(coord,w_en)
-				subsequence=seq[si:ei]
-				suberror=10**(-(np.mean(qual[si:ei]))/10)
-				l = map_dict[hit.ctg]
-				l.append((name,subsequence,suberror))
-				map_dict[hit.ctg]=l
+
+				if hit.r_st <= w_st and hit.r_en >= w_en:#the entire rep is spanned, keep the read
+
+					subsequence=seq[si:ei]
+					suberror=10**(-(np.mean(qual[si:ei]))/10)
+					
+					Slist.append((name,subsequence))
+					Qlist.append((name, suberror))
+
+				else: #not spanning entire rep, skipping
+
+					continue
 				
 			#else:
 
-				#l = map_dict['notprimary']
-				#l.append(name)
-				#map_dict[hit.ctg]=l
-
+				#do nothing
+				
+				
 		except StopIteration: #unmapped sequence
-
-			#l = map_dict['unmapped']
-			#l.append(name)
-			#map_dict[hit.ctg]=l
+			
 			continue
 
 
-def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,similarity,support):
+def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support):
 
 	'''
 	Create synthetic chromosomes harboring different set of repeat expansions and map original sequences to these chromosomes
@@ -205,7 +267,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,similarity,support):
 
 			while maxsize - reps > min_:
 
-				seqtoadd=(len(sequence)/100)*(100-similarity)
+				seqtoadd=(len(sequence)/100)*(100-sim)
 				reptoadd=round(seqtoadd/len(repeat))
 				reps+=reptoadd
 				header='>treadmill_reef_' + REGION + '_' + repeat + '_' + str(reps)
@@ -236,17 +298,15 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,similarity,support):
 
 					BAMseqs.append(Rdict)
 
+
+			#parallelize alignment
+
 			chunk_size=len(BAMseqs)/cores
 			slices=Chunks(BAMseqs,math.ceil(chunk_size))
 			manager=multiprocessing.Manager()
-			Adict=manager.dict()
+			Slist=manager.list()
+			Qlist=manager.list()
 
-			for key in seqdict.keys(): #intialize empty
-
-				Adict[key[1:]] = []
-
-			#Adict['unmapped'] = []
-			#Adict['notprimary'] = []
 
 			processes=[]
 			a=mp.Aligner(REFOUT, preset='map-ont')
@@ -256,7 +316,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,similarity,support):
 
 			for s in slices:
 
-				p=multiprocessing.Process(target=Map, args=(a,Adict,s,flank))
+				p=multiprocessing.Process(target=Map, args=(a,Slist,Qlist,s,flank))
 				p.start()
 				processes.append(p)
 
@@ -266,21 +326,31 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,similarity,support):
 
 			os.remove(REFOUT)
 
+			#convert list of tuples to dict for better usability
+
+			sdict=dict((x, y) for x, y in Slist)
+			qdict=dict((x, y) for x, y in Qlist)
+
+			#fine tuning: re-group by similarity of sequences
+
+			decision=decisiontree(sdict,support,sim)
 			allerrors=[]
-			coverage=0
 
-			for i,key in enumerate(Adict.keys()):
+			for i,groups in enumerate(decision):
 
-				if not Adict[key] == [] and len(Adict[key]) >= support: #skip empty groups and groups without enough reads
+				group='group'+str(i+1)
 
-					for el in Adict[key]:
+				for elements in groups:
 
-						coverage+=1
-						hierarchy[REGION]['group' + str(i+1)][el[0]] = (el[1],el[2])
-						allerrors.append(el[2])
+					keys=[k for k,v in sdict.items() if v == elements] #get corresponding keys
+				
+					for k in keys:
+
+						hierarchy[REGION][group][k]=(sdict[k],qdict[k])
+						allerrors.append(qdict[k])
 
 			hierarchy[REGION]['reference'] = refseq
-			hierarchy[REGION]['coverage'] = coverage
+			hierarchy[REGION]['coverage'] = len(sdict)
 			hierarchy[REGION]['error'] = np.mean(allerrors)
 
 	return hierarchy
