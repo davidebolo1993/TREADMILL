@@ -205,7 +205,7 @@ def Map(a_instance,Slist,Qlist,sequences,flank):
 def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support):
 
 	'''
-	Create synthetic chromosomes harboring different set of repeat expansions and map original sequences to these chromosomes
+	Create synthetic chromosomes harboring different set of repeat expansions and map original sequences to these chromosomes. Group reads by similarity.
 	'''
 	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
