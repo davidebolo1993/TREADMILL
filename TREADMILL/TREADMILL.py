@@ -35,7 +35,7 @@ def main():
 	required.add_argument('-bam', '--bamfile', help='sorted BAM file', metavar='BAM', required=True)
 	required.add_argument('-bed', '--bedfile', help='on-target regions in BED format', metavar='BED', required=True)
 	required.add_argument('-o', '--output', help='output binary map', metavar='BIN', required=True)
-	required.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to RYDER)', nargs='+', action='append', required=True)
+	required.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to RYDER)', nargs='+', action='append', required=True, metavar='MOTIF')
 	
 	additional = parser_reef.add_argument_group('Additional parameters')
 
@@ -55,7 +55,7 @@ def main():
 
 	required.add_argument('-i', '--input', help='input binary map from READER', metavar='BIN', required=True)
 	required.add_argument('-o', '--output', help='output directory', metavar='DIR', required=True)
-	required.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to RYDER)', nargs='+', action='append', required=True)
+	required.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to RYDER)', nargs='+', action='append', required=True, metavar='MOTIF')
 
 	algorithm = parser_trap.add_argument_group('Repeat profiling parameters')
 

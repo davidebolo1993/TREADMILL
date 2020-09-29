@@ -6,7 +6,7 @@ import sys
 import os
 import re
 import pickle
-from datetime import datetime
+import datetime
 import subprocess
 import shutil
 from collections import OrderedDict,Counter
