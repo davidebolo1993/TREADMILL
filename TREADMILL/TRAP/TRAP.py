@@ -246,7 +246,6 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 				AL1N,AL1I=RegExF(altal,sMotif)
 				AL2N,AL2I='.','.'
 
-
 			else: #e.g. 1/2, 1/3, 2/3, then is multiallelic
 
 				getCombos=list(['0/0', '0/'+getKey.split('/')[0], getKey.split('/')[0]+'/'+getKey.split('/')[0],'0/'+getKey.split('/')[1], getKey, getKey.split('/')[1] + '/' + getKey.split('/')[1]])
@@ -264,7 +263,6 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 				altal=dictA[getKey.split('/')[0]][0]
 				AL1N,AL1I=RegExF(altal,sMotif)
 				AL2N,AL2I='.','.'
-
 
 			else: #0/0
 

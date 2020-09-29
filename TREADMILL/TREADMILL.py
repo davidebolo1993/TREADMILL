@@ -78,8 +78,8 @@ def main():
 
 	algorithm.add_argument('-m', '--match', help='match reward for consensus computation [5]', metavar='', default=5, type=int)
 	algorithm.add_argument('-x', '--mismatch', help='mismatch penalty for consensus computation [-4]', metavar='', default=-4, type=int)
-	algorithm.add_argument('-o', '--gapopen', help='gap opening penalty for consensus computation [-8]', metavar='', default=-8, type=int)
-	algorithm.add_argument('-e', '--gapextend', help='gap extending penalty for consensus computation [-6]', metavar='', default=-6, type=int)
+	algorithm.add_argument('-go', '--gapopen', help='gap opening penalty for consensus computation [-8]', metavar='', default=-8, type=int)
+	algorithm.add_argument('-ge', '--gapextend', help='gap extending penalty for consensus computation [-6]', metavar='', default=-6, type=int)
 	algorithm.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to READER/REEF)', nargs='+', action='append', required=True)
 	
 	additional = parser_trap.add_argument_group('Additional parameters')
