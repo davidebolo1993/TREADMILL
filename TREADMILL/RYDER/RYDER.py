@@ -239,13 +239,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support):
 		leftflank=fastafile[CHROM][:len(fastafile[CHROM])].seq[START-(flank+1):END-1] #region flanking on the left side
 		rightflank=fastafile[CHROM][:len(fastafile[CHROM])].seq[START:END+flank] #region flanking on the right side
 
-		r=re.compile(r'('  + repeat + r')\1+')
-		seen=set()
-
-		for match in r.finditer(refseq):
-
-			seen.add(match.group(0))
-
+		seen=[m.start() for m in re.finditer(repeat, refseq)]
 		now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
 		if len(seen) == 0:
@@ -255,7 +249,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support):
 
 		else:
 
-			min_=sum(el.count(repeat) for el in seen)
+			min_=len(seen)
 			print('[' + now + ']' + '[Message] ' + str(min_) + ' ' + str(repeat) + ' in reference sequence')
 
 			seqdict=dict()
@@ -297,7 +291,6 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support):
 					Rdict['qual'] = reads.query_qualities
 
 					BAMseqs.append(Rdict)
-
 
 			#parallelize alignment
 
