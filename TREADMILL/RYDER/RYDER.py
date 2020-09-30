@@ -321,11 +321,14 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 
 			#append to fake reference and clean-up
 
-			gzref = gzip.open(FAKEREF, 'a')
-			txref = open(REFOUT, 'r')
-			gzref.write(txref.read()) 			
-			gzref.close()
-			txref.close()
+			if store:
+
+				gzref = gzip.open(FAKEREF, 'at')
+				txref = open(REFOUT, 'rt')
+				gzref.write(txref.read()) 			
+				gzref.close()
+				txref.close()
+
 			os.remove(REFOUT)
 
 			#convert list of tuples to dict for better usability
