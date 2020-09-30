@@ -11,7 +11,7 @@ def main():
 	
 	parser = argparse.ArgumentParser(prog='TREADMILL', description='''TREADMILL: Tandem REpeats AnD MethylatIon caLLing''', epilog='''This program was developed by Davide Bolognini (https://github.com/davidebolo1993)''', formatter_class=CustomFormat) 
 
-	subparsers = parser.add_subparsers(title='modules', dest='command', metavar='BASIC,READER,TRAP')
+	subparsers = parser.add_subparsers(title='modules', dest='command', metavar='BASIC,RYDER,TRAP')
 
 	## BASIC ##
 
