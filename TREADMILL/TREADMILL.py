@@ -49,11 +49,11 @@ def main():
 
 	## TRAP ##
 
-	parser_trap = subparsers.add_parser('TRAP', help='Tandem RepeAts Profiler. Identify and genotype tandem repeats from clusters of reads created with READER')
+	parser_trap = subparsers.add_parser('TRAP', help='Tandem RepeAts Profiler. Identify and genotype tandem repeats from clusters of reads created with RYDER')
 
 	required = parser_trap.add_argument_group('Required I/O arguments')
 
-	required.add_argument('-i', '--input', help='input binary map from READER', metavar='BIN', required=True)
+	required.add_argument('-i', '--input', help='input binary map from RYDER', metavar='BIN', required=True)
 	required.add_argument('-o', '--output', help='output directory', metavar='DIR', required=True)
 	required.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to RYDER)', nargs='+', action='append', required=True, metavar='MOTIF')
 
