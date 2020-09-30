@@ -5,7 +5,6 @@ import sys
 import re
 import multiprocessing
 import math
-import gzip
 import pickle
 from itertools import groupby,combinations
 from datetime import datetime
@@ -152,7 +151,7 @@ def PyCoord(CIGOP,ref_pointer):
 	return coords
 
 
-def Map(a_instance,Slist,Qlist,sequences,flank):
+def Map(a_instance,Slist,Qlist,sequences,flank,finalBAM,store):
 
 	'''
 	Map a list of reads to fake reference sequences
@@ -166,9 +165,13 @@ def Map(a_instance,Slist,Qlist,sequences,flank):
 
 		try:
 
-			hit=next(a_instance.map(seq))
+			hit=next(a_instance.map(seq,MD=True))
 
 			if hit.is_primary:
+
+				if store:
+
+					finalBAM.append((hit,seq,qual,name))
 
 				w_st=flank #rep start at flank
 				w_en=hit.ctg_len-flank #rep end at reference length - flank size
@@ -215,7 +218,8 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 	bamfile=pysam.AlignmentFile(BAM, 'rb')
 	bedfile=pybedtools.BedTool(BED)
 
-	FAKEREF=os.path.abspath(os.path.dirname(BIN) + '/fake.fa.gz')
+	FAKEREF=os.path.abspath(os.path.dirname(BIN) + '/fake.fa')
+	BAMsegments=manager.list()
 	
 	try:
 		
@@ -311,22 +315,25 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 
 			for s in slices:
 
-				p=multiprocessing.Process(target=Map, args=(a,Slist,Qlist,s,flank))
+				p=multiprocessing.Process(target=Map, args=(a,Slist,Qlist,s,flank,BAMsegments,store))
 				p.start()
 				processes.append(p)
 
 			for p in processes:
 				
-					p.join()
+				p.join()
 
-			#append to fake reference and clean-up
+			#append to fake reference if store is True and clean-up
 
 			if store:
 
-				gzref = gzip.open(FAKEREF, 'at')
+				now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+				print('[' + now + ']' + '[Message] Writing generated contigs to file')
+
+				faref = open(FAKEREF, 'at')
 				txref = open(REFOUT, 'rt')
-				gzref.write(txref.read()) 			
-				gzref.close()
+				faref.write(txref.read()) 			
+				faref.close()
 				txref.close()
 
 			os.remove(REFOUT)
@@ -360,6 +367,18 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 			hierarchy[REGION]['reference'] = refseq
 			hierarchy[REGION]['coverage'] = len(sdict)
 			hierarchy[REGION]['error'] = np.mean(allerrors)
+
+
+	if store: #also write to BAM if store is True
+
+		now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		print('[' + now + ']' + '[Message] Writing re-aligned segments to file')
+
+		faref=pyfaidx.Fasta(FAKEREF)
+
+
+		#continue from here
+
 
 	return hierarchy
 
