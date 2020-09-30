@@ -5,6 +5,7 @@ import sys
 import re
 import multiprocessing
 import math
+import gzip
 import pickle
 from itertools import groupby,combinations
 from datetime import datetime
@@ -202,7 +203,7 @@ def Map(a_instance,Slist,Qlist,sequences,flank):
 			continue
 
 
-def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support):
+def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 
 	'''
 	Create synthetic chromosomes harboring different set of repeat expansions and map original sequences to these chromosomes. Group reads by similarity.
@@ -213,6 +214,8 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support):
 	fastafile=pyfaidx.Fasta(REF)
 	bamfile=pysam.AlignmentFile(BAM, 'rb')
 	bedfile=pybedtools.BedTool(BED)
+
+	FAKEREF=os.path.abspath(os.path.dirname(BIN) + '/fake.fa.gz')
 	
 	try:
 		
@@ -254,7 +257,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support):
 
 			seqdict=dict()
 
-			header='>treadmill_reef_' + REGION + '_' + repeat + '_' + str(min_)
+			header='>treadmill_reef_' + REGION + '_' + repeat + '_' + str(min_) + '_flank_' + str(flank)
 			sequence=leftflank+refseq+rightflank
 			seqdict[header]=sequence
 			reps=min_
@@ -264,7 +267,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support):
 				seqtoadd=(len(sequence)/100)*(100-sim)
 				reptoadd=round(seqtoadd/len(repeat))
 				reps+=reptoadd
-				header='>treadmill_reef_' + REGION + '_' + repeat + '_' + str(reps)
+				header='>treadmill_reef_' + REGION + '_' + repeat + '_' + str(reps) + '_flank_' + str(flank)
 				sequence=leftflank+refseq+(repeat*(reps-min_))+rightflank
 				seqdict[header]=sequence
 
@@ -300,7 +303,6 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support):
 			Slist=manager.list()
 			Qlist=manager.list()
 
-
 			processes=[]
 			a=mp.Aligner(REFOUT, preset='map-ont')
 
@@ -317,6 +319,13 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support):
 				
 					p.join()
 
+			#append to fake reference and clean-up
+
+			gzref = gzip.open(FAKEREF, 'a')
+			txref = open(REFOUT, 'r')
+			gzref.write(txref.read()) 			
+			gzref.close()
+			txref.close()
 			os.remove(REFOUT)
 
 			#convert list of tuples to dict for better usability
@@ -399,7 +408,7 @@ def run(parser,args):
 		print('[' + now + ']' + '[Error] Missing write permissions on the output folder')
 		sys.exit(1)
 
-	hierarchy=ReMap(BAM,REF,BED,BIN,args.motif[0],args.flanking,args.maxsize,args.threads,args.similarity,args.support)
+	hierarchy=ReMap(BAM,REF,BED,BIN,args.motif[0],args.flanking,args.maxsize,args.threads,args.similarity,args.support,args.store)
 
 	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 	print('[' + now + ']' + '[Message] Writing output')

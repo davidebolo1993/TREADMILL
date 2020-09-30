@@ -11,7 +11,7 @@ def main():
 	
 	parser = argparse.ArgumentParser(prog='TREADMILL', description='''TREADMILL: Tandem REpeats AnD MethylatIon caLLing''', epilog='''This program was developed by Davide Bolognini (https://github.com/davidebolo1993)''', formatter_class=CustomFormat) 
 
-	subparsers = parser.add_subparsers(title='modules', dest='command', metavar='BASIC,RYDER,TRAP')
+	subparsers = parser.add_subparsers(title='modules', dest='command', metavar='BASIC,READER,TRAP')
 
 	## BASIC ##
 
@@ -44,6 +44,7 @@ def main():
 	additional.add_argument('--similarity', help='sequence similarity percentage between generated (synthetic) reference sequences and between grouped reads [85.0]', type=float, metavar='', default=85.0)
 	additional.add_argument('--support', help='minimum group support (retain only groups with enough reads)[5]', required=False, default=5, type=int, metavar='')
 	additional.add_argument('--threads', help='number of threads to use for the re-alignment step [1]', type=int, metavar='', default=1)
+	additional.add_argument('--store', help='store the synthetic chromosomes used for the re-alignment step in a gzipped FASTA file and the re-aligned BAM in the same folder used for the BIN file', action='store_true')
 	
 	parser_reef.set_defaults(func=run_subtool)
 

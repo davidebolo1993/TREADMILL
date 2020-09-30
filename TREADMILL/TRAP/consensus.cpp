@@ -68,7 +68,6 @@ int main(int argc, char** argv) {
 	auto alignment_engine = spoa::createAlignmentEngine(static_cast<spoa::AlignmentType>(alignment_type),(int8_t) match_score, (int8_t) mismatch_score,(int8_t) gap_opening_score, (int8_t) gap_extension_score);
 	auto graph = spoa::createGraph();
 
-
 	// as from Longshot use of SPOA, slightly modified (https://github.com/pjedge/longshot/blob/master/src/poa/poa_func.cpp)
 
 	// seed the POA with a seed sequence (e.g. reference sequence)
