@@ -170,7 +170,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold):
 
 		for i,keyG in enumerate(dictR[keyR].keys()):
 
-			if keyG != 'reference' and keyG != 'error' and keyG != 'coverage':
+			if keyG != 'reference' and keyG != 'error' and keyG != 'coverage' and keyG != 'motif':
 
 				dictR[keyR][keyG] = OrderedDict(sorted(dictR[keyR][keyG].items(), key=lambda x:x[1][1])) #sort by quality. If the number of sequences is > 100, this allows to exclude low-quality sequences from consensus computation, as these won't be added in the final .fa
 				counter=0
