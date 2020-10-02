@@ -297,7 +297,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 		else:
 
 			min_=len(seen)
-			print('[' + now + ']' + '[Message] ' + str(min_) + ' ' + str(repeat) + ' in reference sequence')
+			print('[' + now + ']' + '[Message] ' + str(min_) + ' ' + repeat + ' in reference sequence')
 
 			seqdict=dict()
 
@@ -406,6 +406,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 			hierarchy[REGION]['reference'] = refseq
 			hierarchy[REGION]['coverage'] = len(sdict)
 			hierarchy[REGION]['error'] = np.mean(allerrors)
+			hierarchy[REGION]['motif'] = repeat
 
 	if store: #also write to BAM if store is True
 

@@ -129,7 +129,7 @@ def GTLH(alleles,coverage,error,PHom,PHet):
 
 
 
-def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
+def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold):
 
 	'''
 	Generate POA-based consensus sequences for each input group and identify REF/ALT alleles
@@ -141,23 +141,18 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 	binin.close()
 	ctgs=set(x.split(':')[0] for x in list(dictR.keys()))
 
-	if len(motifs) != len(dictR.keys()):
-
-		print('[' + now + ']' + '[Error] The number of repeated motifs does not match the number of regions in the BIN file.')
-		sys.exit(1)
-
 	#write header and append the other lines afterwards
 
 	with open(os.path.abspath(OUT + '/TREADMILL.vcf'), 'w') as vcfout:
 
 		vcfout.write(VCFH(ctgs,BIN))
 
-	for l,keyR in enumerate(dictR.keys()):
+	for keyR in dictR.keys():
 
 		now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 		print('[' + now + ']' + '[Message] Processing region ' + keyR)
 
-		sMotif=motifs[l]
+		sMotif=dictR[keyR]['motif']
 		OUTR=os.path.abspath(OUT + '/' + keyR)
 		dictA=dict()
 		listA=list()
@@ -172,7 +167,6 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 		with open(os.path.abspath(OUTR + '/r.tmp.fa'), 'w') as fr:
 
 			fr.write('>reference\n' + refsequence + '\n')
-
 
 		for i,keyG in enumerate(dictR[keyR].keys()):
 
@@ -212,13 +206,6 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,motifs):
 				os.remove(os.path.abspath(OUTR + '/a'+str(i+1)+'.cs.fa')) #clean-up
 
 		sortlistA=sorted(listA, key=lambda x:x[1], reverse=True) #first is the most similar to the reference
-
-		corrdict=dict()
-
-		for i,el in enumerate(sortlistA):
-
-			corrdict['group'+str(listA.index(el)+1)] = 'group'+str(i+1)
-
 
 		if sortlistA[0][1] >= treshold:
 
@@ -349,7 +336,7 @@ def run(parser,args):
 			print('[' + now + ']' + '[Error] Cannot create the output folder')
 			sys.exit(1)
 
-	ParseGroups(BIN,OUT,args.match,args.mismatch,args.gapopen,args.gapextend,args.similarity,args.motif[0])
+	ParseGroups(BIN,OUT,args.match,args.mismatch,args.gapopen,args.gapextend,args.similarity)
 
 	now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 	print('[' + now + ']' + '[Message] Done')
