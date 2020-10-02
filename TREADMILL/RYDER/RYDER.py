@@ -151,6 +151,34 @@ def PyCoord(CIGOP,ref_pointer):
 	return coords
 
 
+
+def BamW(header,BAMsegments,BAM):
+
+	'''
+	Write aligned segments in BAM format
+
+	'''
+
+	with pysam.AlignmentFile(BAM, mode='wb', header=header) as bout:
+
+		for segments in BAMsegments:
+
+			s = pysam.AlignedSegment(bout.header)
+			s.is_unmapped=False #'cause primary alignments were skipped
+			s.is_reverse=False #'cause reads are all translated to forward orientation
+			s.is_secondary=False #'cause only primary alignments were retained
+			s.query_name=segments['QNAME']
+			s.reference_name=segments['RNAME']
+			s.reference_start=segments['POS']
+			s.mapping_quality=segments['MAPQ']
+			s.cigarstring=segments['CIGAR']
+			s.query_sequence=segments['SEQ']
+			s.query_qualities=segments['QUAL']
+			s.set_tags([("MD",segments['MD'], "Z"), ("cs", segments['cs'], "Z")])
+			bout.write(s)
+
+
+
 def Map(a_instance,Slist,Qlist,sequences,flank,finalBAM,store):
 
 	'''
@@ -163,15 +191,13 @@ def Map(a_instance,Slist,Qlist,sequences,flank,finalBAM,store):
 		qual=d['qual']
 		name=d['name']
 
+		Aldict=dict()
+
 		try:
 
-			hit=next(a_instance.map(seq,MD=True))
+			hit=next(a_instance.map(seq,MD=True,cs=True))
 
 			if hit.is_primary:
-
-				if store:
-
-					finalBAM.append((hit,seq,qual,name))
 
 				w_st=flank #rep start at flank
 				w_en=hit.ctg_len-flank #rep end at reference length - flank size
@@ -192,18 +218,28 @@ def Map(a_instance,Slist,Qlist,sequences,flank,finalBAM,store):
 					Slist.append((name,subsequence))
 					Qlist.append((name, suberror))
 
-				else: #not spanning entire rep, skipping
+				if store:
 
-					continue
+					Aldict['QNAME'] = name
+					Aldict['RNAME'] = hit.ctg
+					Aldict['POS'] = hit.r_st				
+					Aldict['MAPQ'] = hit.mapq
+					Aldict['CIGAR'] = cigstr
+					Aldict['SEQ'] = seq
+					Aldict['QUAL'] = qual
+					Aldict['MD'] = hit.MD
+					Aldict['cs'] = hit.cs
+
+					finalBAM.append(Aldict)
 				
-			#else:
+			else:
 
-				#do nothing
+				pass
 				
 				
 		except StopIteration: #unmapped sequence
 			
-			continue
+			pass
 
 
 def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
@@ -219,7 +255,11 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 	bedfile=pybedtools.BedTool(BED)
 
 	FAKEREF=os.path.abspath(os.path.dirname(BIN) + '/fake.fa')
-	BAMsegments=manager.list()
+	FAKEBAM=os.path.abspath(os.path.dirname(BIN) + '/fake.bam')
+	FAKESRTBAM=os.path.abspath(os.path.dirname(BIN) + '/fake.srt.bam')
+
+	manager=multiprocessing.Manager()
+	BAMsegments=manager.list() #initialize even if this will stay empty
 	
 	try:
 		
@@ -303,7 +343,6 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 
 			chunk_size=len(BAMseqs)/cores
 			slices=Chunks(BAMseqs,math.ceil(chunk_size))
-			manager=multiprocessing.Manager()
 			Slist=manager.list()
 			Qlist=manager.list()
 
@@ -328,7 +367,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 			if store:
 
 				now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-				print('[' + now + ']' + '[Message] Writing generated contigs to file')
+				print('[' + now + ']' + '[Message] Writing synthetic contigs to file')
 
 				faref = open(FAKEREF, 'at')
 				txref = open(REFOUT, 'rt')
@@ -368,17 +407,17 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 			hierarchy[REGION]['coverage'] = len(sdict)
 			hierarchy[REGION]['error'] = np.mean(allerrors)
 
-
 	if store: #also write to BAM if store is True
 
 		now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 		print('[' + now + ']' + '[Message] Writing re-aligned segments to file')
-
 		faref=pyfaidx.Fasta(FAKEREF)
+		header = {'HD': {'VN': 1.6, 'SO': 'coordinate'},'SQ': [{'LN': len(faref[k]),'SN': k} for k in faref.keys()]}
+		BamW(header,BAMsegments,FAKEBAM)
+		pysam.sort("-o", FAKESRTBAM, '-@', str(cores), FAKEBAM)
+		pysam.index(FAKESRTBAM)
 
-
-		#continue from here
-
+		os.remove(FAKEBAM)
 
 	return hierarchy
 
