@@ -102,7 +102,7 @@ def VCFV(keyR,REF,ALT,MOTIF,RSIM,RN,RI,RALS,RALD,RALN,RALI,AL1N,AL1I,AL2N,AL2I,G
 def GTLH(alleles,coverage,error,PHom,PHet):
 
 	'''
-	Calculate log10-scaled GT likelihoods for consensus sequences. We do not have per-base quality of the consensus, thus we use the mean erro rate of each group to compute the error probability.
+	Calculate log10-scaled GT likelihoods for consensus sequences. We do not have per-base quality of the consensus, thus we use the mean error rate of each group to compute the error probability.
 	'''
 
 	listGT=list()
@@ -295,7 +295,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold):
 		now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 		print('[' + now + ']' + '[Message] Writing names to TSV')
 
-		tsv=pd.DataFrame({'Region':allreg, 'Name':allnames,'Allele':allpos})
+		tsv=pd.DataFrame({'region':allreg, 'name':allnames,'allele':allpos})
 		tsv.to_csv(os.path.abspath(OUT + '/TREADMILL.tsv.gz') ,sep='\t',index=False, header=False, compression='gzip', mode='a')
 
 		shutil.rmtree(OUTR)
