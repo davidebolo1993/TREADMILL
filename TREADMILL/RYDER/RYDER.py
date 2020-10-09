@@ -67,7 +67,7 @@ def similarity(worda,wordb):
 def decisiontree(readsdict,mingroupsize,treshold):
 
 	'''
-	Group strings in list by similarity (edit distance score)
+	Cluster strings in list by similarity (edit distance score)
 	'''
 
 	paired ={c:{c} for c in readsdict.values()}
@@ -151,7 +151,6 @@ def PyCoord(CIGOP,ref_pointer):
 	return coords
 
 
-
 def BamW(header,BAMsegments,BAM):
 
 	'''
@@ -164,7 +163,7 @@ def BamW(header,BAMsegments,BAM):
 		for segments in BAMsegments:
 
 			s = pysam.AlignedSegment(bout.header)
-			s.is_unmapped=False #'cause primary alignments were skipped
+			s.is_unmapped=False #'cause unmapped reads were skipped
 			s.is_reverse=False #'cause reads are all translated to forward orientation
 			s.is_secondary=False #'cause only primary alignments were retained
 			s.query_name=segments['QNAME']
@@ -176,7 +175,6 @@ def BamW(header,BAMsegments,BAM):
 			s.query_qualities=segments['QUAL']
 			s.set_tags([("MD",segments['MD'], "Z"), ("cs", segments['cs'], "Z")])
 			bout.write(s)
-
 
 
 def Map(a_instance,Slist,Qlist,sequences,flank,finalBAM,store):
@@ -382,7 +380,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 			sdict=dict((x, y) for x, y in Slist)
 			qdict=dict((x, y) for x, y in Qlist)
 
-			#fine tuning: re-group by similarity of sequences
+			#fine tuning: re-group by similarity of sequences. This avoids having outlayers that decrease consensus accuracy in TRAP.
 
 			now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 			print('[' + now + ']' + '[Message] Grouping reads by similarity')
@@ -417,7 +415,6 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 		BamW(header,BAMsegments,FAKEBAM)
 		pysam.sort("-o", FAKESRTBAM, '-@', str(cores), FAKEBAM)
 		pysam.index(FAKESRTBAM)
-
 		os.remove(FAKEBAM)
 
 	return hierarchy

@@ -38,7 +38,7 @@ def RegExF(sequence,motif):
 
 			dictI[sequence[occurences[i][1]:occurences[i+1][0]]]+=1
 
-	return len(occurences), ','.join(dictI.keys())+':'+','.join(str(x) for x in dictI.values())
+	return len(occurences), ','.join(dictI.keys())+':'+','.join(str(x) for x in dictI.values())s
 
 
 def VCFH(ctgs,BIN):
