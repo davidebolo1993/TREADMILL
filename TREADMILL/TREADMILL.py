@@ -36,7 +36,7 @@ def main():
 	required.add_argument('-bed', '--bedfile', help='on-target regions in BED format', metavar='BED', required=True)
 	required.add_argument('-o', '--output', help='output binary map', metavar='BIN', required=True)
 	required.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to RYDER)', nargs='+', action='append', required=True, metavar='MOTIF')
-	
+
 	additional = parser_reef.add_argument_group('Additional parameters')
 
 	additional.add_argument('--maxsize', help='approximate maximum number of repeated motifs in the (synthetic) reference sequences [500]', type=int, default=500, metavar='')
@@ -57,16 +57,24 @@ def main():
 	required.add_argument('-i', '--input', help='input binary map from RYDER', metavar='BIN', required=True)
 	required.add_argument('-o', '--output', help='output directory', metavar='DIR', required=True)
 
-	algorithm = parser_trap.add_argument_group('Repeat profiling parameters')
+	algorithm = parser_trap.add_argument_group('Consensus sequence computation')
 
 	algorithm.add_argument('-m', '--match', help='match reward for consensus computation [5]', metavar='', default=5, type=int)
 	algorithm.add_argument('-x', '--mismatch', help='mismatch penalty for consensus computation [-4]', metavar='', default=-4, type=int)
 	algorithm.add_argument('-go', '--gapopen', help='gap opening penalty for consensus computation [-8]', metavar='', default=-8, type=int)
 	algorithm.add_argument('-ge', '--gapextend', help='gap extending penalty for consensus computation [-6]', metavar='', default=-6, type=int)
-	
+
+	repeat=parser_trap.add_argument_group('Repeat profiling parameters')
+
+	repeat.add_argument('--substitution', help='substitution cost for weighted edit distance calculation [1.0]', metavar='', default=1.0, type=float)
+	repeat.add_argument('--deletion', help='deletion cost for weighted edit distance calculation [1.0]', metavar='', default=1.0, type=float)
+	repeat.add_argument('--insertion', help='insertion cost for weighted edit distance calculation [1.0]', metavar='', default=1.0, type=float)
+	repeat.add_argument('--maxedit', help='maximum edit distance [1.0]', metavar='', default=1.0, type=float)
+
 	additional = parser_trap.add_argument_group('Additional parameters')
 
 	additional.add_argument('--similarity', help='sequence similarity percentage (discriminate between reference and alternative alleles)[80.0]', required=False, default=80.0, type=float, metavar='')
+
 
 	parser_trap.set_defaults(func=run_subtool)
 

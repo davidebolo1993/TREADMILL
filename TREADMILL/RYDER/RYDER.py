@@ -173,7 +173,7 @@ def BamW(header,BAMsegments,BAM):
 			s.cigarstring=segments['CIGAR']
 			s.query_sequence=segments['SEQ']
 			s.query_qualities=segments['QUAL']
-			s.set_tags([("MD",segments['MD'], "Z"), ("cs", segments['cs'], "Z")])
+			s.set_tags([('MD',segments['MD'], 'Z'), ('cs', segments['cs'], 'Z')])
 			bout.write(s)
 
 
@@ -245,7 +245,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 	'''
 	Create synthetic chromosomes harboring different set of repeat expansions and map original sequences to these chromosomes. Group reads by similarity.
 	'''
-	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
 	hierarchy=AutoVivification()
 	fastafile=pyfaidx.Fasta(REF)
@@ -277,7 +277,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 
 		CHROM,START,END,repeat=query.chrom, query.start,query.end,motifs[i]
 		REGION=CHROM + ':' + str(START) + '-' + str(END)
-		now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Message] Processing region ' + REGION+ ', with repeat ' + motifs[i])
 
 		refseq=fastafile[CHROM][:len(fastafile[CHROM])].seq[START-1:END] #region containing the repetition
@@ -285,7 +285,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 		rightflank=fastafile[CHROM][:len(fastafile[CHROM])].seq[START:END+flank] #region flanking on the right side
 
 		seen=[m.start() for m in re.finditer(repeat, refseq)]
-		now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
 		if len(seen) == 0:
 
@@ -322,7 +322,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 					fout.write(key+'\n'+value+'\n')
 
 			BAMseqs=list()
-			now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 			print('[' + now + ']' + '[Message] Parsing BAM file')
 
 			for reads in bamfile.fetch(CHROM,START,END):
@@ -347,7 +347,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 			processes=[]
 			a=mp.Aligner(REFOUT, preset='map-ont')
 
-			now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 			print('[' + now + ']' + '[Message] Re-mapping reads to the synthetic reference')
 
 			for s in slices:
@@ -364,7 +364,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 
 			if store:
 
-				now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+				now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 				print('[' + now + ']' + '[Message] Writing synthetic contigs to file')
 
 				faref = open(FAKEREF, 'at')
@@ -382,7 +382,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 
 			#fine tuning: re-group by similarity of sequences. This avoids having outlayers that decrease consensus accuracy in TRAP.
 
-			now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 			print('[' + now + ']' + '[Message] Grouping reads by similarity')
 
 			decision=decisiontree(sdict,support,sim)
@@ -408,12 +408,12 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 
 	if store: #also write to BAM if store is True
 
-		now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Message] Writing re-aligned segments to file')
 		faref=pyfaidx.Fasta(FAKEREF)
 		header = {'HD': {'VN': 1.6, 'SO': 'coordinate'},'SQ': [{'LN': len(faref[k]),'SN': k} for k in faref.keys()]}
 		BamW(header,BAMsegments,FAKEBAM)
-		pysam.sort("-o", FAKESRTBAM, '-@', str(cores), FAKEBAM)
+		pysam.sort('-o', FAKESRTBAM, '-@', str(cores), FAKEBAM)
 		pysam.index(FAKESRTBAM)
 		os.remove(FAKEBAM)
 
@@ -426,7 +426,7 @@ def run(parser,args):
 	Execute the code and and dump binary output to file
 	'''
 
-	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
 	BAM=os.path.abspath(args.bamfile)
 
@@ -469,7 +469,7 @@ def run(parser,args):
 
 	hierarchy=ReMap(BAM,REF,BED,BIN,args.motif[0],args.flanking,args.maxsize,args.threads,args.similarity,args.support,args.store)
 
-	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Writing output')
 
 	binout=open(BIN,'wb')
@@ -482,7 +482,7 @@ def run(parser,args):
 	#data = pickle.load(binin)
 	#binin.close()
 
-	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Done')
 
 	sys.exit(0)

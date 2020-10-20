@@ -16,16 +16,19 @@ from itertools import combinations_with_replacement
 #additional modules
 
 import editdistance
+from weighted_levenshtein import lev 
 import numpy as np
 import pandas as pd
 import pysam
 
 CS_CPP=os.path.abspath(os.path.dirname(__file__) + '/consensus')
 
-def RegExF(sequence,motif):
+
+def PerfectMatch(sequence,motif):
+
 
 	'''
-	Find repeats and interruptions given a known repeated motif and the sequence
+	Find repeats and interruptions given a known repeated motif and the sequence. This applies to reference sequence
 	'''
 
 	dictI=Counter()
@@ -38,7 +41,46 @@ def RegExF(sequence,motif):
 
 			dictI[sequence[occurences[i][1]:occurences[i+1][0]]]+=1
 
-	return len(occurences), ','.join(dictI.keys())+':'+','.join(str(x) for x in dictI.values())s
+	return len(occurences), ','.join(dictI.keys())+':'+','.join(str(x) for x in dictI.values())
+
+
+
+def FuzzyMatch(sequence,motif,substitution,deletion,insertion,maxedit):
+
+	'''
+	Find repeats and interruptions given a known repeated motif and the sequence. This applies to noisy read but should give same result as PerfectMatch if maxedit is set to 0. Depends
+	'''
+
+	dictI=Counter()
+
+	#create arrays of weights, tuned by users
+
+	insert_costs = np.ones(128, dtype=np.float64) #128 is the number of ASCII characters
+	insert_costs[:]=insertion
+	delete_costs = np.ones(128, dtype=np.float64)
+	delete_costs[:]=deletion
+	substitute_costs=np.ones((128, 128), dtype=np.float64)
+	substitute_costs[:]=substitution
+
+	occurences=[(r.start(0), r.end(0)) for r in re.finditer(motif, sequence)]
+
+	for i in range(len(occurences)-1): 
+
+		if occurences[i][1] != occurences[i+1][0]: #aling sequences in between perfect matches
+
+			subsequence=sequence[occurences[i][1]:occurences[i+1][0]] 
+			#now check the weighted levensthein between motif and subsequence
+			w_edit=lev(motif, subsequence, insert_costs=insert_costs, delete_costs=delete_costs,substitute_costs=substitute_costs)
+
+			if w_edit > maxedit:
+
+				continue
+
+			else:
+
+				dictI[subsequence] +=1
+
+	return len(occurences), ','.join(dictI.keys())+':'+','.join(str(x) for x in dictI.values())
 
 
 def VCFH(ctgs,BIN):
@@ -73,9 +115,9 @@ def VCFH(ctgs,BIN):
 	#FORMAT field
 
 	gt='##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'
-	gl='##FORMAT=<ID=GL,Number=G,Type=Float,Description="Log10-scaled likelihoods for genotypes 0/0, 0/1, 1/1 or 0/0, 0/1, 1/1, 0/2, 1/2, 2/2>"\n'
+	gl='##FORMAT=<ID=GL,Number=G,Type=Float,Description="Log10-scaled likelihoods for genotypes 0/0, 0/1, 1/1 or 0/0, 0/1, 1/1, 0/2, 1/2, 2/2">\n'
 	dp='##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">\n'
-	ad='##FORMAT=<ID=AD,Number=G,Type=Integer,Description="Depth of alleles>"\n'
+	ad='##FORMAT=<ID=AD,Number=G,Type=Integer,Description="Depth of alleles">\n'
 	head='#CHROM' + '\t' + 'POS' '\t' + 'ID' + '\t' + 'REF' + '\t' + 'ALT' + '\t' + 'QUAL' + '\t' + 'FILTER' + '\t' + 'INFO' + '\t' + 'FORMAT' + '\t' + os.path.basename(BIN).split('.')[0].upper() + '\n'
 
 	return fileformat+filedate+source+contigs+end+motif+refrep+refint+allelerefseq+alleledistance+allelerefnum+allelerefint+altdist+allele1num+allele1int+allele2num+allele2int+gt+gl+dp+ad+head
@@ -129,13 +171,13 @@ def GTLH(alleles,coverage,error,PHom,PHet):
 
 
 
-def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold):
+def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,deletion,insertion,maxedit):
 
 	'''
 	Generate POA-based consensus sequences for each input group and identify REF/ALT alleles
 	'''
 
-	now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	binin=open(BIN,'rb')
 	dictR = pickle.load(binin)
 	binin.close()
@@ -149,7 +191,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold):
 
 	for keyR in dictR.keys():
 
-		now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Message] Processing region ' + keyR)
 
 		sMotif=dictR[keyR]['motif']
@@ -162,7 +204,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold):
 			os.makedirs(OUTR)
 
 		refsequence=dictR[keyR]['reference']
-		Rref,Iref=RegExF(refsequence,sMotif)
+		Rref,Iref=PerfectMatch(refsequence,sMotif)
 
 		with open(os.path.abspath(OUTR + '/r.tmp.fa'), 'w') as fr:
 
@@ -210,7 +252,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold):
 		if sortlistA[0][1] >= treshold:
 
 			RSIM='.'
-			RALN,RALI=RegExF(sortlistA[0][0],sMotif)
+			RALN,RALI=FuzzyMatch(sortlistA[0][0],sMotif,substitution,deletion,insertion,maxedit)
 
 			for i in range(len(sortlistA)):
 
@@ -240,7 +282,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold):
 				getCombos=['/'.join(x) for x in combinations_with_replacement(['0', getKey.split('/')[1]],2)]
 				Wgenotype='0/1'
 				altal=dictA[getKey.split('/')[1]][0]
-				AL1N,AL1I=RegExF(altal,sMotif)
+				AL1N,AL1I=FuzzyMatch(altal,sMotif,substitution,deletion,insertion,maxedit)
 				AL2N,AL2I='.','.'
 
 			else: #e.g. 1/2, 1/3, 2/3, then is multiallelic
@@ -248,8 +290,8 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold):
 				getCombos=list(['0/0', '0/'+getKey.split('/')[0], getKey.split('/')[0]+'/'+getKey.split('/')[0],'0/'+getKey.split('/')[1], getKey, getKey.split('/')[1] + '/' + getKey.split('/')[1]])
 				Wgenotype='1/2'
 				altal=','.join([dictA[getKey.split('/')[0]][0],dictA[getKey.split('/')[1]][0]])
-				AL1N,AL1I=RegExF(dictA[getKey.split('/')[0]][0],sMotif)
-				AL2N,AL2I=RegExF(dictA[getKey.split('/')[1]][0],sMotif)
+				AL1N,AL1I=FuzzyMatch(dictA[getKey.split('/')[0]][0],sMotif,substitution,deletion,insertion,maxedit)
+				AL2N,AL2I=FuzzyMatch(dictA[getKey.split('/')[1]][0],sMotif,substitution,deletion,insertion,maxedit)
 
 		else: #e.g. 1/1, 2/2
 
@@ -258,7 +300,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold):
 				getCombos=['0/0', '0/'+getKey.split('/')[0], getKey.split('/')[0]+'/'+getKey.split('/')[0]]
 				Wgenotype='1/1'
 				altal=dictA[getKey.split('/')[0]][0]
-				AL1N,AL1I=RegExF(altal,sMotif)
+				AL1N,AL1I=FuzzyMatch(altal,sMotif,substitution,deletion,insertion,maxedit)
 				AL2N,AL2I='.','.'
 
 			else: #0/0
@@ -285,14 +327,14 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold):
 		allpos=['1']*len(names1) + ['2']*len(names2)
 		allreg=[str(keyR)]*len(allpos)
 
-		now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Message] Writing VCF entry')
 
 		with open(os.path.abspath(OUT + '/TREADMILL.vcf'), 'a') as vcfout:
 
 			vcfout.write(VCFV(keyR,refsequence,altal,sMotif,RSIM,Rref,Iref,dictA['0'][0],dictA['0'][1],RALN,RALI,AL1N,AL1I,AL2N,AL2I,Wgenotype,WGL,str(dictR[keyR]['coverage']),WAD))
 
-		now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Message] Writing names to TSV')
 
 		tsv=pd.DataFrame({'region':allreg, 'name':allnames,'allele':allpos})
@@ -302,7 +344,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold):
 
 	#index
 
-	now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Indexing VCF')
 	
 	pysam.tabix_index(OUT + '/TREADMILL.vcf', preset='vcf', force=True)
@@ -314,7 +356,7 @@ def run(parser,args):
 	Execute the code and write variants to VCF.GZ
 	'''
 
-	now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
 	BIN=os.path.abspath(args.input)
 
@@ -336,9 +378,10 @@ def run(parser,args):
 			print('[' + now + ']' + '[Error] Cannot create the output folder')
 			sys.exit(1)
 
-	ParseGroups(BIN,OUT,args.match,args.mismatch,args.gapopen,args.gapextend,args.similarity)
 
-	now=datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	ParseGroups(BIN,OUT,args.match,args.mismatch,args.gapopen,args.gapextend,args.similarity,args.substitution,args.deletion.args.insertion,args.maxedit)
+
+	now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Done')
 
 	sys.exit(0)

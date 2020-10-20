@@ -64,7 +64,7 @@ def parse(BAM,BED):
 	S_dict['BAM_CDIFF']=0 #bps
 
 
-	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
 	bamfile=pysam.AlignmentFile(BAM, 'rb')
 	bedfile=pybedtools.BedTool(BED)
@@ -136,8 +136,8 @@ def parse(BAM,BED):
 	for query in bedsrtd:
 
 
-		key=query.chrom+":"+str(query.start)+"-"+str(query.end)
-		now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		key=query.chrom+':'+str(query.start)+'-'+str(query.end)
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Message] Calculating coverage in region ' + key)
 		query_arr=bamfile.count_coverage(query.chrom,query.start,query.end,read_callback=check_read)
 		perbasecov=np.sum(query_arr,axis=0).tolist()
@@ -154,7 +154,7 @@ def run(parser,args):
 	Execute the code and dump JSON to file
 	'''
 
-	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
 	BAM=os.path.abspath(args.bamfile)
 
@@ -184,7 +184,7 @@ def run(parser,args):
 
 	S_dict=parse(BAM,BED)
 
-	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Writing output')
 
 	with gzip.open(JSON+'.gz', 'wt') as gzout:
@@ -192,7 +192,7 @@ def run(parser,args):
 		json.dump(S_dict, gzout, indent=4)
 		gzout.write('\n')
 
-	now=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Done')
 
 	sys.exit(0)
