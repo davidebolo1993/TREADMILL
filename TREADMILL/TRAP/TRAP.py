@@ -48,7 +48,7 @@ def PerfectMatch(sequence,motif):
 def FuzzyMatch(sequence,motif,substitution,deletion,insertion,maxedit):
 
 	'''
-	Find repeats and interruptions given a known repeated motif and the sequence. This applies to noisy read but should give same result as PerfectMatch if maxedit is set to 0. Depends
+	Find repeats and interruptions given a known repeated motif and the sequence. This applies to noisy reads but should give same result as PerfectMatch if maxedit is set to 0.
 	'''
 
 	dictI=Counter()
