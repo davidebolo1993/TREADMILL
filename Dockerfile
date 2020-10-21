@@ -5,7 +5,6 @@ FROM ubuntu:18.04
 
 # File author/maintainer info
 MAINTAINER Davide Bolognini <davidebolognini7@gmail.com>
-
 # Install dependencies
 RUN apt-get update && apt-get install -y nano curl git wget build-essential g++ cmake zlib1g-dev gfortran && apt-get clean
 RUN curl -LO http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
@@ -19,9 +18,11 @@ ENV PATH /miniconda/envs/treadmillenv/bin:$PATH
 RUN git clone --recursive https://github.com/jts/nanopolish.git && cd nanopolish && make all
 ENV PATH nanopolish:$PATH
 ENV PATH nanopolish/scripts:$PATH
-RUN conda install -y -n treadmillenv -c bioconda samtools bcftools bedtools bedops minimap2 ngmlr pysam pyfaidx pybedtools mappy numpy
+RUN conda install -y -n treadmillenv -c bioconda samtools bcftools bedtools minimap2 ngmlr pysam pyfaidx pybedtools mappy numpy
 RUN conda install -y -n treadmillenv -c r r
-#more to go
+RUN conda install -y -n treadmillenv -c bioconda bioconductor-karyoploter
+RUN git clone --recursive https://github.com/davidebolo1993/TREADMILL && cd TREADMILL && ./configure && python setup.py install
+
 
 #Pull with:
 #sudo docker pull davidebolo1993/treadmill

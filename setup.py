@@ -1,7 +1,6 @@
 from setuptools import setup,find_packages
 
 
-
 setup(name='TREADMILL',      
   version='1.0.0',
   description='Tandem REpeats AnD MethylatIon caLLing',

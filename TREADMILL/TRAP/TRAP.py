@@ -16,7 +16,7 @@ from itertools import combinations_with_replacement
 #additional modules
 
 import editdistance
-from weighted_levenshtein import lev 
+from weighted_levenshtein import lev
 import numpy as np
 import pandas as pd
 import pysam
