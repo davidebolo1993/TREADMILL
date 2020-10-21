@@ -108,9 +108,9 @@ def VCFH(ctgs,BIN):
 	allelerefint='##INFO=<ID=RALI,Number=1,Type=String,Description="Interruptions in the reference allele (if present)">\n'
 	altdist='##INFO=<ID=ALTD,Number=1,Type=Float,Description="If a reference allele is not present, the highest similarity score (edit distance-based) between the alternative allele/s and the reference sequence">\n'
 	allele1num='##INFO=<ID=AL1N,Number=1,Type=Integer,Description="Number of repeats in the 1st alternative allele (if present)">\n'
-	allele1int='##INFO=<ID=AL1I,Number=1,Type=String,Description="Interruptions in the 1st alternative allele (if present)">\n'
+	allele1int='##INFO=<ID=AL1I,Number=1,Type=String,Description="Interruptions/approximate matches in the 1st alternative allele (if present)">\n'
 	allele2num='##INFO=<ID=AL2N,Number=1,Type=Integer,Description="Number of repeats in the 2nd alternative allele (if present)">\n'
-	allele2int='##INFO=<ID=AL2I,Number=1,Type=String,Description="Interruptions in the 2nd alternative allele (if present)">\n'
+	allele2int='##INFO=<ID=AL2I,Number=1,Type=String,Description="Interruptions/approximate matches in the 2nd alternative allele (if present)">\n'
 
 	#FORMAT field
 
