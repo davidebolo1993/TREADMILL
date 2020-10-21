@@ -379,7 +379,7 @@ def run(parser,args):
 			sys.exit(1)
 
 
-	ParseGroups(BIN,OUT,args.match,args.mismatch,args.gapopen,args.gapextend,args.similarity,args.substitution,args.deletion.args.insertion,args.maxedit)
+	ParseGroups(BIN,OUT,args.match,args.mismatch,args.gapopen,args.gapextend,args.similarity,args.substitution,args.deletion,args.insertion,args.maxedit)
 
 	now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Done')
