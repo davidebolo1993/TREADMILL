@@ -113,8 +113,9 @@ def parse(BAM,BED):
 							S_dict['BAM_QUAL'].append(np.mean(read.query_qualities))
 
 							NM=read.get_tag('NM')
-							reflen=len(read.get_reference_sequence)
-							seqlen=len(read.get_reference_positions(full_length=True))
+							refcoords=read.get_reference_positions()
+							reflen=refcoords[-1]-refcoords[0]#reference spans from first aligned to last aligned
+							seqlen=len(read.get_reference_positions(full_length=True))#this is the read length
 							S_dict['BAM_LEN'].append(seqlen)
 							PID=100-100*NM/max(reflen,seqlen)
 							S_dict['BAM_PID'].append(PID)
