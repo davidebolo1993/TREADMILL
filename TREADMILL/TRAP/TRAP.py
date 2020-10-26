@@ -89,7 +89,7 @@ def VCFH(ctgs,BIN):
 	Write VCF header
 	'''
 
-	#genmeral informations
+	#general informations
 
 	fileformat='##fileformat=VCFv4.2\n'
 	filedate='##fileDate=' + ''.join(str(datetime.date.today()).split('-')) + '\n'

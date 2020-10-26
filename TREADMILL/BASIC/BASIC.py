@@ -62,7 +62,9 @@ def parse(BAM,BED):
 	S_dict['BAM_CINS']=0 #bps
 	S_dict['BAM_CDEL']=0 #bps
 	S_dict['BAM_CDIFF']=0 #bps
-
+	S_sict['BAM_LEN'] = [] #all lengths in list
+	S_dict['BAM_QUAL'] = [] #all qualities in list
+	S_dict['BAM_PID'] = [] #all PID in list
 
 	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
@@ -84,7 +86,7 @@ def parse(BAM,BED):
 
 	for read in bamfile.fetch():
 
-		if read.has_tag('MD'):
+		if read.has_tag('MD') and read.has_tag('NM'):
 
 			if not read.is_unmapped:
 
@@ -108,6 +110,15 @@ def parse(BAM,BED):
 							S_dict['BAM_CDEL']+=Cdict[2]
 							S_dict['BAM_CMATCH']+=sum(1 for x,y,z in MD if x is not None and z is not None and z[0].isupper())
 							S_dict['BAM_CDIFF']+=sum(1 for x,y,z in MD if x is not None and z is not None and z[0].islower())
+							S_dict['BAM_QUAL'].append(np.mean(read.query_qualities))
+
+							NM=read.get_tag('NM')
+							reflen=len(read.get_reference_sequence)
+							seqlen=len(read.get_reference_positions(full_length=True))
+							S_dict['BAM_LEN'].append(seqlen)
+							PID=100-100*NM/max(reflen,seqlen)
+							S_dict['BAM_PID'].append(PID)
+
 
 						else:
 
@@ -127,14 +138,13 @@ def parse(BAM,BED):
 
 		else:
 
-			print('[Error] BAM misses the required MD tag')
+			print('[Error] BAM misses the required MD/NM tags')
 			bamfile.close()
 			sys.exit(1)
 
 	#calculate coverage in regions from BED
 
 	for query in bedsrtd:
-
 
 		key=query.chrom+':'+str(query.start)+'-'+str(query.end)
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')

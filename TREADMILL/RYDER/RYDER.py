@@ -61,7 +61,7 @@ def similarity(worda,wordb):
 	Return the edit distance-based similarity score between 2 sequences
 	'''
 
-	return 100-100*editdistance.eval(worda,wordb)/(len(worda)+len(wordb))
+	return 100-100*editdistance.eval(worda,wordb)/max(len(worda),len(wordb))
 
 
 def decisiontree(readsdict,mingroupsize,treshold):
