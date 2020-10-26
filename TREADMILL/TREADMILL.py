@@ -11,7 +11,7 @@ def main():
 	
 	parser = argparse.ArgumentParser(prog='TREADMILL', description='''TREADMILL: Tandem REpeats AnD MethylatIon caLLing''', epilog='''This program was developed by Davide Bolognini (https://github.com/davidebolo1993)''', formatter_class=CustomFormat) 
 
-	subparsers = parser.add_subparsers(title='modules', dest='command', metavar='BASIC,READER,TRAP')
+	subparsers = parser.add_subparsers(title='modules', dest='command', metavar='BASIC,RYDER,TRAP')
 
 	## BASIC ##
 
@@ -22,10 +22,6 @@ def main():
 	required.add_argument('-bam', '--bamfile', help='sorted and MD-tagged BAM file', metavar='BAM', required=True)
 	required.add_argument('-bed', '--bedfile', help='on-target regions in BED format', metavar='BED', required=True)
 	required.add_argument('-o', '--output', help='output gzipped JSON file', metavar='JSON.GZ', required=True)
-
-	additional = parser_basic.add_argument_group('Additional parameters')
-
-	additional.add_argument('--strict', help='only reads fully overlapping start-end are taken into account for coverage estimation', action='store_true')
 
 	parser_basic.set_defaults(func=run_subtool)
 
