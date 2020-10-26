@@ -62,7 +62,7 @@ def parse(BAM,BED):
 	S_dict['BAM_CINS']=0 #bps
 	S_dict['BAM_CDEL']=0 #bps
 	S_dict['BAM_CDIFF']=0 #bps
-	S_sict['BAM_LEN'] = [] #all lengths in list
+	S_dict['BAM_LEN'] = [] #all lengths in list
 	S_dict['BAM_QUAL'] = [] #all qualities in list
 	S_dict['BAM_PID'] = [] #all PID in list
 
@@ -118,7 +118,6 @@ def parse(BAM,BED):
 							S_dict['BAM_LEN'].append(seqlen)
 							PID=100-100*NM/max(reflen,seqlen)
 							S_dict['BAM_PID'].append(PID)
-
 
 						else:
 
