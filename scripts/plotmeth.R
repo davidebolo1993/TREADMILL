@@ -402,6 +402,9 @@ for (row in 1:nrow(BED)) {
 
   #plot
 
+  now<-Sys.time()
+  message('[',now,'][Message] Plotting')
+
   pdf(file.path(opt$outputdir, paste0(region, '.pdf')), height=10, width=15)
 
   if (!is.null(PLOT2)) {

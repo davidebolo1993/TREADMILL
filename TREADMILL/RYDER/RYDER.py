@@ -206,7 +206,7 @@ def Map(a_instance,Slist,Qlist,sequences,flank,finalBAM,store):
 				cigop=[cig_split[n:n+2] for n in range(0,len(cig_split),2)] #group by operation
 				cigop_conv=''.join([str(x[1])*int(x[0]) for x in cigop]) #convert to string, one char for each operation
 				coord=np.asarray(subnone(PyCoord(cigop_conv,hit.r_st))) #convert to list of coords, in the style of pysam
-				si,ei=find_nearest(coord,w_st),find_nearest(coord,w_en)
+				si,ei=find_nearest(coord,w_st),find_nearest(coord,w_en) 
 
 				if hit.r_st <= w_st and hit.r_en >= w_en: #the entire rep is spanned, keep the read
 

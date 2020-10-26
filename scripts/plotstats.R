@@ -22,8 +22,10 @@ suppressPackageStartupMessages(library(plyr))
 suppressPackageStartupMessages(library(ggrepel))
 suppressPackageStartupMessages(library(grid))
 
-
 vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+
+defaultW <- getOption("warn")
+options(warn = -1)
 
 option_list = list(
   make_option(c('-m', '--minimap2'), action='store', type='character', help='.json file with informations from a minimap2-generated alignment'),
@@ -41,7 +43,10 @@ listcov<-list()
 liststats<-list()
 
 if (! is.null(opt$minimap2)) {
-  
+
+  now<-Sys.time()
+  message('[',now,'][Message] Processing .json file from minimap2')
+
   if (file.exists(file.path(opt$minimap2))) {
     mjson<-fromJSON(file = file.path(opt$minimap2))
     mkeyall<-c('unmapped', 'supplementary', 'secondary', 'primary', 'on-target', 'off-target')
@@ -78,6 +83,9 @@ if (! is.null(opt$minimap2)) {
 
 if (! is.null(opt$ngmlr)) {
   
+
+  now<-Sys.time()
+  message('[',now,'][Message] Processing .json file from ngmlr')
   
   if (file.exists(file.path(opt$ngmlr))) {
     njson<-fromJSON(file = file.path(opt$ngmlr))
@@ -116,8 +124,11 @@ if (! is.null(opt$ngmlr)) {
 
 #if (! is.null(opt$last)) {
 
+  #now<-Sys.time()
+  #message('[',now,'][Message] Processing .json file from last')
+
   #if (file.exists(file.path(opt$last))) {
-    #ljson<-fromJSON(file = file.path(opt$minimap2))
+    #ljson<-fromJSON(file = file.path(opt$last))
     #lkeyall<-c('unmapped', 'supplementary', 'secondary', 'primary', 'on-target', 'off-target')
     #lvalueall<-c(ljson$BAM_UNMAP,ljson$BAM_SUPP,ljson$BAM_SEC,ljson$BAM_PRIM,ljson$BAM_ONTARGET,ljson$BAM_OFFTARGET)
     #lalignerall<-rep('last',length(lkeyall))
@@ -152,9 +163,13 @@ if (! is.null(opt$ngmlr)) {
 #}
 
 if (length(listall) == 0) {
-  stop('[Error] [Usage] Rscript plotstats.R -m <minimap2.json> -n <ngmlr.json> -o <out.pdf>. At least one .json file is required')
+  now<-Sys.time()
+  stop('[',now,'][Error] At least one .json from TREADMILL BASIC is required')
 }
 
+
+now<-Sys.time()
+message('[',now,'][Message] Plotting')
 
 #overall
 
@@ -252,15 +267,13 @@ p_len_vs_pid<-ggplot(data=dfstats, aes(x=w, y=x)) +
   facet_wrap(~z, scales = "free")+
   ggtitle('% identity vs length, on-target reads')
 
-
-
 #coverage per region
 
 dfcov<-do.call(rbind,listcov)
 dfcov$x<-factor(dfcov$x,levels=unique(dfcov$x))
 
 pcov<-ggplot(dfcov, aes(x=x, y=y, fill=z)) +
-  geom_boxplot(position=position_dodge(width = .25), width=0.2/length(unique(dfcov$x)))+
+  geom_boxplot(position=position_dodge(0.3), width=0.2/length(unique(dfcov$x)))+
   scale_fill_brewer(palette='Dark2') + theme_bw()+
   xlab('regions') + 
   ylab('coverage') +
@@ -278,3 +291,5 @@ print(p_qual_vs_pid, vp = vplayout(5:6, 1:2))
 print(p_len_vs_pid, vp = vplayout(7:8, 1:2))
 print(pcov, vp = vplayout(9:10, 1:2))
 dev.off()
+
+options(warn = defaultW)
