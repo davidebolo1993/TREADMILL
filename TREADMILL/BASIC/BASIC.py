@@ -15,6 +15,8 @@ import pysam
 import pybedtools
 import numpy as np
 
+global s
+global e
 
 def tuptodict(cigartuples):
 
@@ -43,7 +45,18 @@ def check_read(read):
 		return True
 
 
-def parse(BAM,BED): 
+def check_read_strict(read,start,end):
+
+	'''
+	Return True for primary alignments spanning the entire region
+	'''
+
+	if not read.is_unmapped and not read.is_secondary and not read.is_supplementary and read.reference_start <= s and read.reference_end >= e:
+
+		return True
+
+
+def parse(BAM,BED,strict): 
 
 	'''
 	Parse BAM and get overall and queries-specific statistics
@@ -149,7 +162,17 @@ def parse(BAM,BED):
 		key=query.chrom+':'+str(query.start)+'-'+str(query.end)
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Message] Calculating coverage in region ' + key)
-		query_arr=bamfile.count_coverage(query.chrom,query.start,query.end,read_callback=check_read)
+
+		if strict:
+
+			query_arr=bamfile.count_coverage(query.chrom,query.start,query.end,read_callback=check_read)
+
+		else:
+
+			s=query.start
+			e=query.end
+			query_arr=bamfile.count_coverage(query.chrom,query.start,query.end,read_callback=check_read_strict)
+
 		perbasecov=np.sum(query_arr,axis=0).tolist()
 		S_dict[key]=perbasecov
 
@@ -192,7 +215,7 @@ def run(parser,args):
 		print('[' + now + ']' + '[Error] Missing write permissions on the output folder')
 		sys.exit(1)
 
-	S_dict=parse(BAM,BED)
+	S_dict=parse(BAM,BED,args.strict)
 
 	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Writing output')

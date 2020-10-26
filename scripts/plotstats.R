@@ -38,6 +38,7 @@ opt = parse_args(OptionParser(option_list=option_list))
 listall<-list()
 listerr<-list()
 listcov<-list()
+liststats<-list()
 
 if (! is.null(opt$minimap2)) {
   
@@ -56,6 +57,9 @@ if (! is.null(opt$minimap2)) {
     
     merror<-data.frame(x=malignererr,y=mvalueerr,z=mkeyerr,stringsAsFactors = FALSE)
     listerr[['m']]<-merror
+
+    mstats<-data.frame(x=mjson$BAM_LEN, y=mjson$BAM_QUAL, w=mjson$BAM_PID, z=c('minimap2'),stringsAsFactors = FALSE)
+    liststats[['m']]<-mstats
     
     mcovkeys<-grep(':', names(mjson), value=TRUE)
     mtmplist<-list()
@@ -90,7 +94,10 @@ if (! is.null(opt$ngmlr)) {
     
     nerror<-data.frame(x=nalignererr,y=nvalueerr,z=nkeyerr,stringsAsFactors = FALSE)
     listerr[['n']]<-nerror
-    
+
+    nstats<-data.frame(x=njson$BAM_LEN, y=njson$BAM_QUAL, w=njson$BAM_PID, z=c('ngmlr'),stringsAsFactors = FALSE)
+    liststats[['n']]<-nstats
+   
     ncovkeys<-grep(':', names(njson), value=TRUE)
     ntmplist<-list()
     
@@ -124,6 +131,9 @@ if (! is.null(opt$ngmlr)) {
 
     #lerror<-data.frame(x=lalignererr,y=lvalueerr,z=lkeyerr,stringsAsFactors = FALSE)
     #listerr[['l']]<-lerror
+
+    #lstats<-data.frame(x=ljson$BAM_LEN, y=ljson$BAM_QUAL, w=ljson$BAM_PID, z=c('last'),stringsAsFactors = FALSE)
+    #liststats[['l']]<-lstats
 
     #lcovkeys<-grep(':', names(ljson), value=TRUE)
     #ltmplist<-list()
@@ -178,11 +188,71 @@ perr<-ggplot(dferr, aes(x=x, y=y, fill=z)) +
   geom_bar(stat='identity',width = .1)+
   theme_bw()+
   scale_fill_brewer(palette='Dark2')+
-  ylab('# bases') +
+  ylab('# bp') +
   xlab('aligner') +
   theme(legend.title=element_blank(), plot.title = element_text(hjust = 0.5))+
   geom_text(aes(label = label), position = position_stack(vjust = 0.5), size = 2)+
   ggtitle('Base composition of on-target reads')
+
+
+dfstats<-do.call(rbind, liststats)
+
+#pre-compute means per group
+
+qualmean<- ddply(dfstats, .(z), summarise, xmean=mean(y))
+lenmean<- ddply(dfstats, .(z), summarise, xmean=mean(x))
+idmean<- ddply(dfstats, .(z), summarise, xmean=mean(w))
+
+
+
+p_qual_vs_pid<-ggplot(data=dfstats, aes(x=w, y=y)) + 
+  geom_point(size = 0.6)+ stat_density2d(aes(col=..level.., alpha=..level..))+
+  geom_rug(sides="t", size=0.05, col=rgb(.8,0,0,alpha=.3)) + 
+  geom_rug(sides="r", size=0.05, col=rgb(0,0,.8,alpha=.3)) + 
+  scale_x_continuous("% identity") + 
+  scale_y_continuous("quality (phred)") + 
+  theme_bw()+
+  geom_vline(data=idmean, aes(xintercept = xmean),linetype='dashed', col='darkgreen')+
+  geom_hline(data=qualmean,aes(yintercept = xmean), linetype='dashed', col='darkgreen')+
+  scale_color_continuous(low="darkblue",high="darkred")+
+  guides(alpha="none",col=guide_legend(title="Density"))+
+  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
+  facet_wrap(~z, scales = "free")+
+  ggtitle('% identity vs quality, on-target reads')
+
+
+p_qual_vs_len<-ggplot(data=dfstats, aes(x=x, y=y)) + 
+  geom_point(size = 0.6)+ stat_density2d(aes(col=..level.., alpha=..level..))+
+  geom_rug(sides="t", size=0.05, col=rgb(.8,0,0,alpha=.3)) + 
+  geom_rug(sides="r", size=0.05, col=rgb(0,0,.8,alpha=.3)) + 
+  scale_x_continuous("length (#bp)") + 
+  scale_y_continuous("quality (phred)") + 
+  theme_bw()+
+  geom_vline(data=lenmean, aes(xintercept = xmean),linetype='dashed', col='darkgreen')+
+  geom_hline(data=qualmean,aes(yintercept = xmean), linetype='dashed', col='darkgreen')+
+  scale_color_continuous(low="darkblue",high="darkred")+
+  guides(alpha="none",col=guide_legend(title="Density"))+
+  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
+  facet_wrap(~z, scales = "free")+
+  ggtitle('Length vs quality, on-target reads')
+  
+
+p_len_vs_pid<-ggplot(data=dfstats, aes(x=w, y=x)) + 
+  geom_point(size = 0.6)+ stat_density2d(aes(col=..level.., alpha=..level..))+
+  geom_rug(sides="t", size=0.05, col=rgb(.8,0,0,alpha=.3)) + 
+  geom_rug(sides="r", size=0.05, col=rgb(0,0,.8,alpha=.3)) + 
+  scale_x_continuous("% identity") + 
+  scale_y_continuous("length (#bp)") + 
+  theme_bw()+
+  geom_vline(data=idmean, aes(xintercept = xmean),linetype='dashed', col='darkgreen')+
+  geom_hline(data=lenmean,aes(yintercept = xmean), linetype='dashed', col='darkgreen')+  
+  scale_color_continuous(low="darkblue",high="darkred")+
+  guides(alpha="none",col=guide_legend(title="Density"))+
+  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
+  facet_wrap(~z, scales = "free")+
+  ggtitle('% identity vs length, on-target reads')
+
+
 
 #coverage per region
 
@@ -190,17 +260,21 @@ dfcov<-do.call(rbind,listcov)
 dfcov$x<-factor(dfcov$x,levels=unique(dfcov$x))
 
 pcov<-ggplot(dfcov, aes(x=x, y=y, fill=z)) +
-  geom_boxplot(position=position_dodge(), width=0.3/length(unique(dfcov$x)))+
+  geom_boxplot(position=position_dodge(width = .25), width=0.2/length(unique(dfcov$x)))+
   scale_fill_brewer(palette='Dark2') + theme_bw()+
   xlab('regions') + 
   ylab('coverage') +
   theme(legend.title=element_blank(),plot.title = element_text(hjust = 0.5)) +
   ggtitle('Coverage on targets')
 
-pdf(file.path(opt$output), height=10, width=15, onefile=TRUE)
+
+pdf(file.path(opt$output), height=20, width=13, onefile=TRUE)
 grid.newpage()
-pushViewport(viewport(layout = grid.layout(2, 2)))
-print(pall, vp = vplayout(1, 1))
-print(perr, vp = vplayout(1, 2))
-print(pcov, vp = vplayout(2, 1:2))
+pushViewport(viewport(layout = grid.layout(10, 2)))
+print(pall, vp = vplayout(1:2, 1))
+print(perr, vp = vplayout(1:2, 2))
+print(p_qual_vs_len, vp = vplayout(3:4, 1:2))
+print(p_qual_vs_pid, vp = vplayout(5:6, 1:2))
+print(p_len_vs_pid, vp = vplayout(7:8, 1:2))
+print(pcov, vp = vplayout(9:10, 1:2))
 dev.off()

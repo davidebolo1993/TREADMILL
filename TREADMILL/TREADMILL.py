@@ -23,7 +23,12 @@ def main():
 	required.add_argument('-bed', '--bedfile', help='on-target regions in BED format', metavar='BED', required=True)
 	required.add_argument('-o', '--output', help='output gzipped JSON file', metavar='JSON.GZ', required=True)
 
+	additional = parser_basic.add_argument_group('Additional parameters')
+
+	additional.add_argument('--strict', help='only reads fully overlapping start-end are taken into account for coverage estimation', action='store_true')
+
 	parser_basic.set_defaults(func=run_subtool)
+
 
 	## RYDER ##
 
@@ -44,7 +49,7 @@ def main():
 	additional.add_argument('--similarity', help='sequence similarity percentage between generated (synthetic) reference sequences and between grouped reads [85.0]', type=float, metavar='', default=85.0)
 	additional.add_argument('--support', help='minimum group support (retain only groups with enough reads)[5]', required=False, default=5, type=int, metavar='')
 	additional.add_argument('--threads', help='number of threads to use for the re-alignment step [1]', type=int, metavar='', default=1)
-	additional.add_argument('--store', help='store the synthetic chromosomes used for the re-alignment step in FASTA file and the re-aligned BAM in the same folder used for the BIN file.', action='store_true')
+	additional.add_argument('--store', help='store the synthetic chromosomes used for the re-alignment step in FASTA file and the re-aligned BAM in the same folder used for the BIN file', action='store_true')
 	
 	parser_reef.set_defaults(func=run_subtool)
 

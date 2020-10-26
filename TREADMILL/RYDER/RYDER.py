@@ -208,7 +208,7 @@ def Map(a_instance,Slist,Qlist,sequences,flank,finalBAM,store):
 				coord=np.asarray(subnone(PyCoord(cigop_conv,hit.r_st))) #convert to list of coords, in the style of pysam
 				si,ei=find_nearest(coord,w_st),find_nearest(coord,w_en)
 
-				if hit.r_st <= w_st and hit.r_en >= w_en:#the entire rep is spanned, keep the read
+				if hit.r_st <= w_st and hit.r_en >= w_en: #the entire rep is spanned, keep the read
 
 					subsequence=seq[si:ei]
 					suberror=10**(-(np.mean(qual[si:ei]))/10)
