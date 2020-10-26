@@ -42,7 +42,7 @@ def check_read(read):
 		return True
 
 
-def parse(BAM,BED,strict): 
+def parse(BAM,BED): 
 
 	'''
 	Parse BAM and get overall and queries-specific statistics
@@ -192,7 +192,7 @@ def run(parser,args):
 		sys.exit(1)
 
 
-	S_dict=parse(BAM,BED,args.strict)
+	S_dict=parse(BAM,BED)
 
 	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Writing output')
