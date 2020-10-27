@@ -236,7 +236,7 @@ p_qual_vs_pid<-ggplot(data=dfstats, aes(x=w, y=y)) +
   geom_hline(data=qualmean,aes(yintercept = xmean), linetype='dashed', col='darkgreen')+
   scale_color_continuous(low="darkblue",high="darkred")+
   guides(alpha="none",col=guide_legend(title="Density"))+
-  theme(legend.position='right', legend.background=element_blank(),legend.direction="vertical", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
+  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
   facet_wrap(~z, scales = "free")+
   ggtitle('% identity vs quality, on-target reads')
 
@@ -252,7 +252,7 @@ p_qual_vs_len<-ggplot(data=dfstats, aes(x=x, y=y)) +
   geom_hline(data=qualmean,aes(yintercept = xmean), linetype='dashed', col='darkgreen')+
   scale_color_continuous(low="darkblue",high="darkred")+
   guides(alpha="none",col=guide_legend(title="Density"))+
-  theme(legend.position='right', legend.background=element_blank(),legend.direction="vertical", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
+  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
   facet_wrap(~z, scales = "free")+
   ggtitle('Length vs quality, on-target reads')
   
@@ -268,7 +268,7 @@ p_len_vs_pid<-ggplot(data=dfstats, aes(x=w, y=x)) +
   geom_hline(data=lenmean,aes(yintercept = xmean), linetype='dashed', col='darkgreen')+  
   scale_color_continuous(low="darkblue",high="darkred")+
   guides(alpha="none",col=guide_legend(title="Density"))+
-  theme(legend.position='right', legend.background=element_blank(),legend.direction="vertical", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
+  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
   facet_wrap(~z, scales = "free")+
   ggtitle('% identity vs length, on-target reads')
 
