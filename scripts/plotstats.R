@@ -176,15 +176,22 @@ message('[',now,'][Message] Plotting')
 dfall<-do.call(rbind,listall)
 dfall$x<-factor(dfall$x,levels=unique(dfall$x))
 
+
+dfall_mod <- ddply(dfall, .(z), transform, percent = y/sum(y) * 100)
+dfall_mod <- ddply(dfall_mod, .(z), transform, pos = (cumsum(y) - 0.5 * y))
+dfall_mod$label <- paste0(sprintf('%.3f', dfall_mod$percent), '%')
+dfall_mod$zoom <- TRUE
+
 pall<-ggplot(dfall, aes(x=as.numeric(x), y=y, fill=z))+
-  geom_bar(stat='identity',width = .3,position=position_dodge())+
+  geom_bar(stat='identity',width = .3,position="dodge")+
   theme_bw()+
   scale_fill_brewer(palette='Dark2')+
   ylab('# reads') + 
   xlab('read type')+
   theme(legend.title = element_blank(), plot.title = element_text(hjust = 0.5))+
   ggtitle('Overall statistics')+
-  facet_zoom(xlim=c(4,6),ylim=c(0,dfall$y[which(dfall$x=='on-target')]+100), horizontal=FALSE )+
+  facet_zoom(xlim=c(4,6),ylim=c(0,dfall$y[which(dfall$x=='on-target')]+100), horizontal=FALSE, zoom.data=zoom)+
+  geom_text(data=dfall_mod, aes(label = label), position=position_dodge(width=.3), size=2,vjust = -0.5)+
   scale_x_continuous(
     breaks = 1:length(unique(dfall$x)),
     label = levels(dfall$x)
@@ -218,8 +225,6 @@ qualmean<- ddply(dfstats, .(z), summarise, xmean=mean(y))
 lenmean<- ddply(dfstats, .(z), summarise, xmean=mean(x))
 idmean<- ddply(dfstats, .(z), summarise, xmean=mean(w))
 
-
-
 p_qual_vs_pid<-ggplot(data=dfstats, aes(x=w, y=y)) + 
   geom_point(size = 0.6)+ stat_density2d(aes(col=..level.., alpha=..level..))+
   geom_rug(sides="t", size=0.05, col=rgb(.8,0,0,alpha=.3)) + 
@@ -231,7 +236,7 @@ p_qual_vs_pid<-ggplot(data=dfstats, aes(x=w, y=y)) +
   geom_hline(data=qualmean,aes(yintercept = xmean), linetype='dashed', col='darkgreen')+
   scale_color_continuous(low="darkblue",high="darkred")+
   guides(alpha="none",col=guide_legend(title="Density"))+
-  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
+  theme(legend.position='right', legend.background=element_blank(),legend.direction="vertical", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
   facet_wrap(~z, scales = "free")+
   ggtitle('% identity vs quality, on-target reads')
 
@@ -247,7 +252,7 @@ p_qual_vs_len<-ggplot(data=dfstats, aes(x=x, y=y)) +
   geom_hline(data=qualmean,aes(yintercept = xmean), linetype='dashed', col='darkgreen')+
   scale_color_continuous(low="darkblue",high="darkred")+
   guides(alpha="none",col=guide_legend(title="Density"))+
-  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
+  theme(legend.position='right', legend.background=element_blank(),legend.direction="vertical", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
   facet_wrap(~z, scales = "free")+
   ggtitle('Length vs quality, on-target reads')
   
@@ -263,7 +268,7 @@ p_len_vs_pid<-ggplot(data=dfstats, aes(x=w, y=x)) +
   geom_hline(data=lenmean,aes(yintercept = xmean), linetype='dashed', col='darkgreen')+  
   scale_color_continuous(low="darkblue",high="darkred")+
   guides(alpha="none",col=guide_legend(title="Density"))+
-  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
+  theme(legend.position='right', legend.background=element_blank(),legend.direction="vertical", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
   facet_wrap(~z, scales = "free")+
   ggtitle('% identity vs length, on-target reads')
 
@@ -283,13 +288,13 @@ pcov<-ggplot(dfcov, aes(x=x, y=y, fill=z)) +
 
 pdf(file.path(opt$output), height=20, width=13, onefile=TRUE)
 grid.newpage()
-pushViewport(viewport(layout = grid.layout(10, 2)))
-print(pall, vp = vplayout(1:2, 1))
-print(perr, vp = vplayout(1:2, 2))
-print(p_qual_vs_len, vp = vplayout(3:4, 1:2))
-print(p_qual_vs_pid, vp = vplayout(5:6, 1:2))
-print(p_len_vs_pid, vp = vplayout(7:8, 1:2))
-print(pcov, vp = vplayout(9:10, 1:2))
+pushViewport(viewport(layout = grid.layout(10, 10)))
+print(pall, vp = vplayout(1:2, 1:5))
+print(perr, vp = vplayout(1:2, 6:10))
+print(p_qual_vs_len, vp = vplayout(3:4, 2:9))
+print(p_qual_vs_pid, vp = vplayout(5:6, 2:9))
+print(p_len_vs_pid, vp = vplayout(7:8, 2:9))
+print(pcov, vp = vplayout(9:10, 1:10))
 dev.off()
 
 options(warn = defaultW)
