@@ -164,16 +164,19 @@ def run(parser,args):
 	'''
 
 	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+	print('[' + now + '][Message] TREADMILL BASIC v1.0')
 
 	BAM=os.path.abspath(args.bamfile)
 
 	if not os.path.isfile(BAM):
 
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Error] Invalid BAM file')
 		sys.exit(1)
 
 	if not os.path.isfile(BAM+'.bai'):
 
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Error] Missing BAM file index')
 		sys.exit(1)
 
@@ -181,6 +184,7 @@ def run(parser,args):
 
 	if not os.path.isfile(BED):
 
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Error] Invalid BED file')
 		sys.exit(1)
 
@@ -188,6 +192,7 @@ def run(parser,args):
 
 	if not os.access(os.path.dirname(JSON),os.W_OK):
 
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Error] Missing write permissions on the output folder')
 		sys.exit(1)
 

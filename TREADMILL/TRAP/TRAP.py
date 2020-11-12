@@ -357,11 +357,13 @@ def run(parser,args):
 	'''
 
 	now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+	print('[' + now + '][Message] TREADMILL TRAP v1.0')
 
 	BIN=os.path.abspath(args.input)
 
 	if not os.path.isfile(BIN):
 
+		now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Error] Invalid BIN file')
 		sys.exit(1)
 
@@ -375,9 +377,9 @@ def run(parser,args):
 
 		except:
 
+			now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 			print('[' + now + ']' + '[Error] Cannot create the output folder')
 			sys.exit(1)
-
 
 	ParseGroups(BIN,OUT,args.match,args.mismatch,args.gapopen,args.gapextend,args.similarity,args.substitution,args.deletion,args.insertion,args.maxedit)
 
