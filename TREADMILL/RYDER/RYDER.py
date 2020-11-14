@@ -133,20 +133,26 @@ def PyCoord(CIGOP,ref_pointer):
 	s=ref_pointer
 	coords=[]
 
-	for op in list(CIGOP):
+	for i,op in enumerate(list(CIGOP)):
 
-		if op == 'M':
+		if i==0 and op == 'M':
 
 			coords.append(s)
-			s+=1
 
-		elif op == 'I' or op == 'S':
+		else:
 
-			coords.append(None)
+			if op == 'M':
 
-		elif op == 'D':
+				s+=1
+				coords.append(s)
 
-			s+=1
+			elif op == 'I' or op == 'S':
+
+				coords.append(None)
+
+			elif op == 'D':
+
+				s+=1
 
 	return coords
 
