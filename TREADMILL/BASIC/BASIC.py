@@ -25,7 +25,7 @@ def tuptodict(cigartuples):
 
 	for key, value in cigartuples:
 
-		Cdict[key] = Cdict[key]+value
+		Cdict[key]+=value
 
 	return Cdict
 
