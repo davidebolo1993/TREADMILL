@@ -177,7 +177,6 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,d
 	Generate POA-based consensus sequences for each input group and identify REF/ALT alleles
 	'''
 
-	now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	binin=open(BIN,'rb')
 	dictR = pickle.load(binin)
 	binin.close()
@@ -346,7 +345,6 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,d
 
 	now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Indexing VCF')
-	
 	pysam.tabix_index(OUT + '/TREADMILL.vcf', preset='vcf', force=True)
 
 
@@ -361,7 +359,7 @@ def run(parser,args):
 
 	BIN=os.path.abspath(args.input)
 
-	if not os.path.isfile(BIN):
+	if not os.path.exists(BIN):
 
 		now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Error] Invalid BIN file')

@@ -251,12 +251,21 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 	'''
 	Create synthetic chromosomes harboring different set of repeat expansions and map original sequences to these chromosomes. Group reads by similarity.
 	'''
-	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
 	hierarchy=AutoVivification()
 	fastafile=pyfaidx.Fasta(REF)
 	bamfile=pysam.AlignmentFile(BAM, 'rb')
-	bedfile=pybedtools.BedTool(BED)
+	
+	try:
+		
+		bedfile=pybedtools.BedTool(BED)
+		bedsrtd=bedfile.sort()
+
+	except:
+
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+		print('[' + now + ']' + '[Error] Invalid BED file format')
+		sys.exit(1)
 
 	FAKEREF=os.path.abspath(os.path.dirname(BIN) + '/fake.fa')
 	FAKEBAM=os.path.abspath(os.path.dirname(BIN) + '/fake.bam')
@@ -265,18 +274,10 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 	manager=multiprocessing.Manager()
 	BAMsegments=manager.list() #initialize even if this will stay empty
 	
-	try:
-		
-		bedsrtd=bedfile.sort()
-
-	except:
-
-		print('[' + now + ']' + '[Error] Invalid BED file format')
-		sys.exit(1)
-
 	if len(motifs) != len(bedsrtd):
 
-		print('[' + now + ']' + '[Error] The number of repeated motifs does not match the number of regions in the BED file')
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+		print('[' + now + ']' + '[Error] The number of repeated motifs provided does not match the number of regions in the BED file')
 		sys.exit(1)	
 
 	for i,query in enumerate(bedsrtd):
@@ -295,12 +296,14 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 
 		if len(seen) == 0:
 
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 			print('[' + now + ']' + '[Error] Could not find the specified repeat in reference')
 			sys.exit(1)
 
 		else:
 
 			min_=len(seen)
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 			print('[' + now + ']' + '[Message] ' + str(min_) + ' ' + repeat + ' in reference sequence')
 
 			seqdict=dict()
@@ -435,23 +438,30 @@ def run(parser,args):
 	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + '][Message] TREADMILL RYDER v1.0')
 
-	BAM=os.path.abspath(args.bamfile)
-
-	if not os.path.isfile(BAM):
+	if not os.path.exists(BAM):
 
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Error] Invalid BAM file')
 		sys.exit(1)
 
-	if not os.path.isfile(BAM+'.bai'):
+	if not os.path.exists(BAM+'.bai'):
 
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-		print('[' + now + ']' + '[Warning] Missing BAM file index. Indexing')
-		pysam.index(BAM)
+		print('[' + now + ']' + '[Warning] Missing BAM file index. Creating')
+		
+		try:
+
+			pysam.index(BAM)
+
+		except:
+
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+			print('[' + now + ']' + '[Error] Cannot index BAM')
+			sys.exit(1)
 
 	BED=os.path.abspath(args.bedfile)
 
-	if not os.path.isfile(BED):
+	if not os.path.exists(BED):
 
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Error] Invalid BED file')

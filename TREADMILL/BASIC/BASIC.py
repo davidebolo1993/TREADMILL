@@ -65,20 +65,20 @@ def parse(BAM,BED):
 	S_dict['BAM_QUAL'] = [] #all qualities in list
 	S_dict['BAM_PID'] = [] #all PID in list
 
-	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-
 	bamfile=pysam.AlignmentFile(BAM, 'rb')
-	bedfile=pybedtools.BedTool(BED)
 	
 	try:
 		
+		bedfile=pybedtools.BedTool(BED)
 		bedsrtd=bedfile.sort()
 
 	except:
 
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Error] Invalid BED file format')
 		sys.exit(1)
 
+	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Parsing BAM file')
 
 	ivf=bedsrtd.as_intervalfile()
@@ -137,6 +137,7 @@ def parse(BAM,BED):
 
 		else:
 
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 			print('[Error] BAM misses the required MD/NM tags')
 			bamfile.close()
 			sys.exit(1)
@@ -168,21 +169,30 @@ def run(parser,args):
 
 	BAM=os.path.abspath(args.bamfile)
 
-	if not os.path.isfile(BAM):
+	if not os.path.exists(BAM):
 
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Error] Invalid BAM file')
 		sys.exit(1)
 
-	if not os.path.isfile(BAM+'.bai'):
+	if not os.path.exists(BAM+'.bai'):
 
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-		print('[' + now + ']' + '[Error] Missing BAM file index')
-		sys.exit(1)
+		print('[' + now + ']' + '[Warning] Missing BAM file index. Creating')
+		
+		try:
+
+			pysam.index(BAM)
+
+		except:
+
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+			print('[' + now + ']' + '[Error] Cannot index BAM')
+			sys.exit(1)
 
 	BED=os.path.abspath(args.bedfile)
 
-	if not os.path.isfile(BED):
+	if not os.path.exists(BED):
 
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Error] Invalid BED file')
@@ -195,7 +205,6 @@ def run(parser,args):
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Error] Missing write permissions on the output folder')
 		sys.exit(1)
-
 
 	S_dict=parse(BAM,BED)
 
