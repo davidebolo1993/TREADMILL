@@ -43,7 +43,7 @@ def subnone(coordinates):
 	Substitute None (soft-clipped/inserted) coordinates with a negative value
 	'''
 
-	return [-9999999 if v is None else v for v in coordinates]
+	return [-9999999999 if v is None else v for v in coordinates]
 
 
 def find_nearest(array, value):
@@ -437,6 +437,8 @@ def run(parser,args):
 
 	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + '][Message] TREADMILL RYDER v1.0')
+
+	BAM=os.path.abspath(args.bamfile)
 
 	if not os.path.exists(BAM):
 

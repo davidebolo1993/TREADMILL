@@ -24,7 +24,6 @@ def main():
 
 	parser_basic.set_defaults(func=run_subtool)
 
-
 	## RYDER ##
 
 	parser_reef = subparsers.add_parser('RYDER', help='gRoup bY DEcision tRee. Extract on-target reads from a targeted nanopore experiment and group them by similarity. This module (1) a re-maps the original reads to synthetic chromosomes harboring repeat expansions and (2) group reads by similarity using an edit distance-based decision tree')

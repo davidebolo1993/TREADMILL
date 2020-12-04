@@ -30,7 +30,6 @@ def tuptodict(cigartuples):
 	return Cdict
 
 
-
 def check_read(read):
 
 	'''

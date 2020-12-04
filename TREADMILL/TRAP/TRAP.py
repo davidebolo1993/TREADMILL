@@ -105,7 +105,7 @@ def VCFH(ctgs,BIN):
 	allelerefseq='##INFO=<ID=RALS,Number=1,Type=String,Description="Reference allele sequence (if present)">\n'
 	alleledistance='##INFO=<ID=RALD,Number=1,Type=Float,Description="Sequence similarity (edit distance-based) between reference sequence and reference allele (if present)">\n'
 	allelerefnum='##INFO=<ID=RALN,Number=1,Type=Integer,Description="Number of repeats in the reference allele (if present)">\n'
-	allelerefint='##INFO=<ID=RALI,Number=1,Type=String,Description="Interruptions in the reference allele (if present)">\n'
+	allelerefint='##INFO=<ID=RALI,Number=1,Type=String,Description="Interruptions/approximate matches in the reference allele (if present)">\n'
 	altdist='##INFO=<ID=ALTD,Number=1,Type=Float,Description="If a reference allele is not present, the highest similarity score (edit distance-based) between the alternative allele/s and the reference sequence">\n'
 	allele1num='##INFO=<ID=AL1N,Number=1,Type=Integer,Description="Number of repeats in the 1st alternative allele (if present)">\n'
 	allele1int='##INFO=<ID=AL1I,Number=1,Type=String,Description="Interruptions/approximate matches in the 1st alternative allele (if present)">\n'
