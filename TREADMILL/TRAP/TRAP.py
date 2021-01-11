@@ -105,7 +105,7 @@ def VCFH(ctgs,BIN):
 	allelerefseq='##INFO=<ID=RALS,Number=1,Type=String,Description="Reference allele sequence (if present)">\n'
 	alleledistance='##INFO=<ID=RALD,Number=1,Type=Float,Description="Sequence similarity (edit distance-based) between reference sequence and reference allele (if present)">\n'
 	allelerefnum='##INFO=<ID=RALN,Number=1,Type=Integer,Description="Number of repeats in the reference allele (if present)">\n'
-	allelerefint='##INFO=<ID=RALI,Number=1,Type=String,Description="Interruptions/approximate matches in the reference allele (if present)">\n'
+	allelerefint='##INFO=<ID=RALI,Number=1,Type=String,Description="Interruptions in the reference allele (if present)">\n'
 	altdist='##INFO=<ID=ALTD,Number=1,Type=Float,Description="If a reference allele is not present, the highest similarity score (edit distance-based) between the alternative allele/s and the reference sequence">\n'
 	allele1num='##INFO=<ID=AL1N,Number=1,Type=Integer,Description="Number of repeats in the 1st alternative allele (if present)">\n'
 	allele1int='##INFO=<ID=AL1I,Number=1,Type=String,Description="Interruptions/approximate matches in the 1st alternative allele (if present)">\n'
@@ -257,6 +257,10 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,d
 
 				dictA[str(i)] = sortlistA[i]
 
+			if len(dictA.keys()) == 1: #just one dict
+
+				dictA['1'] = ('.','.',0)
+
 		else: #if not, all alternative alleles
 
 			RSIM=sortlistA[0][1]
@@ -304,8 +308,8 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,d
 
 			else: #0/0
 
-				Hkey=[x for x in GL.keys() if '0' in str(x) and x!= '0/0'][0]
-				getCombos=['0/0', Hkey,  Hkey.split('/')[1]+'/'+ Hkey.split('/')[1]]
+				Hkey='0/1'
+				getCombos=['0/0', '0/1', '1/1']
 				Wgenotype='0/0'
 				altal=''
 				AL1N,AL1I='.','.'
