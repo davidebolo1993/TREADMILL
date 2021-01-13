@@ -11,8 +11,7 @@ import subprocess
 import shutil
 import gzip
 from collections import OrderedDict,Counter
-from itertools import combinations_with_replacement
-
+from itertools import combinations_with_replacement,chain
 #additional modules
 
 import editdistance
@@ -111,6 +110,8 @@ def VCFH(ctgs,BIN):
 	allele1int='##INFO=<ID=AL1I,Number=1,Type=String,Description="Interruptions/approximate matches in the 1st alternative allele (if present)">\n'
 	allele2num='##INFO=<ID=AL2N,Number=1,Type=Integer,Description="Number of repeats in the 2nd alternative allele (if present)">\n'
 	allele2int='##INFO=<ID=AL2I,Number=1,Type=String,Description="Interruptions/approximate matches in the 2nd alternative allele (if present)">\n'
+	subclonen='##INFO=<ID=SUBN,Number=1,Type=String,Description="Number of repeats in subpopulations that cluster alternatively (if any)">\n'
+	subclonep='##INFO=<ID=SUBP,Number=1,Type=String,Description="Relative percentage of subpopulations that cluster alternatively (if any)">\n'
 
 	#FORMAT field
 
@@ -120,10 +121,10 @@ def VCFH(ctgs,BIN):
 	ad='##FORMAT=<ID=AD,Number=G,Type=Integer,Description="Depth of alleles">\n'
 	head='#CHROM' + '\t' + 'POS' '\t' + 'ID' + '\t' + 'REF' + '\t' + 'ALT' + '\t' + 'QUAL' + '\t' + 'FILTER' + '\t' + 'INFO' + '\t' + 'FORMAT' + '\t' + os.path.basename(BIN).split('.')[0].upper() + '\n'
 
-	return fileformat+filedate+source+contigs+end+motif+refrep+refint+allelerefseq+alleledistance+allelerefnum+allelerefint+altdist+allele1num+allele1int+allele2num+allele2int+gt+gl+dp+ad+head
+	return fileformat+filedate+source+contigs+end+motif+refrep+refint+allelerefseq+alleledistance+allelerefnum+allelerefint+altdist+allele1num+allele1int+allele2num+allele2int+subclonen+subclonep+gt+gl+dp+ad+head
 
 
-def VCFV(keyR,REF,ALT,MOTIF,RSIM,RN,RI,RALS,RALD,RALN,RALI,AL1N,AL1I,AL2N,AL2I,GT,GL,DP,AD):
+def VCFV(keyR,REF,ALT,MOTIF,RSIM,RN,RI,RALS,RALD,RALN,RALI,AL1N,AL1I,AL2N,AL2I,SUBN,SUBP,GT,GL,DP,AD):
 
 	'''
 	Write VCF variant
@@ -134,7 +135,7 @@ def VCFV(keyR,REF,ALT,MOTIF,RSIM,RN,RI,RALS,RALD,RALN,RALI,AL1N,AL1I,AL2N,AL2I,G
 	ID='.'
 	QUAL='.'
 	FILTER='.'
-	INFO='END=' + keyR.split(':')[1].split('-')[1] + ';MOTIF=' + MOTIF +';RN='+ str(RN) + ';RI='+ RI + ';RALS=' + RALS + ';RALD='+ str(RALD) + ';RALN=' + str(RALN) + ';RALI=' + RALI + ';ALTD='+ str(RSIM) + ';AL1N='+ str(AL1N) + ';AL1I='+ AL1I + ';AL2N='+ str(AL2N) + ';AL2I='+ AL2I
+	INFO='END=' + keyR.split(':')[1].split('-')[1] + ';MOTIF=' + MOTIF +';RN='+ str(RN) + ';RI='+ RI + ';RALS=' + RALS + ';RALD='+ str(RALD) + ';RALN=' + str(RALN) + ';RALI=' + RALI + ';ALTD='+ str(RSIM) + ';AL1N='+ str(AL1N) + ';AL1I='+ AL1I + ';AL2N='+ str(AL2N) + ';AL2I='+ AL2I+ ';SUBN='+ SUBN + ';SUBP='+ SUBP
 	FORMAT='GT:GL:DP:AD\t' + GT + ':' + GL + ':' + DP + ':' + AD
 	variant=CHROM + '\t' + POS + '\t' + ID +'\t' + REF + '\t' + ALT + '\t' + QUAL +'\t' + FILTER +'\t'+ INFO +'\t'+ FORMAT + '\n' 
 
@@ -330,12 +331,45 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,d
 		allpos=['1']*len(names1) + ['2']*len(names2)
 		allreg=[str(keyR)]*len(allpos)
 
+
+		#calculate percentage of sub-groups
+
+		sns=[]
+		sis=[]
+		otherkeys=set(chain.from_iterable([x.split('/') for x in list(GL) if (getKey.split('/')[0] not in x and getKey.split('/')[1] not in x)]))
+		
+		for key in otherkeys:
+
+			if dictA[key][0] == '.':
+
+				continue
+
+			else:
+
+				subg=listA[listA.index(dictA[key])]
+				SN,SI=FuzzyMatch(subg[0],sMotif,substitution,deletion,insertion,maxedit)
+				subperc=round((subg[2]/dictR[keyR]['coverage'])*100,2)
+
+				sns.append(SN)
+				sis.append(subperc)
+
+		if len(sns) == 0:
+
+			SUBN= '.'
+			SUBP= '.'
+
+		else:
+
+			SUBN=','.join(str(x) for x in sns)
+			SUBP=','.join(str(x) for x in sis)
+
+
 		now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Message] Writing VCF entry')
 
 		with open(os.path.abspath(OUT + '/TREADMILL.vcf'), 'a') as vcfout:
 
-			vcfout.write(VCFV(keyR,refsequence,altal,sMotif,RSIM,Rref,Iref,dictA['0'][0],dictA['0'][1],RALN,RALI,AL1N,AL1I,AL2N,AL2I,Wgenotype,WGL,str(dictR[keyR]['coverage']),WAD))
+			vcfout.write(VCFV(keyR,refsequence,altal,sMotif,RSIM,Rref,Iref,dictA['0'][0],dictA['0'][1],RALN,RALI,AL1N,AL1I,AL2N,AL2I,SUBN,SUBP,Wgenotype,WGL,str(dictR[keyR]['coverage']),WAD))
 
 		now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Message] Writing names to TSV')
