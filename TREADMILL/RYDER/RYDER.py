@@ -60,18 +60,18 @@ def find_nearest(array, value):
 
 #def similarity(worda,wordb):
 
-	'''
-	Return the edit distance-based similarity score between 2 sequences
-	'''
+	#'''
+	#Return the edit distance-based similarity score between 2 sequences
+	#'''
 
 	#return 100-100*editdistance.eval(worda,wordb)/max(len(worda),len(wordb))
 
 
 #def decisiontree(readsdict,mingroupsize,treshold):
 
-	'''
-	Cluster strings in list by similarity (edit distance score)
-	'''
+	#'''
+	#Cluster strings in list by similarity (edit distance score)
+	#'''
 
 	#paired ={c:{c} for c in readsdict.values()}
 
