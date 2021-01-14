@@ -13,4 +13,4 @@ setup(name='TREADMILL',
   zip_safe=False,
   packages=find_packages(),
   include_package_data=True,
-  entry_points={'console_scripts': ['TREADMILL=TREADMILL.TREADMILL:main']}          
+  entry_points={'console_scripts': ['TREADMILL=TREADMILL.TREADMILL:main']}
