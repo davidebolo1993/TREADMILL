@@ -17,6 +17,9 @@ import pybedtools
 import numpy as np
 import mappy as mp
 import editdistance
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.metrics.pairwise import pairwise_distances
+
 
 class AutoVivification(dict):
 
@@ -55,63 +58,98 @@ def find_nearest(array, value):
 	return (np.abs(array - value)).argmin()
 
 
-def similarity(worda,wordb):
+#def similarity(worda,wordb):
 
 	'''
 	Return the edit distance-based similarity score between 2 sequences
 	'''
 
-	return 100-100*editdistance.eval(worda,wordb)/max(len(worda),len(wordb))
+	#return 100-100*editdistance.eval(worda,wordb)/max(len(worda),len(wordb))
 
 
-def decisiontree(readsdict,mingroupsize,treshold):
+#def decisiontree(readsdict,mingroupsize,treshold):
 
 	'''
 	Cluster strings in list by similarity (edit distance score)
 	'''
 
-	paired ={c:{c} for c in readsdict.values()}
+	#paired ={c:{c} for c in readsdict.values()}
 
-	for worda,wordb in combinations(readsdict.values(),2):
+	#for worda,wordb in combinations(readsdict.values(),2):
 
-		if similarity(worda,wordb) < treshold: 
+		#if similarity(worda,wordb) < treshold: 
 
-				continue
+				#continue
 
-		else:
+		#else:
 
-			paired[worda].add(wordb)
-			paired[wordb].add(worda)
+			#paired[worda].add(wordb)
+			#paired[wordb].add(worda)
 
 
-	decision = list()
-	ungrouped = set(readsdict.values())
+	#decision = list()
+	#ungrouped = set(readsdict.values())
 	
-	while ungrouped:
+	#while ungrouped:
 
-		best = {}
+		#best = {}
 
-		for word in ungrouped:
+		#for word in ungrouped:
 
-			g = paired[word] & ungrouped
+			#g = paired[word] & ungrouped
 
-			for c in g.copy():
+			#for c in g.copy():
 			
-				g &= paired[c]
+				#g &= paired[c]
 
-			if len(g) > len(best):
+			#if len(g) > len(best):
 
-				best=g
+				#best=g
 
-		if len(best) < mingroupsize:
+		#if len(best) < mingroupsize:
 
-			break
+			#break
 
-		ungrouped -= best
+		#ungrouped -= best
 
-		decision.append(best)
+		#decision.append(best)
 
-	return decision
+	#return decision
+
+def similarity(x,y):
+
+	'''
+	Calculate custom distance metric
+	'''
+
+	return int(editdistance.eval(data[int(x[0])], data[int(y[0])]))
+
+
+def decisiontree(readsdict,mingroupsize,threshold):
+
+	'''
+	Cluster strings in list by similarity (edit distance score)
+	'''
+
+	result=[]
+	global data
+
+	data=list(readsdict.values())
+	X = np.arange(len(data)).reshape(-1, 1)
+	metric= pairwise_distances(X, X, metric=similarity)
+	agg = AgglomerativeClustering(n_clusters=None,distance_threshold=(100-threshold), affinity='precomputed', linkage='average')
+	cluster_=agg.fit(metric)
+	groups=set(cluster_.labels_)
+
+	for g in groups:
+
+		group=list(np.take(data,np.where(cluster_.labels_ == g))[0])
+
+		if len(group) >= mingroupsize:
+
+			result.append(group)
+
+	return result
 
 
 def Chunks(l,n):
