@@ -172,7 +172,7 @@ def GTLH(alleles,coverage,error,PHom,PHet):
 
 
 
-def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,deletion,insertion,maxedit):
+def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,deletion,insertion,maxedit,subgroups):
 
 	'''
 	Generate POA-based consensus sequences for each input group and identify REF/ALT alleles
@@ -332,26 +332,31 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,d
 		allreg=[str(keyR)]*len(allpos)
 
 
+
+
 		#calculate percentage of sub-groups
 
 		sns=[]
 		sis=[]
-		otherkeys=set(chain.from_iterable([x.split('/') for x in list(GL) if (getKey.split('/')[0] not in x and getKey.split('/')[1] not in x)]))
-		
-		for key in otherkeys:
 
-			if dictA[key][0] == '.':
+		if subgroups:
 
-				continue
+			otherkeys=set(chain.from_iterable([x.split('/') for x in list(GL) if (getKey.split('/')[0] not in x and getKey.split('/')[1] not in x)]))
+			
+			for key in otherkeys:
 
-			else:
+				if dictA[key][0] == '.':
 
-				subg=listA[listA.index(dictA[key])]
-				SN,SI=FuzzyMatch(subg[0],sMotif,substitution,deletion,insertion,maxedit)
-				subperc=round((subg[2]/dictR[keyR]['coverage'])*100,2)
+					continue
 
-				sns.append(SN)
-				sis.append(subperc)
+				else:
+
+					subg=listA[listA.index(dictA[key])]
+					SN,SI=FuzzyMatch(subg[0],sMotif,substitution,deletion,insertion,maxedit)
+					subperc=round((subg[2]/dictR[keyR]['coverage'])*100,2)
+
+					sns.append(SN)
+					sis.append(subperc)
 
 		if len(sns) == 0:
 
@@ -417,7 +422,7 @@ def run(parser,args):
 			print('[' + now + ']' + '[Error] Cannot create the output folder')
 			sys.exit(1)
 
-	ParseGroups(BIN,OUT,args.match,args.mismatch,args.gapopen,args.gapextend,args.similarity,args.substitution,args.deletion,args.insertion,args.maxedit)
+	ParseGroups(BIN,OUT,args.match,args.mismatch,args.gapopen,args.gapextend,args.similarity,args.substitution,args.deletion,args.insertion,args.maxedit, args.subgroups)
 
 	now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Done')
