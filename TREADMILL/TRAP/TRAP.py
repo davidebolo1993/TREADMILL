@@ -172,7 +172,7 @@ def GTLH(alleles,coverage,error,PHom,PHet):
 
 
 
-def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,deletion,insertion,maxedit,subgroups):
+def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,deletion,insertion,maxedit,subgroups,weight):
 
 	'''
 	Generate POA-based consensus sequences for each input group and identify REF/ALT alleles
@@ -233,7 +233,7 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,d
 
 				with open(os.path.abspath(OUTR + '/a'+str(i+1)+'.cs.fa'), 'w') as cs:
 
-					subprocess.call([CS_CPP, str(match), str(mismatch), str(gapopen), str(gapextend), os.path.abspath(OUTR + '/r.tmp.fa'), os.path.abspath(OUTR + '/a'+str(i+1)+'.tmp.fa')], stdout=cs)
+					subprocess.call([CS_CPP, str(match), str(mismatch), str(gapopen), str(gapextend), os.path.abspath(OUTR + '/r.tmp.fa'), os.path.abspath(OUTR + '/a'+str(i+1)+'.tmp.fa'), str(weight)], stdout=cs)
 
 				os.remove(os.path.abspath(OUTR + '/a'+str(i+1)+'.tmp.fa')) #clean-up
 
@@ -422,7 +422,7 @@ def run(parser,args):
 			print('[' + now + ']' + '[Error] Cannot create the output folder')
 			sys.exit(1)
 
-	ParseGroups(BIN,OUT,args.match,args.mismatch,args.gapopen,args.gapextend,args.similarity,args.substitution,args.deletion,args.insertion,args.maxedit, args.subgroups)
+	ParseGroups(BIN,OUT,args.match,args.mismatch,args.gapopen,args.gapextend,args.similarity,args.substitution,args.deletion,args.insertion,args.maxedit, args.subgroups, args.reference_weight)
 
 	now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Done')

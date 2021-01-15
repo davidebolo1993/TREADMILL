@@ -1,7 +1,7 @@
 #include "spoa/spoa.hpp"
 #include <iostream>
 #include <fstream>
-
+#include <cmath>
 
 int main(int argc, char** argv) {
 
@@ -65,6 +65,9 @@ int main(int argc, char** argv) {
 
 	int vsize = static_cast<int>(sequences.size());
 
+	int percentage = atoi(argv[7]);
+	int refnum = round(vsize/100*percentage);
+
 	auto alignment_engine = spoa::createAlignmentEngine(static_cast<spoa::AlignmentType>(alignment_type),(int8_t) match_score, (int8_t) mismatch_score,(int8_t) gap_opening_score, (int8_t) gap_extension_score);
 	auto graph = spoa::createGraph();
 
@@ -77,13 +80,13 @@ int main(int argc, char** argv) {
 	// so for each subsequent addition we save computation by just adding the same alignment onto the graph over and over.
 
 
-	 if (vsize/2 > 0) {
+	 if (refnum > 0) {
 			
 		auto first_seed_aln = alignment_engine->align(reference_seq, graph);
 		graph->add_alignment(first_seed_aln, reference_seq);
 		auto next_seed_aln = alignment_engine->align(reference_seq, graph);
 			
-		for (int i = 1; i < vsize/2; i++){
+		for (int i = 1; i < refnum; i++){
 			
 			graph->add_alignment(next_seed_aln, reference_seq);
 		

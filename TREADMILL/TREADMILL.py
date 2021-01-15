@@ -62,6 +62,7 @@ def main():
 	algorithm.add_argument('-x', '--mismatch', help='mismatch penalty for consensus computation [-4]', metavar='', default=-4, type=int)
 	algorithm.add_argument('-go', '--gapopen', help='gap opening penalty for consensus computation [-8]', metavar='', default=-8, type=int)
 	algorithm.add_argument('-ge', '--gapextend', help='gap extending penalty for consensus computation [-6]', metavar='', default=-6, type=int)
+	algorithm.add_argument('--reference_weight', help='reference weight for consensus computation. This weights the reference with respect to the number of noisy reads for which consensus is computed [0.0]', metavar='', default=0.0, type=float)
 
 	repeat=parser_trap.add_argument_group('Repeat profiling parameters')
 
@@ -74,7 +75,6 @@ def main():
 
 	additional.add_argument('--similarity', help='sequence similarity percentage (discriminate between reference and alternative alleles) [80.0]', required=False, default=80.0, type=float, metavar='')
 	additional.add_argument('--subgroups', help='if multiple alleles are present, output their repeat content and frequency', action='store_true')
-
 
 	parser_trap.set_defaults(func=run_subtool)
 
