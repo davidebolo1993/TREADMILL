@@ -33,16 +33,22 @@ def main():
 	required.add_argument('-fa', '--fastafile', help='reference genome in FASTA format', metavar='FASTA', required=True)
 	required.add_argument('-bam', '--bamfile', help='sorted BAM file', metavar='BAM', required=True)
 	required.add_argument('-bed', '--bedfile', help='on-target regions in BED format', metavar='BED', required=True)
-	required.add_argument('-o', '--output', help='output binary map', metavar='BIN', required=True)
+	required.add_argument('-o', '--output', help='output binary map. Output folder will be created if it does not exist', metavar='BIN', required=True)
 	required.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to RYDER)', nargs='+', action='append', required=True, metavar='MOTIF')
+
+
+	cluster = parser_reef.add_argument_group('Agglomerative clustering parameters')
+	cluster.add_argument('--affinity', help='sequence similarity percentage between clustered sequences [70.0]', type=float, default=70.0, metavar='')
+	cluster.add_argument('--clusters', help = 'force agglomerative clustering to generate the specified number of clusters. Useful if clustering by sequence similarity does not generate the expected number of groups [None]', default=None, metavar='')
+	cluster.add_argument('--support', help='minimum group support (retain only clustered groups with enough members) [5]', default=5, type=int, metavar='')
+
 
 	additional = parser_reef.add_argument_group('Additional parameters')
 
-	additional.add_argument('--maxsize', help='approximate maximum number of repeated motifs in the (synthetic) reference sequences [500]', type=int, default=500, metavar='')
+	additional.add_argument('--maxsize', help='maximum number (approximate) of repeated motifs in the (synthetic) reference sequences [500]', type=int, default=500, metavar='')
 	additional.add_argument('--flanking', help='number of bases flanking repeats in the (synthetic) reference sequences [1000]', type=int, metavar='', default=1000)
-	additional.add_argument('--similarity', help='sequence similarity percentage between generated (synthetic) reference sequences and clustered groups [85.0]', type=float, metavar='', default=85.0)
+	additional.add_argument('--similarity', help='sequence similarity percentage between generated (synthetic) reference sequences [85.0]', type=float, metavar='', default=85.0)
 	additional.add_argument('--threads', help='number of threads to use for the re-alignment step [1]', type=int, metavar='', default=1)
-	additional.add_argument('--support', help='minimum group support (retain only clustered groups with enough reads)[5]', required=False, default=5, type=int, metavar='')
 	additional.add_argument('--store', help='store the synthetic chromosomes used for the re-alignment step in FASTA file and the re-aligned BAM in the same folder used for the BIN file', action='store_true')
 	
 	parser_reef.set_defaults(func=run_subtool)

@@ -332,8 +332,6 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,d
 		allreg=[str(keyR)]*len(allpos)
 
 
-
-
 		#calculate percentage of sub-groups
 
 		sns=[]
@@ -374,6 +372,10 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,d
 
 		with open(os.path.abspath(OUT + '/TREADMILL.vcf'), 'a') as vcfout:
 
+			RALI = '.' if RALI == ':' else RALI #convert to missing if only ":"
+			AL1I = '.' if AL1I == ':' else AL1I
+			AL2I = '.' if AL2I == ':' else AL2I
+
 			vcfout.write(VCFV(keyR,refsequence,altal,sMotif,RSIM,Rref,Iref,dictA['0'][0],dictA['0'][1],RALN,RALI,AL1N,AL1I,AL2N,AL2I,SUBN,SUBP,Wgenotype,WGL,str(dictR[keyR]['coverage']),WAD))
 
 		now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
@@ -407,6 +409,7 @@ def run(parser,args):
 		now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Error] Invalid BIN file')
 		sys.exit(1)
+
 
 	OUT=os.path.abspath(args.output)
 

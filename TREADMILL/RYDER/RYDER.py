@@ -58,15 +58,6 @@ def find_nearest(array, value):
 	return (np.abs(array - value)).argmin()
 
 
-#def similarity(worda,wordb):
-
-	#'''
-	#Return the edit distance-based similarity score between 2 sequences
-	#'''
-
-	#return 100-100*editdistance.eval(worda,wordb)/max(len(worda),len(wordb))
-
-
 #def decisiontree(readsdict,mingroupsize,treshold):
 
 	#'''
@@ -116,38 +107,97 @@ def find_nearest(array, value):
 
 	#return decision
 
-def similarity(x,y):
+
+def similarity(worda,wordb):
 
 	'''
-	Calculate custom distance metric
+	#Return the edit distance-based similarity score between 2 sequences
+	'''
+
+	return 100-100*editdistance.eval(worda,wordb)/max(len(worda),len(wordb))
+
+
+def editdist(x,y):
+
+	'''
+	Custom function for string clustering
 	'''
 
 	return int(editdistance.eval(data[int(x[0])], data[int(y[0])]))
 
 
-def decisiontree(readsdict,mingroupsize,threshold):
+def decisiontree(readsdict,mingroupsize,cluster):
 
 	'''
 	Cluster strings in list by similarity (edit distance score)
 	'''
 
-	result=[]
 	global data
-
 	data=list(readsdict.values())
-	X = np.arange(len(data)).reshape(-1, 1)
-	metric= pairwise_distances(X, X, metric=similarity)
-	agg = AgglomerativeClustering(n_clusters=None,distance_threshold=(100-threshold), affinity='precomputed', linkage='average')
-	cluster_=agg.fit(metric)
-	groups=set(cluster_.labels_)
+	result=[]
 
-	for g in groups:
+	if type(cluster) == float: #perform clustering based on string simlarity
 
-		group=list(np.take(data,np.where(cluster_.labels_ == g))[0])
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+		print('[' + now + ']' + '[Message] Grouping reads by similarity')
 
-		if len(group) >= mingroupsize:
+		paired ={c:{c} for c in data}
 
-			result.append(group)
+		for worda,wordb in combinations(data,2):
+
+			if similarity(worda,wordb) < cluster: 
+
+				continue
+
+			else:
+
+				paired[worda].add(wordb)
+				paired[wordb].add(worda)
+
+		ungrouped = set(data)
+		
+		while ungrouped:
+
+			best = {}
+
+			for word in ungrouped:
+
+				g = paired[word] & ungrouped
+
+				for c in g.copy():
+			
+					g &= paired[c]
+
+				if len(g) > len(best):
+
+					best=g
+
+			if len(best) < mingroupsize:
+
+				break
+
+			ungrouped -= best
+
+			result.append(best)
+
+	else:
+
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+		print('[' + now + ']' + '[Message] Grouping reads by number of clusters')
+
+		X = np.arange(len(data)).reshape(-1, 1)
+		metric= pairwise_distances(X, X, metric=editdist)
+		agg = AgglomerativeClustering(n_clusters=cluster, affinity='precomputed',linkage='average')
+		cluster_=agg.fit(metric)
+		groups=set(cluster_.labels_)
+
+		for g in groups:
+
+			group=list(np.take(data,np.where(cluster_.labels_ == g))[0])
+
+			if len(group) >= mingroupsize:
+
+				result.append(group)
 
 	return result
 
@@ -284,7 +334,7 @@ def Map(a_instance,Slist,Qlist,sequences,flank,finalBAM,store):
 			pass
 
 
-def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
+def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster):
 
 	'''
 	Create synthetic chromosomes harboring different set of repeat expansions and map original sequences to these chromosomes. Group reads by similarity.
@@ -430,9 +480,9 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store):
 			#fine tuning: re-group by similarity of sequences. This avoids having outlayers that decrease consensus accuracy in TRAP.
 
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-			print('[' + now + ']' + '[Message] Grouping reads by similarity')
+			print('[' + now + ']' + '[Message] Grouping reads')
 
-			decision=decisiontree(sdict,support,sim)
+			decision=decisiontree(sdict,support,cluster)
 			allerrors=[]
 
 			for i,groups in enumerate(decision):
@@ -521,6 +571,21 @@ def run(parser,args):
 		print('[' + now + ']' + '[Error] Invalid reference FASTA file')
 		sys.exit(1)
 
+
+	OUTDIR=os.path.dirname(os.path.abspath(args.output))
+
+	if not os.path.exists(OUTDIR):
+
+		try:
+
+			os.makedirs(OUTDIR)
+
+		except:
+
+			now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+			print('[' + now + ']' + '[Error] Cannot create the output folder')
+			sys.exit(1)
+
 	BIN=os.path.abspath(args.output)
 
 	if not os.access(os.path.dirname(BIN),os.W_OK):
@@ -529,7 +594,16 @@ def run(parser,args):
 		print('[' + now + ']' + '[Error] Missing write permissions on the output folder')
 		sys.exit(1)
 
-	hierarchy=ReMap(BAM,REF,BED,BIN,args.motif[0],args.flanking,args.maxsize,args.threads,args.similarity,args.support,args.store)
+	if args.clusters:
+
+		cluster=int(args.clusters)
+
+	else:
+
+		cluster=args.affinity
+
+
+	hierarchy=ReMap(BAM,REF,BED,BIN,args.motif[0],args.flanking,args.maxsize,args.threads,args.similarity,args.support,args.store,cluster)
 
 	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Writing output')
