@@ -38,10 +38,12 @@ def main():
 
 
 	cluster = parser_reef.add_argument_group('Agglomerative clustering parameters')
-	cluster.add_argument('--affinity', help='sequence similarity percentage between clustered sequences [70.0]', type=float, default=70.0, metavar='')
-	cluster.add_argument('--clusters', help = 'force agglomerative clustering to generate the specified number of clusters. Useful if clustering by sequence similarity does not generate the expected number of groups [None]', default=None, metavar='')
+	cluster.add_argument('--affinity', help='sequence similarity percentage between grouped sequences [70.0]', type=float, default=70.0, metavar='')
 	cluster.add_argument('--support', help='minimum group support (retain only clustered groups with enough members) [5]', default=5, type=int, metavar='')
-
+	cluster.add_argument('--hierarchical_clustering', help = 'perform agglomerative hierarchical clustering instead of using the greedy approach. One between --threshold and --clusters must be specified', action='store_true')
+	cluster.add_argument('--treshold', help = 'cut dendogram at given treshold [None]', default=None, metavar='')
+	cluster.add_argument('--clusters', help = 'output specified number of clusters [None]', default=None, metavar='')
+	
 
 	additional = parser_reef.add_argument_group('Additional parameters')
 

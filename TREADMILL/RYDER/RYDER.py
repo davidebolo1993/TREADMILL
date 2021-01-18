@@ -17,8 +17,8 @@ import pybedtools
 import numpy as np
 import mappy as mp
 import editdistance
-from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics.pairwise import pairwise_distances
+from sklearn.cluster import AgglomerativeClustering
 
 
 class AutoVivification(dict):
@@ -58,56 +58,6 @@ def find_nearest(array, value):
 	return (np.abs(array - value)).argmin()
 
 
-#def decisiontree(readsdict,mingroupsize,treshold):
-
-	#'''
-	#Cluster strings in list by similarity (edit distance score)
-	#'''
-
-	#paired ={c:{c} for c in readsdict.values()}
-
-	#for worda,wordb in combinations(readsdict.values(),2):
-
-		#if similarity(worda,wordb) < treshold: 
-
-				#continue
-
-		#else:
-
-			#paired[worda].add(wordb)
-			#paired[wordb].add(worda)
-
-
-	#decision = list()
-	#ungrouped = set(readsdict.values())
-	
-	#while ungrouped:
-
-		#best = {}
-
-		#for word in ungrouped:
-
-			#g = paired[word] & ungrouped
-
-			#for c in g.copy():
-			
-				#g &= paired[c]
-
-			#if len(g) > len(best):
-
-				#best=g
-
-		#if len(best) < mingroupsize:
-
-			#break
-
-		#ungrouped -= best
-
-		#decision.append(best)
-
-	#return decision
-
-
 def similarity(worda,wordb):
 
 	'''
@@ -126,7 +76,7 @@ def editdist(x,y):
 	return int(editdistance.eval(data[int(x[0])], data[int(y[0])]))
 
 
-def decisiontree(readsdict,mingroupsize,cluster):
+def decisiontree(readsdict,mingroupsize,cluster,tresh):
 
 	'''
 	Cluster strings in list by similarity (edit distance score)
@@ -136,7 +86,7 @@ def decisiontree(readsdict,mingroupsize,cluster):
 	data=list(readsdict.values())
 	result=[]
 
-	if type(cluster) == float: #perform clustering based on string simlarity
+	if not cluster: #perform clustering based on string simlarity
 
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Message] Grouping reads by similarity')
@@ -145,7 +95,7 @@ def decisiontree(readsdict,mingroupsize,cluster):
 
 		for worda,wordb in combinations(data,2):
 
-			if similarity(worda,wordb) < cluster: 
+			if similarity(worda,wordb) < tresh: 
 
 				continue
 
@@ -183,11 +133,22 @@ def decisiontree(readsdict,mingroupsize,cluster):
 	else:
 
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-		print('[' + now + ']' + '[Message] Grouping reads by number of clusters')
-
+		print('[' + now + ']' + '[Message] Performing agglomerative clustering')
 		X = np.arange(len(data)).reshape(-1, 1)
 		metric= pairwise_distances(X, X, metric=editdist)
-		agg = AgglomerativeClustering(n_clusters=cluster, affinity='precomputed',linkage='average')
+
+		if type(tresh) == int:
+
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+			print('[' + now + ']' + '[Message] Creating ' + str(tresh) + ' clusters')
+			agg = AgglomerativeClustering(n_clusters=tresh, affinity='precomputed',linkage='average')
+
+		else:
+
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+			print('[' + now + ']' + '[Message] Cutting dendogram tree using treshold ' + str(tresh))
+			agg = AgglomerativeClustering(n_clusters=None,distance_threshold=tresh,affinity='precomputed',linkage='average')
+
 		cluster_=agg.fit(metric)
 		groups=set(cluster_.labels_)
 
@@ -334,7 +295,7 @@ def Map(a_instance,Slist,Qlist,sequences,flank,finalBAM,store):
 			pass
 
 
-def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster):
+def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster,tresh):
 
 	'''
 	Create synthetic chromosomes harboring different set of repeat expansions and map original sequences to these chromosomes. Group reads by similarity.
@@ -482,7 +443,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster):
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 			print('[' + now + ']' + '[Message] Grouping reads')
 
-			decision=decisiontree(sdict,support,cluster)
+			decision=decisiontree(sdict,support,cluster,tresh)
 			allerrors=[]
 
 			for i,groups in enumerate(decision):
@@ -594,16 +555,39 @@ def run(parser,args):
 		print('[' + now + ']' + '[Error] Missing write permissions on the output folder')
 		sys.exit(1)
 
-	if args.clusters:
+	cluster=False
 
-		cluster=int(args.clusters)
+	if args.hierarchical_clustering:
+
+		if not args.treshold and not args.clusters:
+
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+			print('[' + now + ']' + '[Error] When performing hierarchical clustering, one between --treshold and --clusters must be specified')
+			sys.exit(1)
+
+		elif args.treshold and args.clusters:
+
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+			print('[' + now + ']' + '[Error] When performing hierarchical clustering, only one between --treshold and --clusters must be specified')
+			sys.exit(1)
+
+		else:
+
+			cluster=True
+			
+			if args.treshold:
+
+				tresh=float(args.treshold)
+
+			else:
+
+				tresh=int(args.clusters)
 
 	else:
 
-		cluster=args.affinity
+		tresh=args.affinity
 
-
-	hierarchy=ReMap(BAM,REF,BED,BIN,args.motif[0],args.flanking,args.maxsize,args.threads,args.similarity,args.support,args.store,cluster)
+	hierarchy=ReMap(BAM,REF,BED,BIN,args.motif[0],args.flanking,args.maxsize,args.threads,args.similarity,args.support,args.store,cluster,tresh)
 
 	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Writing output')
