@@ -42,7 +42,7 @@ def main():
 	cluster.add_argument('--support', help='minimum group support (retain only clustered groups with enough members) [5]', default=5, type=int, metavar='')
 	cluster.add_argument('--hierarchical_clustering', help = 'perform agglomerative hierarchical clustering instead of using the greedy approach. One between --threshold, --clusters and --dendogram must be specified', action='store_true')
 	cluster.add_argument('--dendogram', help='compute full dendogram and store model to output', action='store_true')
-	cluster.add_argument('--treshold', help = 'cut dendogram at given treshold [None]', default=None, metavar='')
+	cluster.add_argument('--threshold', help = 'cut dendogram at given threshold [None]', default=None, metavar='')
 	cluster.add_argument('--clusters', help = 'output specified number of clusters [None]', default=None, metavar='')
 	
 
