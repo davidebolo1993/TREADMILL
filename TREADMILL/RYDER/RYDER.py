@@ -134,33 +134,47 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Message] Performing agglomerative clustering')
+
 		X = np.arange(len(data)).reshape(-1, 1)
 		metric= pairwise_distances(X, X, metric=editdist)
 
-		if type(tresh) == int:
+		if type(tresh) == int: #by number of clusters
 
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 			print('[' + now + ']' + '[Message] Creating ' + str(tresh) + ' clusters')
 			agg = AgglomerativeClustering(n_clusters=tresh, affinity='precomputed',linkage='average')
 
-		else:
+		elif type(tresh) == float: #by treshold
 
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 			print('[' + now + ']' + '[Message] Cutting dendogram tree using treshold ' + str(tresh))
 			agg = AgglomerativeClustering(n_clusters=None,distance_threshold=tresh,affinity='precomputed',linkage='average')
 
+		else: #is string. Compute full dendogram
+
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')			
+			print('[' + now + ']' + '[Message] Computing full dendogram and storing model to output file')
+			agg=AgglomerativeClustering(distance_threshold=0, n_clusters=None, affinity='precomputed', linkage='average')
+
 		cluster_=agg.fit(metric)
-		groups=set(cluster_.labels_)
 
-		for g in groups:
+		if type(tresh) == str: #full tree was computed and model can be plotted
 
-			group=list(np.take(data,np.where(cluster_.labels_ == g))[0])
+			return cluster_
 
-			if len(group) >= mingroupsize:
+		else:
 
-				result.append(group)
+			groups=set(cluster_.labels_)
 
-	return result
+			for g in groups:
+
+				group=list(np.take(data,np.where(cluster_.labels_ == g))[0])
+
+				if len(group) >= mingroupsize:
+
+					result.append(group)
+
+		return result
 
 
 def Chunks(l,n):
@@ -316,6 +330,21 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster,t
 		print('[' + now + ']' + '[Error] Invalid BED file format')
 		sys.exit(1)
 
+	if cluster:
+
+		if len(bedsrtd) > 1:
+
+			if type(tresh) == str:
+
+				now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+				print('[' + now + ']' + '[Error] Only one region at a time must be provided in BED when computing the full dendogram')
+				sys.exit(1)
+
+			else: #this is int or float
+
+				now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+				print('[' + now + ']' + '[Warning] Value given to --clusters/--treshold will be propagated to all the regions in BED')
+
 	FAKEREF=os.path.abspath(os.path.dirname(BIN) + '/fake.fa')
 	FAKEBAM=os.path.abspath(os.path.dirname(BIN) + '/fake.bam')
 	FAKESRTBAM=os.path.abspath(os.path.dirname(BIN) + '/fake.srt.bam')
@@ -444,25 +473,32 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster,t
 			print('[' + now + ']' + '[Message] Grouping reads')
 
 			decision=decisiontree(sdict,support,cluster,tresh)
-			allerrors=[]
 
-			for i,groups in enumerate(decision):
+			if type(tresh) == str: #then decision is a model
 
-				group='group'+str(i+1)
+				hierarchy=decision
 
-				for elements in groups:
+			else: #decision is actual the clustered result
 
-					keys=[k for k,v in sdict.items() if v == elements] #get corresponding keys
-				
-					for k in keys:
+				allerrors=[]
 
-						hierarchy[REGION][group][k]=(sdict[k],qdict[k])
-						allerrors.append(qdict[k])
+				for i,groups in enumerate(decision):
 
-			hierarchy[REGION]['reference'] = refseq
-			hierarchy[REGION]['coverage'] = len(sdict)
-			hierarchy[REGION]['error'] = np.mean(allerrors)
-			hierarchy[REGION]['motif'] = repeat
+					group='group'+str(i+1)
+
+					for elements in groups:
+
+						keys=[k for k,v in sdict.items() if v == elements] #get corresponding keys
+					
+						for k in keys:
+
+							hierarchy[REGION][group][k]=(sdict[k],qdict[k])
+							allerrors.append(qdict[k])
+
+				hierarchy[REGION]['reference'] = refseq
+				hierarchy[REGION]['coverage'] = len(sdict)
+				hierarchy[REGION]['error'] = np.mean(allerrors)
+				hierarchy[REGION]['motif'] = repeat
 
 	if store: #also write to BAM if store is True
 
@@ -559,16 +595,16 @@ def run(parser,args):
 
 	if args.hierarchical_clustering:
 
-		if not args.treshold and not args.clusters:
+		if not args.treshold and not args.clusters and not args.dendogram:
 
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-			print('[' + now + ']' + '[Error] When performing hierarchical clustering, one between --treshold and --clusters must be specified')
+			print('[' + now + ']' + '[Error] When performing hierarchical clustering, one between --treshold, --clusters and --dendogram must be specified')
 			sys.exit(1)
 
-		elif args.treshold and args.clusters:
+		elif (args.treshold and args.clusters) or (args.treshold and args.dendogram) or (args.clusters and args.dendogram):
 
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-			print('[' + now + ']' + '[Error] When performing hierarchical clustering, only one between --treshold and --clusters must be specified')
+			print('[' + now + ']' + '[Error] When performing hierarchical clustering, only one between --treshold, --clusters and --dendogram must be specified')
 			sys.exit(1)
 
 		else:
@@ -579,11 +615,15 @@ def run(parser,args):
 
 				tresh=float(args.treshold)
 
-			else:
+			elif args.clusters:
 
 				tresh=int(args.clusters)
 
-	else:
+			else: #args.dendogram
+
+				tresh='dendogram'
+
+	else: #greedy string clustering
 
 		tresh=args.affinity
 
@@ -606,3 +646,4 @@ def run(parser,args):
 	print('[' + now + ']' + '[Message] Done')
 
 	sys.exit(0)
+
