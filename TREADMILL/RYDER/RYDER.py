@@ -174,7 +174,7 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 
 					result.append(group)
 
-		return result
+	return result
 
 
 def Chunks(l,n):
