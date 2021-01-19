@@ -33,14 +33,15 @@ def main():
 	required.add_argument('-fa', '--fastafile', help='reference genome in FASTA format', metavar='FASTA', required=True)
 	required.add_argument('-bam', '--bamfile', help='sorted BAM file', metavar='BAM', required=True)
 	required.add_argument('-bed', '--bedfile', help='on-target regions in BED format', metavar='BED', required=True)
-	required.add_argument('-o', '--output', help='output binary map. Output folder will be created if it does not exist', metavar='BIN', required=True)
 	required.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to RYDER)', nargs='+', action='append', required=True, metavar='MOTIF')
+	required.add_argument('-o', '--output', help='output binary map. Output folder will be created if it does not exist', metavar='BIN', required=True)
 
 
-	cluster = parser_reef.add_argument_group('Agglomerative clustering parameters')
+	cluster = parser_reef.add_argument_group('Agglomerative/Greedy clustering parameters')
 	cluster.add_argument('--affinity', help='sequence similarity percentage between grouped sequences [70.0]', type=float, default=70.0, metavar='')
 	cluster.add_argument('--support', help='minimum group support (retain only clustered groups with enough members) [5]', default=5, type=int, metavar='')
-	cluster.add_argument('--hierarchical_clustering', help = 'perform agglomerative hierarchical clustering instead of using the greedy approach. One between --threshold and --clusters must be specified', action='store_true')
+	cluster.add_argument('--hierarchical_clustering', help = 'perform agglomerative hierarchical clustering instead of using the greedy approach. One between --threshold, --clusters and --dendogram must be specified', action='store_true')
+	cluster.add_argument('--dendogram', help='compute full dendogram and store model to output', action='store_true')
 	cluster.add_argument('--treshold', help = 'cut dendogram at given treshold [None]', default=None, metavar='')
 	cluster.add_argument('--clusters', help = 'output specified number of clusters [None]', default=None, metavar='')
 	
