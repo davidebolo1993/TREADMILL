@@ -144,10 +144,10 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 			print('[' + now + ']' + '[Message] Creating ' + str(tresh) + ' clusters')
 			agg = AgglomerativeClustering(n_clusters=tresh, affinity='precomputed',linkage='average')
 
-		elif type(tresh) == float: #by treshold
+		elif type(tresh) == float: #by threshold
 
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-			print('[' + now + ']' + '[Message] Cutting dendogram tree using treshold ' + str(tresh))
+			print('[' + now + ']' + '[Message] Cutting dendogram tree using threshold ' + str(tresh))
 			agg = AgglomerativeClustering(n_clusters=None,distance_threshold=tresh,affinity='precomputed',linkage='average')
 
 		else: #is string. Compute full dendogram
@@ -343,7 +343,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster,t
 			else: #this is int or float
 
 				now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-				print('[' + now + ']' + '[Warning] Value given to --clusters/--treshold will be propagated to all the regions in BED')
+				print('[' + now + ']' + '[Warning] Value given to --clusters/--threshold will be propagated to all the regions in BED')
 
 	FAKEREF=os.path.abspath(os.path.dirname(BIN) + '/fake.fa')
 	FAKEBAM=os.path.abspath(os.path.dirname(BIN) + '/fake.bam')
@@ -595,25 +595,25 @@ def run(parser,args):
 
 	if args.hierarchical_clustering:
 
-		if not args.treshold and not args.clusters and not args.dendogram:
+		if not args.threshold and not args.clusters and not args.dendogram:
 
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-			print('[' + now + ']' + '[Error] When performing hierarchical clustering, one between --treshold, --clusters and --dendogram must be specified')
+			print('[' + now + ']' + '[Error] When performing hierarchical clustering, one between --threshold, --clusters and --dendogram must be specified')
 			sys.exit(1)
 
-		elif (args.treshold and args.clusters) or (args.treshold and args.dendogram) or (args.clusters and args.dendogram):
+		elif (args.threshold and args.clusters) or (args.threshold and args.dendogram) or (args.clusters and args.dendogram):
 
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-			print('[' + now + ']' + '[Error] When performing hierarchical clustering, only one between --treshold, --clusters and --dendogram must be specified')
+			print('[' + now + ']' + '[Error] When performing hierarchical clustering, only one between --threshold, --clusters and --dendogram must be specified')
 			sys.exit(1)
 
 		else:
 
 			cluster=True
 			
-			if args.treshold:
+			if args.threshold:
 
-				tresh=float(args.treshold)
+				tresh=float(args.threshold)
 
 			elif args.clusters:
 
