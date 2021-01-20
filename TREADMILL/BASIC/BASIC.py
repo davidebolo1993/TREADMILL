@@ -148,7 +148,7 @@ def parse(BAM,BED):
 		key=query.chrom+':'+str(query.start)+'-'+str(query.end)
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Message] Calculating coverage in region ' + key)
-		query_arr=bamfile.count_coverage(query.chrom,query.start,query.end,read_callback=check_read)
+		query_arr=bamfile.count_coverage(query.chrom,query.start,query.end,quality_threshold=0, read_callback=check_read)
 		perbasecov=np.sum(query_arr,axis=0).tolist()
 		S_dict[key]=perbasecov
 
