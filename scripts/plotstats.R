@@ -175,10 +175,12 @@ message('[',now,'][Message] Plotting')
 
 dfall<-do.call(rbind,listall)
 dfall$x<-factor(dfall$x,levels=unique(dfall$x))
-
-
-dfall_mod <- ddply(dfall, .(z), transform, percent = y/sum(y) * 100)
-dfall_mod <- ddply(dfall_mod, .(z), transform, pos = (cumsum(y) - 0.5 * y))
+dfall_2<-subset(dfall,x=='on-target' | x =='off-target')
+dfall_mod1 <- ddply(dfall_2, .(z), transform, percent = y/sum(y) * 100)
+dfall_3<-subset(dfall,x!='on-target' & x !='off-target')
+dfall_3$percent<-0.0
+dfall_mod<-rbind(dfall_3,dfall_mod1)
+dfall_mod<- ddply(dfall_mod, .(z), transform, pos = (cumsum(y) - 0.5 * y))
 dfall_mod$label <- paste0(sprintf('%.3f', dfall_mod$percent), '%')
 dfall_mod$zoom <- TRUE
 
