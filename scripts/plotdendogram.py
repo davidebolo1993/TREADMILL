@@ -10,6 +10,7 @@ from datetime import datetime
 #additional modules
 
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 import matplotlib.cm as cm
 from scipy.cluster import hierarchy
@@ -114,10 +115,11 @@ def main():
 	additionals.add_argument('--height_dendogram', help='height of dendogram plot [10.0]', metavar='', default=10.0, type=float)
 	additionals.add_argument('--width_silhouette', help='width of silhouette plot [10.0]', metavar='', default=10.0, type=float)
 	additionals.add_argument('--height_silhouette', help='height of silhouette plot [20.0]', metavar='', default=20.0, type=float)
-
+	additionals.add_argument('--maxclust', help='maximum number of clusters for silhouette analysis [6]', metavar='', default=6, type=int)
 
 	args = parser.parse_args()	
 	
+	resdict=dict()
 
 	OUTDIR=os.path.abspath(args.output)
 
@@ -142,6 +144,7 @@ def main():
 
 	OUTD=os.path.abspath(OUTDIR+ '/dendogram.pdf')
 	OUTS=os.path.abspath(OUTDIR + '/silhouette.pdf')
+	OUTT=os.path.abspath(OUTDIR + '/silhouettescores.tsv')
 
 	BIND=os.path.abspath(args.dendogram)
 
@@ -181,14 +184,14 @@ def main():
 	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Performing Silhouette analysis and plotting')
 
-	range_n_clusters = range(2,7)
+	range_n_clusters = range(2,args.maxclust+1)
 
 	fig,axs = plt.subplots(len(range_n_clusters),2)
 	fig.set_size_inches(args.width_silhouette,args.height_silhouette)
 
 	for i,n_clusters in enumerate(range_n_clusters):
 
-		axs[i,0].set_xlim([0, 1])
+		axs[i,0].set_xlim([-1, 1])
 		axs[i,0].set_ylim([0, len(silhouette) + (n_clusters + 1) * 10])
 		clusterer = AgglomerativeClustering(n_clusters=n_clusters, affinity='precomputed', linkage='average')
 		cluster_labels = clusterer.fit_predict(silhouette)
@@ -196,6 +199,7 @@ def main():
 
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + '][Message]' + ' For number of clusters = ' + str(n_clusters) + ', the average silhouette_score is : ' + str(silhouette_avg))
+		resdict[str(n_clusters)] = float(silhouette_avg)
 
 		sample_silhouette_values = silhouette_samples(silhouette, cluster_labels)
 		y_lower = 10
@@ -211,13 +215,12 @@ def main():
 			#axs[i,0].text(-0.05, y_lower + 0.5 * size_cluster_i, str(l))
 			y_lower = y_upper + 10 
 
-
 		axs[i,0].set_title('Silhouette plot with number of clusters = ' + str(n_clusters))
 		axs[i,0].set_xlabel('Silhouette coefficient value')
 		axs[i,0].set_ylabel('Clusters')
 		axs[i,0].axvline(x=silhouette_avg, color="red", linestyle="--")
 		axs[i,0].set_yticks([])
-		axs[i,0].set_xticks([0, 0.2, 0.4, 0.6, 0.8, 1])
+		axs[i,0].set_xticks([-1, -0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1])
 
 		colors = cm.nipy_spectral(cluster_labels.astype(float) / n_clusters)
 		axs[i,1].scatter(silhouette[:, 0], silhouette[:, 1], marker='.', s=30, lw=0, alpha=0.7,c=colors, edgecolor='k')
@@ -228,6 +231,9 @@ def main():
 	plt.tight_layout()
 	plt.savefig(OUTS)
 
+	reslist=sorted(resdict.items(), key=lambda item: item[1], reverse=True)
+	tab=pd.DataFrame({'n_clusters': [x[0] for x in reslist], 'silhouette_score' : [x[1] for x in reslist]})
+	tab.to_csv(OUTT, sep='\t', header=True, index=False)
 
 
 if __name__ == '__main__':
