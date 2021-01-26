@@ -3,13 +3,62 @@
 import os
 import sys
 import pickle
+import argparse
+from argparse import HelpFormatter
 from datetime import datetime
 
 #additional modules
 
 import numpy as np
 from matplotlib import pyplot as plt
+import matplotlib.cm as cm
 from scipy.cluster import hierarchy
+from sklearn.metrics import silhouette_samples, silhouette_score
+from sklearn.cluster import AgglomerativeClustering
+
+
+
+class CustomFormat(HelpFormatter):
+
+	'''
+	Custom help format
+	'''
+
+
+	def _format_action_invocation(self, action):
+
+		if not action.option_strings:
+
+			default = self._get_default_metavar_for_positional(action)
+			metavar, = self._metavar_formatter(action, default)(1)
+			
+			return metavar
+
+		else:
+
+			parts = []
+
+			if action.nargs == 0:
+
+				parts.extend(action.option_strings)
+
+			else:
+
+				default = self._get_default_metavar_for_optional(action)
+				args_string = self._format_args(action, default)
+				
+				for option_string in action.option_strings:
+
+					parts.append(option_string)
+
+				return '%s %s' % (', '.join(parts), args_string)
+
+			return ', '.join(parts)
+
+	def _get_default_metavar_for_optional(self, action):
+
+		return action.dest.upper()
+
 
 
 def LinkageMatrix(model):
@@ -47,35 +96,30 @@ def main():
 
 
 	'''
-	Get input and dump dendogram to file
+	Get input and dump dendogram and silhouette analysis to file
 	'''
+
+
+	parser = argparse.ArgumentParser(prog='TREADMILL', description='''Plot dendogram and perform Silhouette analysis for agglomerative clustering''', epilog='''This program was developed by Davide Bolognini (https://github.com/davidebolo1993)''', formatter_class=CustomFormat) 
+
+	required=parser.add_argument_group('Required I/O arguments')
+
+	required.add_argument('-d', '--dendogram', help='BIN file containing dendogram map', metavar='BIN', required=True)
+	required.add_argument('-s', '--similarity_matrix', help='BIN file containing the similarity matrix', metavar='BIN', required=True)
+	required.add_argument('-o', '--output', help='output folder', metavar='DIR', required=True)
+
+	additionals=parser.add_argument_group('Additional arguments')
+
+	additionals.add_argument('--width_dendogram', help='width of dendogram plot [30.0]', metavar='', default=30.0, type=float)
+	additionals.add_argument('--height_dendogram', help='height of dendogram plot [10.0]', metavar='', default=10.0, type=float)
+	additionals.add_argument('--width_silhouette', help='width of silhouette plot [10.0]', metavar='', default=10.0, type=float)
+	additionals.add_argument('--height_silhouette', help='height of silhouette plot [20.0]', metavar='', default=20.0, type=float)
+
+
+	args = parser.parse_args()	
 	
-	BIN=os.path.abspath(sys.argv[1])
-	OUT=os.path.abspath(sys.argv[2])
-	OUTDIR=os.path.dirname(os.path.abspath(OUT))
 
-	try:
-
-		width=int(sys.argv[3])
-
-	except:
-
-		width=30
-
-
-	try:
-
-		height=int(sys.argv[4])
-
-	except:
-
-		height=10
-
-	if not os.path.exists(BIN):
-
-		now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-		print('[' + now + ']' + '[Error] Invalid BIN file')
-		sys.exit(1)
+	OUTDIR=os.path.abspath(args.output)
 
 	if not os.path.exists(OUTDIR):
 
@@ -85,27 +129,105 @@ def main():
 
 		except:
 
-			now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 			print('[' + now + ']' + '[Error] Cannot create the output folder')
 			sys.exit(1)
 
-	if not os.access(os.path.dirname(OUT),os.W_OK):
+	if not os.access(OUTDIR,os.W_OK):
 
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Error] Missing write permissions on the output folder')
 		sys.exit(1)
 
 
-	binin=open(BIN,'rb')
-	dendmodel = pickle.load(binin)
-	binin.close()
+	OUTD=os.path.abspath(OUTDIR+ '/dendogram.pdf')
+	OUTS=os.path.abspath(OUTDIR + '/silhouette.pdf')
+
+	BIND=os.path.abspath(args.dendogram)
+
+	if not os.path.exists(BIND):
+
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+		print('[' + now + ']' + '[Error] Invalid dendogram BIN file')
+		sys.exit(1)
+
+
+	BINS=os.path.abspath(args.similarity_matrix)
+
+	if not os.path.exists(BINS):
+
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+		print('[' + now + ']' + '[Error] Invalid similarity matrix BIN file')
+		sys.exit(1)
+
+
+	dendogram=open(BIND,'rb')
+	dendmodel = pickle.load(dendogram)
+	dendogram.close()
+	silhouette=np.load(BINS)
+
+
+	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+	print('[' + now + ']' + '[Message] Extracting full dendogram and plotting')
 
 	linkage_matrix=LinkageMatrix(dendmodel)
 
-	plt.figure(figsize=(width,height))
-	plt.title('Hierarchical Clustering Dendrogram')
+	plt.figure(figsize=(args.width_dendogram,args.height_dendogram))
+	plt.title('Hierarchical Clustering Dendogram')
 	hierarchy.dendrogram(linkage_matrix)
-	plt.savefig(OUT)
+	plt.savefig(OUTD)
+
+
+	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+	print('[' + now + ']' + '[Message] Performing Silhouette analysis and plotting')
+
+	range_n_clusters = range(2,7)
+
+	fig,axs = plt.subplots(len(range_n_clusters),2)
+	fig.set_size_inches(args.width_silhouette,args.height_silhouette)
+
+	for i,n_clusters in enumerate(range_n_clusters):
+
+		axs[i,0].set_xlim([0, 1])
+		axs[i,0].set_ylim([0, len(silhouette) + (n_clusters + 1) * 10])
+		clusterer = AgglomerativeClustering(n_clusters=n_clusters, affinity='precomputed', linkage='average')
+		cluster_labels = clusterer.fit_predict(silhouette)
+		silhouette_avg = silhouette_score(silhouette, cluster_labels, metric='precomputed')
+
+		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+		print('[' + now + '][Message]' + ' For number of clusters = ' + str(n_clusters) + ', the average silhouette_score is : ' + str(silhouette_avg))
+
+		sample_silhouette_values = silhouette_samples(silhouette, cluster_labels)
+		y_lower = 10
+		
+		for l in range(n_clusters):
+
+			ith_cluster_silhouette_values = sample_silhouette_values[cluster_labels == l]
+			ith_cluster_silhouette_values.sort()
+			size_cluster_i = ith_cluster_silhouette_values.shape[0]
+			y_upper = y_lower + size_cluster_i
+			color = cm.nipy_spectral(float(l) / n_clusters)
+			axs[i,0].fill_betweenx(np.arange(y_lower, y_upper),0, ith_cluster_silhouette_values,facecolor=color, edgecolor=color, alpha=0.7)
+			#axs[i,0].text(-0.05, y_lower + 0.5 * size_cluster_i, str(l))
+			y_lower = y_upper + 10 
+
+
+		axs[i,0].set_title('Silhouette plot with number of clusters = ' + str(n_clusters))
+		axs[i,0].set_xlabel('Silhouette coefficient value')
+		axs[i,0].set_ylabel('Clusters')
+		axs[i,0].axvline(x=silhouette_avg, color="red", linestyle="--")
+		axs[i,0].set_yticks([])
+		axs[i,0].set_xticks([0, 0.2, 0.4, 0.6, 0.8, 1])
+
+		colors = cm.nipy_spectral(cluster_labels.astype(float) / n_clusters)
+		axs[i,1].scatter(silhouette[:, 0], silhouette[:, 1], marker='.', s=30, lw=0, alpha=0.7,c=colors, edgecolor='k')
+		axs[i,1].set_title('Cluster plot with number of clusters = ' + str(n_clusters))
+		axs[i,1].get_xaxis().set_ticks([])
+		axs[i,1].get_yaxis().set_ticks([])
+
+	plt.tight_layout()
+	plt.savefig(OUTS)
+
 
 
 if __name__ == '__main__':
