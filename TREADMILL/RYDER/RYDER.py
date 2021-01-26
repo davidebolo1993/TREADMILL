@@ -150,7 +150,7 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 			print('[' + now + ']' + '[Message] Cutting dendogram tree using threshold ' + str(tresh))
 			agg = AgglomerativeClustering(n_clusters=None,distance_threshold=tresh,affinity='precomputed',linkage='average')
 
-		else: #is string. Compute full dendogram
+		else: #is string. Compute full dendogram ans perform Silhouette analysis
 
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')			
 			print('[' + now + ']' + '[Message] Computing full dendogram and storing model to output file')
@@ -160,7 +160,7 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 
 		if type(tresh) == str: #full tree was computed and model can be plotted
 
-			return cluster_
+			return [cluster_,metric]
 
 		else:
 
@@ -174,7 +174,7 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 
 					result.append(group)
 
-	return result
+	return result,metric
 
 
 def Chunks(l,n):
@@ -366,8 +366,8 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster,t
 		print('[' + now + ']' + '[Message] Processing region ' + REGION+ ', with repeat ' + motifs[i])
 
 		refseq=fastafile[CHROM][:len(fastafile[CHROM])].seq[START-1:END] #region containing the repetition
-		leftflank=fastafile[CHROM][:len(fastafile[CHROM])].seq[START-(flank+1):END-1] #region flanking on the left side
-		rightflank=fastafile[CHROM][:len(fastafile[CHROM])].seq[START:END+flank] #region flanking on the right side
+		leftflank=fastafile[CHROM][:len(fastafile[CHROM])].seq[START-(flank+1):START-1] #region flanking on the left side
+		rightflank=fastafile[CHROM][:len(fastafile[CHROM])].seq[END:END+flank] #region flanking on the right side
 
 		seen=[m.start() for m in re.finditer(repeat, refseq)]
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
@@ -472,7 +472,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster,t
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 			print('[' + now + ']' + '[Message] Grouping reads')
 
-			decision=decisiontree(sdict,support,cluster,tresh)
+			decision,silhouette=decisiontree(sdict,support,cluster,tresh)
 
 			if type(tresh) == str: #then decision is a model
 
@@ -511,7 +511,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster,t
 		pysam.index(FAKESRTBAM)
 		os.remove(FAKEBAM)
 
-	return hierarchy
+	return hierarchy,silhouette
 
 		
 def run(parser,args):
@@ -579,7 +579,7 @@ def run(parser,args):
 
 		except:
 
-			now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 			print('[' + now + ']' + '[Error] Cannot create the output folder')
 			sys.exit(1)
 
@@ -622,12 +622,13 @@ def run(parser,args):
 			else: #args.dendogram
 
 				tresh='dendogram'
+				silout=os.path.abspath(OUTDIR + '/simmatrix.bin')
 
 	else: #greedy string clustering
 
 		tresh=args.affinity
 
-	hierarchy=ReMap(BAM,REF,BED,BIN,args.motif[0],args.flanking,args.maxsize,args.threads,args.similarity,args.support,args.store,cluster,tresh)
+	hierarchy,silhouette=ReMap(BAM,REF,BED,BIN,args.motif[0],args.flanking,args.maxsize,args.threads,args.similarity,args.support,args.store,cluster,tresh)
 
 	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 	print('[' + now + ']' + '[Message] Writing output')
@@ -636,6 +637,12 @@ def run(parser,args):
 	data=pickle.dumps(hierarchy,protocol=pickle.HIGHEST_PROTOCOL)
 	binout.write(data)
 	binout.close()
+
+	if tresh=='dendogram':
+
+		with open(silout, 'wb') as sout:
+
+			np.save(sout,silhouette)
 
 	#reopening for checking routine
 	#binin=open(args.output,'rb')
@@ -646,4 +653,3 @@ def run(parser,args):
 	print('[' + now + ']' + '[Message] Done')
 
 	sys.exit(0)
-
