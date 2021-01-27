@@ -10,7 +10,7 @@ def main():
 
 	parser = argparse.ArgumentParser(prog='TREADMILL', description='''TREADMILL: Tandem REpeats AnD MethylatIon caLLing''', epilog='''This program was developed by Davide Bolognini (https://github.com/davidebolo1993)''', formatter_class=CustomFormat) 
 
-	subparsers = parser.add_subparsers(title='modules', dest='command', metavar='BASIC,RYDER,TRAP')
+	subparsers = parser.add_subparsers(title='modules', dest='command', metavar='BASIC,RACE,TRAP')
 
 	## BASIC ##
 
@@ -24,23 +24,23 @@ def main():
 
 	parser_basic.set_defaults(func=run_subtool)
 
-	## RYDER ##
+	## RACE ##
 
-	parser_reef = subparsers.add_parser('RYDER', help='gRoup bY DEcision tRee. Extract on-target reads from a targeted nanopore experiment and group them by similarity. This module (1) a re-maps the original reads to synthetic chromosomes harboring repeat expansions and (2) group reads by similarity using an edit distance-based decision tree')
+	parser_reef = subparsers.add_parser('RACE', help='ReAds ClusterEr. Extract on-target reads from a targeted nanopore experiment and group them by similarity. This module (1) a re-maps the original reads to synthetic chromosomes harboring repeat expansions and (2) cluster reads by similarity using either Density-Based Spatial Clustering of Applications with Noise (DBSCAN) or Agglomerative Hierarchical Clustering')
 
 	required = parser_reef.add_argument_group('Required I/O arguments')
 
 	required.add_argument('-fa', '--fastafile', help='reference genome in FASTA format', metavar='FASTA', required=True)
 	required.add_argument('-bam', '--bamfile', help='sorted BAM file', metavar='BAM', required=True)
 	required.add_argument('-bed', '--bedfile', help='on-target regions in BED format', metavar='BED', required=True)
-	required.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to RYDER)', nargs='+', action='append', required=True, metavar='MOTIF')
+	required.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to RACE)', nargs='+', action='append', required=True, metavar='MOTIF')
 	required.add_argument('-o', '--output', help='output binary map. Output folder will be created if it does not exist', metavar='BIN', required=True)
 
-	cluster = parser_reef.add_argument_group('Agglomerative/Greedy clustering parameters')
+	cluster = parser_reef.add_argument_group('Clustering parameters. By default, perform DBSCAN')
 	
-	cluster.add_argument('--affinity', help='sequence similarity percentage between grouped sequences [70.0]', type=float, default=70.0, metavar='')
-	cluster.add_argument('--support', help='minimum group support (retain only clustered groups with enough members) [5]', default=5, type=int, metavar='')
-	cluster.add_argument('--hierarchical_clustering', help = 'perform agglomerative hierarchical clustering instead of using the greedy approach. One between --threshold, --clusters and --dendogram must be specified', action='store_true')
+	cluster.add_argument('--affinity', help='sequence similarity percentage between clusters [70.0]', type=float, default=70.0, metavar='')
+	cluster.add_argument('--support', help='minimum group support (retain only clusters with enough reads) [5]', default=5, type=int, metavar='')
+	cluster.add_argument('--hierarchical_clustering', help = 'perform Agglomerative Hierarchical Clustering instead of using DBSCAN. One between --threshold, --clusters and --dendogram must be specified', action='store_true')
 	cluster.add_argument('--dendogram', help='compute full dendogram and store dendogram map to output. This also stores the pre-computed similarity matrix for Silhouette analysis', action='store_true')
 	cluster.add_argument('--threshold', help = 'cut dendogram at given threshold [None]', default=None, metavar='')
 	cluster.add_argument('--clusters', help = 'output specified number of clusters [None]', default=None, metavar='')
@@ -57,11 +57,11 @@ def main():
 
 	## TRAP ##
 
-	parser_trap = subparsers.add_parser('TRAP', help='Tandem RepeAts Profiler. Identify and genotype tandem repeats from clusters of reads created with RYDER')
+	parser_trap = subparsers.add_parser('TRAP', help='Tandem RepeAts Profiler. Identify and genotype tandem repeats from clusters of reads created with RACE')
 
 	required = parser_trap.add_argument_group('Required I/O arguments')
 
-	required.add_argument('-i', '--input', help='input binary map from RYDER', metavar='BIN', required=True)
+	required.add_argument('-i', '--input', help='input binary map from RACE', metavar='BIN', required=True)
 	required.add_argument('-o', '--output', help='output directory', metavar='DIR', required=True)
 
 	algorithm = parser_trap.add_argument_group('Consensus sequence computation')
@@ -110,9 +110,9 @@ def main():
 
 		sys.argv[1] = 'BASIC'
 
-	elif sys.argv[1].lower() == 'ryder':
+	elif sys.argv[1].lower() == 'race':
 
-		sys.argv[1] = 'RYDER'
+		sys.argv[1] = 'RACE'
 
 	elif sys.argv[1].lower() == 'trap':
 
@@ -172,9 +172,9 @@ def run_subtool(parser, args):
 
 		from .BASIC import BASIC as submodule
 
-	elif args.command == 'RYDER': #gRoup bY DEcision tRee
+	elif args.command == 'RACE': #ReAds ClusterEr
 
-		from .RYDER import RYDER as submodule
+		from .RACE import RACE as submodule
 
 	elif args.command == 'TRAP': #Tandem RepeAts Profiler 
 

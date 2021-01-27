@@ -18,7 +18,7 @@ import numpy as np
 import mappy as mp
 import editdistance
 from sklearn.metrics.pairwise import pairwise_distances
-from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import AgglomerativeClustering,DBSCAN
 
 
 class AutoVivification(dict):
@@ -58,13 +58,14 @@ def find_nearest(array, value):
 	return (np.abs(array - value)).argmin()
 
 
-def similarity(worda,wordb):
+def diffperc(x,y):
 
 	'''
-	#Return the edit distance-based similarity score between 2 sequences
+	Custom function for string clustering
 	'''
 
-	return 100-100*editdistance.eval(worda,wordb)/max(len(worda),len(wordb))
+	return 100*int(editdistance.eval(data[int(x[0])], data[int(y[0])]))/max(len(data[int(x[0])]),len(data[int(y[0])]))
+
 
 
 def editdist(x,y):
@@ -79,63 +80,28 @@ def editdist(x,y):
 def decisiontree(readsdict,mingroupsize,cluster,tresh):
 
 	'''
-	Cluster strings in list by similarity (edit distance score)
+	Cluster strings
 	'''
 
 	global data
 	data=list(readsdict.values())
+	X = np.arange(len(data)).reshape(-1, 1)
 	result=[]
 
 	if not cluster: #perform clustering based on string simlarity
 
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-		print('[' + now + ']' + '[Message] Grouping reads by similarity')
+		print('[' + now + ']' + '[Message] Performing DBSCAN')
+		print('[' + now + ']' + '[Message] Clustering reads by similarity')
 
-		paired ={c:{c} for c in data}
-
-		for worda,wordb in combinations(data,2):
-
-			if similarity(worda,wordb) < tresh: 
-
-				continue
-
-			else:
-
-				paired[worda].add(wordb)
-				paired[wordb].add(worda)
-
-		ungrouped = set(data)
-		
-		while ungrouped:
-
-			best = {}
-
-			for word in ungrouped:
-
-				g = paired[word] & ungrouped
-
-				for c in g.copy():
-			
-					g &= paired[c]
-
-				if len(g) > len(best):
-
-					best=g
-
-			if len(best) < mingroupsize:
-
-				break
-
-			ungrouped -= best
-
-			result.append(best)
+		metric= pairwise_distances(X, X, metric=diffperc)
+		agg=DBSCAN(eps=100-tresh, min_samples=mingroupsize,algorithm='brute', metric='precomputed')
 
 	else:
 
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Message] Performing agglomerative clustering')
 
-		X = np.arange(len(data)).reshape(-1, 1)
 		metric= pairwise_distances(X, X, metric=editdist)
 
 		if type(tresh) == int: #by number of clusters
@@ -168,11 +134,17 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 
 			for g in groups:
 
-				group=list(np.take(data,np.where(cluster_.labels_ == g))[0])
+				if g == -1:
 
-				if len(group) >= mingroupsize:
+					continue
 
-					result.append(group)
+				else:
+
+					group=list(np.take(data,np.where(cluster_.labels_ == g))[0])
+
+					if len(group) >= mingroupsize: #this only applies to clustering not DBSCAN in practice
+
+						result.append(group)
 
 	return result,metric
 
@@ -470,7 +442,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster,t
 			#fine tuning: re-group by similarity of sequences. This avoids having outlayers that decrease consensus accuracy in TRAP.
 
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-			print('[' + now + ']' + '[Message] Grouping reads')
+			print('[' + now + ']' + '[Message] Clustering reads')
 
 			decision,silhouette=decisiontree(sdict,support,cluster,tresh)
 
@@ -521,7 +493,7 @@ def run(parser,args):
 	'''
 
 	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-	print('[' + now + '][Message] TREADMILL RYDER v1.0')
+	print('[' + now + '][Message] TREADMILL RACE v1.0')
 
 	BAM=os.path.abspath(args.bamfile)
 
