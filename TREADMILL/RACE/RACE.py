@@ -88,7 +88,7 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 	X = np.arange(len(data)).reshape(-1, 1)
 	result=[]
 
-	if not cluster: #perform clustering based on string simlarity
+	if not cluster: #perform clustering based on string similarity
 
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Message] Performing DBSCAN')
@@ -122,29 +122,29 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 			print('[' + now + ']' + '[Message] Computing full dendogram and storing model to output file')
 			agg=AgglomerativeClustering(distance_threshold=0, n_clusters=None, affinity='precomputed', linkage='average')
 
-		cluster_=agg.fit(metric)
+	cluster_=agg.fit(metric)
 
-		if type(tresh) == str: #full tree was computed and model can be plotted
+	if type(tresh) == str: #full tree was computed and model can be plotted
 
-			return [cluster_,metric]
+		return [cluster_,metric]
 
-		else:
+	else:
 
-			groups=set(cluster_.labels_)
+		groups=set(cluster_.labels_)
 
-			for g in groups:
+		for g in groups:
 
-				if g == -1:
+			if g == -1:
 
-					continue
+				continue
 
-				else:
+			else:
 
-					group=list(np.take(data,np.where(cluster_.labels_ == g))[0])
+				group=list(np.take(data,np.where(cluster_.labels_ == g))[0])
 
-					if len(group) >= mingroupsize: #this only applies to clustering not DBSCAN in practice
+				if len(group) >= mingroupsize: #this only applies to clustering not DBSCAN in practice
 
-						result.append(group)
+					result.append(group)
 
 	return result,metric
 
