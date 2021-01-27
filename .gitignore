@@ -3,4 +3,4 @@ build/*
 dist/*
 scripts/JointSLMTruncI.o
 scripts/JointSLMTruncI.so
-/home/davide/tools/TREADMILL/TREADMILL/TRAP/consensus
+TREADMILL/TRAP/consensus
