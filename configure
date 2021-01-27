@@ -8,7 +8,7 @@ make
 cd ..
 if [ -f ../../TREADMILL/TRAP/consensus.cpp ]
 then
-    mv ../../TREADMILL/TRAP/consensus.cpp .
+    cp ../../TREADMILL/TRAP/consensus.cpp .
     g++ consensus.cpp -std=c++11 -Iinclude/ -Lbuild/lib/ -lspoa -o consensus
     mv consensus ../../TREADMILL/TRAP/ && rm consensus.cpp
 fi

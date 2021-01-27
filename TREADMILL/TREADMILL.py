@@ -38,7 +38,7 @@ def main():
 
 	cluster = parser_reef.add_argument_group('Clustering parameters. By default, perform DBSCAN')
 	
-	cluster.add_argument('--affinity', help='sequence similarity percentage between clusters [80.0]', type=float, default=80.0, metavar='')
+	cluster.add_argument('--affinity', help='sequence similarity percentage between clusters [85.0]', type=float, default=85.0, metavar='')
 	cluster.add_argument('--support', help='minimum group support (retain only clusters with enough reads) [5]', default=5, type=int, metavar='')
 	cluster.add_argument('--hierarchical_clustering', help = 'perform Agglomerative Hierarchical Clustering instead of using DBSCAN. One between --threshold, --clusters and --dendogram must be specified', action='store_true')
 	cluster.add_argument('--dendogram', help='compute full dendogram and store dendogram map to output. This also stores the pre-computed similarity matrix for Silhouette analysis', action='store_true')
