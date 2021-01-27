@@ -58,7 +58,7 @@ def main():
 
 	## TRAP ##
 
-	parser_trap = subparsers.add_parser('TRAP', help='Tandem RepeAts Profiler. Identify and genotype tandem repeats from clusters of reads created with RACE')
+	parser_trap = subparsers.add_parser('TRAP', help='Tandem RepeAts Profiler. Compute consensus sequences from reads clustered with RACE, profile and genotype tandem repeats')
 
 	required = parser_trap.add_argument_group('Required I/O arguments')
 
