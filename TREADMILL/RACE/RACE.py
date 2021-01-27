@@ -17,6 +17,7 @@ import pybedtools
 import numpy as np
 import mappy as mp
 import editdistance
+import matplotlib.pyplot as plt
 from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.cluster import AgglomerativeClustering,DBSCAN
 
@@ -123,6 +124,32 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 			agg=AgglomerativeClustering(distance_threshold=0, n_clusters=None, affinity='precomputed', linkage='average')
 
 	cluster_=agg.fit(metric)
+
+	if plot: #this happens only if cluster is False and we are using DBSCAN
+
+		core_samples_mask = np.zeros_like(cluster_.labels_, dtype=bool)
+		core_samples_mask[cluster_.core_sample_indices_] = True
+		labels = cluster_.labels_
+		n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+		n_noise_ = list(labels).count(-1)
+		unique_labels = set(labels)
+		colors = [plt.cm.Spectral(each) for each in np.linspace(0, 1, len(unique_labels))]
+
+		for k, col in zip(unique_labels, colors):
+
+			if k == -1:
+
+				col = [0, 0, 0, 1]
+
+			class_member_mask = (labels == k)
+			xy = metric[class_member_mask & core_samples_mask]
+			plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=tuple(col),markeredgecolor='k', markersize=14)
+			xy = metric[class_member_mask & ~core_samples_mask]
+			plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=tuple(col), markeredgecolor='k', markersize=6)
+
+		plt.title('Estimated number of clusters: ' + str(n_clusters_))
+		plt.tight_layout()
+		plt.savefig(os.path.abspath(plot + '/' + plotregion + '.pdf'	))
 
 	if type(tresh) == str: #full tree was computed and model can be plotted
 
@@ -287,6 +314,8 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster,t
 	Create synthetic chromosomes harboring different set of repeat expansions and map original sequences to these chromosomes. Group reads by similarity.
 	'''
 
+	global plotregion
+
 	hierarchy=AutoVivification()
 	fastafile=pyfaidx.Fasta(REF)
 	bamfile=pysam.AlignmentFile(BAM, 'rb')
@@ -334,6 +363,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster,t
 
 		CHROM,START,END,repeat=query.chrom, query.start,query.end,motifs[i]
 		REGION=CHROM + ':' + str(START) + '-' + str(END)
+		plotregion=CHROM + '_' + str(START) + '_' + str(END)
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Message] Processing region ' + REGION+ ', with repeat ' + motifs[i])
 
@@ -454,9 +484,9 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster,t
 
 				allerrors=[]
 
-				for i,groups in enumerate(decision):
+				for l,groups in enumerate(decision):
 
-					group='group'+str(i+1)
+					group='group'+str(l+1)
 
 					for elements in groups:
 
@@ -564,6 +594,8 @@ def run(parser,args):
 		sys.exit(1)
 
 	cluster=False
+	global plot
+	plot=False
 
 	if args.hierarchical_clustering:
 
@@ -596,9 +628,14 @@ def run(parser,args):
 				tresh='dendogram'
 				silout=os.path.abspath(OUTDIR + '/simmatrix.bin')
 
-	else: #greedy string clustering
+	else: #DBSCAN string clustering
 
 		tresh=args.affinity
+
+		if args.plot:
+
+			plot=os.path.abspath(OUTDIR + '/plots')
+			os.makedirs(plot)
 
 	hierarchy,silhouette=ReMap(BAM,REF,BED,BIN,args.motif[0],args.flanking,args.maxsize,args.threads,args.similarity,args.support,args.store,cluster,tresh)
 
