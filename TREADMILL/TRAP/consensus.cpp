@@ -2,23 +2,6 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
-#include <numeric>
-#include <algorithm>
-
-
-double lowerbound,upperbound;
-
-// exclude outliers that can confuse the POA algorithm generating longer strings than expected
-
-bool filterstring(std::string candidate) //test condition for remove_if algo.  
-{
-	bool result=false;
-
-    if (candidate.length() < lowerbound  || candidate.length() > upperbound) result=true;
-
-    return result;
-}
-
 
 
 int main(int argc, char** argv) {
@@ -62,8 +45,6 @@ int main(int argc, char** argv) {
 
 	std::string seqs = argv[6];
 	std::vector<std::string> sequences = {};
-	std::vector<int> sizevec = {};
-
 
 	std::ifstream allele_input(seqs, std::ios_base::in | std::ios_base::binary);
 
@@ -74,7 +55,6 @@ int main(int argc, char** argv) {
 			if (line[0] != '>') {
 
 				sequences.push_back(line);
-				sizevec.push_back(line.length());
 			
 			}
 		
@@ -85,33 +65,6 @@ int main(int argc, char** argv) {
 	}
 
 	int vsize = static_cast<int>(sequences.size());
-
-	double sum = std::accumulate(sizevec.begin(), sizevec.end(), 0.0);
-	double mean = sum / sizevec.size();
-
-	//std::cerr << mean << std::endl;
-
-	std::vector<double> diff(sizevec.size());
-	std::transform(sizevec.begin(), sizevec.end(), diff.begin(), [mean](double x) { return x - mean; });
-	double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-	double stdev = std::sqrt(sq_sum / sizevec.size());
-
-	//std::cerr << stdev << std::endl;
-
-
-	// this assume lengths are distributed normally
-
-	lowerbound = mean -3*stdev;
-	upperbound = mean +3*stdev;
-
-
-	//std::cerr << lowerbound << std::endl;
-	//std::cerr << upperbound << std::endl;
-
-
-	// clean vector for string that exceed normal distribution bounds
-
-	sequences.erase(std::remove_if(sequences.begin(), sequences.end(), filterstring), sequences.end()); //erase anything in vector with outdise bounds
 
 	int percentage = atoi(argv[7]);
 	int refnum = round(vsize/100*percentage);

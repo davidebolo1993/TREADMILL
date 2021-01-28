@@ -169,9 +169,25 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 
 				group=list(np.take(data,np.where(cluster_.labels_ == g))[0])
 
-				if len(group) >= mingroupsize: #this only applies to clustering not DBSCAN in practice
+				#remove long outliers from data using Interquartile Range Method
 
-					result.append(group)
+				lens_=[len(x) for x in group]
+				q25,q75 = np.percentile(lens_, 25), np.percentile(lens_, 75)
+				iqr = q75 - q25
+				cut_off = iqr*3.0
+				lower, upper = q25 - cut_off, q75 + cut_off
+
+				newgroup=[]
+
+				for el1,el2 in zip(group,lens_):
+
+					if el2 > lower and el2 < upper:
+
+						newgroup.append(el1)
+
+				if len(newgroup) >= mingroupsize: #this only applies to clustering not DBSCAN in practice
+
+					result.append(newgroup)
 
 	return result,metric
 
