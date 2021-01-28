@@ -149,7 +149,7 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 
 		plt.title('Estimated number of clusters: ' + str(n_clusters_))
 		plt.tight_layout()
-		plt.savefig(os.path.abspath(plot + '/' + plotregion + '.pdf'	))
+		plt.savefig(os.path.abspath(plot + '/' + plotregion + '.pdf'))
 
 	if type(tresh) == str: #full tree was computed and model can be plotted
 

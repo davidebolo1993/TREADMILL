@@ -20,9 +20,9 @@ ENV PATH nanopolish:$PATH
 ENV PATH nanopolish/scripts:$PATH
 RUN conda install -y -n treadmillenv -c bioconda samtools bcftools bedtools minimap2 ngmlr pysam pyfaidx pybedtools mappy numpy
 RUN conda install -y -n treadmillenv -c r r
-RUN conda install -y -n treadmillenv -c bioconda bioconductor-karyoploter
-RUN git clone --recursive https://github.com/davidebolo1993/TREADMILL && cd TREADMILL && ./configure && python setup.py install
-
-
+RUN conda install -y -n treadmillenv -c bioconda bioconductor-karyoploter r-optparse r-ggrepel
+RUN conda install -y -n treadmillenv -c r r-rjson r-ggplot2 r-plyr r-data.table 
+RUN conda install -y -n treadmillenv -c conda-forge r-ggforce 
+RUN git clone --recursive https://github.com/davidebolo1993/TREADMILL && cd TREADMILL && ./configure && python setup.py install #this takes care of all the other python modules
 #Pull with:
 #sudo docker pull davidebolo1993/treadmill

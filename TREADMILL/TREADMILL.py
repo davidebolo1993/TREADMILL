@@ -52,7 +52,7 @@ def main():
 	additional.add_argument('--similarity', help='sequence similarity percentage between generated (synthetic) reference sequences [85.0]', type=float, metavar='', default=85.0)
 	additional.add_argument('--threads', help='number of threads to use for the re-alignment step [1]', type=int, metavar='', default=1)
 	additional.add_argument('--store', help='store the synthetic chromosomes used for the re-alignment step in FASTA file and the re-aligned BAM in the same folder used for the BIN file', action='store_true')
-	additional.add_argument('--plot', help='when using DBSCAN, store cluster plots in the output folder', action='store_true')
+	additional.add_argument('--plot', help='when using DBSCAN, store cluster plots in (one for each region) in the output folder', action='store_true')
 	
 	parser_reef.set_defaults(func=run_subtool)
 
