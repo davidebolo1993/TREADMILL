@@ -193,7 +193,7 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 
 							newgroup.append(el1)
 
-					if len(newgroup) >= mingroupsize: #this only applies to clustering not DBSCAN in practice
+					if len(newgroup) >= mingroupsize:
 
 						result.append(newgroup)
 
