@@ -174,20 +174,28 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 				lens_=[len(x) for x in group]
 				q25,q75 = np.percentile(lens_, 25), np.percentile(lens_, 75)
 				iqr = q75 - q25
-				cut_off = iqr*3.0 #remove large outliers
-				lower, upper = q25 - cut_off, q75 + cut_off
+				cut_off = iqr*3.0 #this is considered a good cut-off for real outliers
 
-				newgroup=[]
+				if cut_off < 1: #basically, near 0. Outliers are not true outliers
 
-				for el1,el2 in zip(group,lens_):
+					if len(group) >= mingroupsize:
 
-					if el2 >= lower and el2 <= upper:
+						result.append(group)
 
-						newgroup.append(el1)
+				else: #cut-off is valid
 
-				if len(newgroup) >= mingroupsize: #this only applies to clustering not DBSCAN in practice
+					lower, upper = q25 - cut_off, q75 + cut_off
+					newgroup=[]
 
-					result.append(newgroup)
+					for el1,el2 in zip(group,lens_):
+
+						if el2 >= lower and el2 <= upper:
+
+							newgroup.append(el1)
+
+					if len(newgroup) >= mingroupsize: #this only applies to clustering not DBSCAN in practice
+
+						result.append(newgroup)
 
 	return result,metric
 
