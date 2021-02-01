@@ -1,6 +1,14 @@
 #!/bin/bash
 
-genome="/home/davide/data/crispr_human/hs37d5.decoy.fa"
+
+if [ ! -f hs37d5.fa ]; then
+
+	wget ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz
+	gzip -d hs37d5.fa.gz
+	genome=$(readlink -f hs37d5.fa)
+
+fi
+
 error="85 90 95" #3 accuracy levels
 coverage="20 50 100 200" #4 coverage levels
 
