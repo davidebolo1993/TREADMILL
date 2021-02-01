@@ -24,7 +24,7 @@ overview<-ggplot(res2.tot) + geom_jitter(aes(x=coverage, y=as.numeric(allele), g
   labs(x='coverage', y='predicted #CGG repeats')+ geom_rect(data = rect_df,aes(x = NULL,y = NULL,xmin = xmin,xmax = xmax,ymin = ymin,ymax = ymax,fill = grp),alpha = 0.3)+
   scale_fill_manual(values = c('darkgreen','grey50','darkblue', 'darkred')) + theme(legend.title=element_blank(), legend.position = 'bottom', legend.direction = 'horizontal', strip.background =element_rect(fill='grey20'), strip.text = element_text(colour = 'white')) + facet_grid(identity ~ algorithm)
 
-ggsave(file.path(args[1],'overview.pdf'), overview, width=20, height=15)
+ggsave(file.path(dirname(args[1]),'overview.pdf'), overview, width=20, height=15)
 
 #truepositiverate
 
@@ -41,6 +41,6 @@ shapes<-c('DBSCAN' = 8, 'AGGLOMERATIVE' = 1)
 tpr<-ggplot(tres) + geom_line(aes(x=errors, y=as.numeric(TPR), group=interaction(status,algorithm), col=status)) +geom_point(aes(x=errors, y=as.numeric(TPR), group=interaction(status,algorithm), shape=algorithm))  + scale_color_manual(values=colors) + theme_bw() + theme(legend.title=element_blank(), legend.position = 'bottom', legend.direction = 'horizontal', strip.background =element_rect(fill="grey20"), strip.text = element_text(colour = 'white')) + labs(y='TPR', x='# errors in CGG prediction')+
   scale_shape_manual(values=shapes) + facet_grid(identity~coverage) + scale_y_continuous(breaks = seq(0.00,1.00,by=0.10))
 
-ggsave(file.path(args[1],'tpr.pdf'), tpr, width=20, height=15)
+ggsave(file.path(dirname(args[1]),'tpr.pdf'), tpr, width=20, height=15)
 
 
