@@ -190,7 +190,7 @@ p_length<-ggplot(data=dfstats, aes(x=x, fill=z)) +
   geom_vline(data=lenmean, aes(xintercept = xmean, color=z),linetype='dashed', show.legend=FALSE)+
   scale_fill_brewer(palette='Dark2') + 
   theme_bw()+
-  scale_x_continuous("read length (#bps)") + 
+  scale_x_continuous("read length (#bp)") + 
   theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_blank(),plot.title = element_text(hjust = 0.5)) +
   ggtitle('Read length distribution, on-target reads')
 
