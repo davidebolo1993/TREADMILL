@@ -28,9 +28,8 @@ defaultW <- getOption("warn")
 options(warn = -1)
 
 option_list = list(
-  make_option(c('-m', '--minimap2'), action='store', type='character', help='.json file with informations from a minimap2-generated alignment'),
-  make_option(c('-n', '--ngmlr'), action='store', type='character', help='.json file with informations from a ngmlr-generated alignment'),
-  #make_option(c('-l', '--last'), action='store', type='character', help='.json file with informations from a last-generated alignment'),
+  make_option(c('-j', '--json'), action='store', type='character', help='on ore more comma-separated .json file from TREADMILL BASIC [required]'),
+  make_option(c('-l', '--labels'), action='store', type='character', help='one ore more comma-separated label to identify each experiment [required]'),
   make_option(c('-o', '--output'), action='store', type='character', help='output .pdf file with calculated stats [out.pdf]', default='out.pdf')
 )
 
@@ -42,29 +41,49 @@ listerr<-list()
 listcov<-list()
 liststats<-list()
 
-if (! is.null(opt$minimap2)) {
+if (is.null(opt$json)) {
 
   now<-Sys.time()
-  message('[',now,'][Message] Processing .json file from minimap2')
+  stop('[',now,'][Error] At least one .json from TREADMILL BASIC is required')
 
-  if (file.exists(file.path(opt$minimap2))) {
-    mjson<-fromJSON(file = file.path(opt$minimap2))
+}
+
+jsons<-unlist(strsplit(opt$json, ','))
+labels<-unlist(strsplit(opt$labels, ','))
+
+if (length(jsons) != length(labels)) {
+
+  now<-Sys.time()
+  stop('[',now,'][Error] Number of input .json files does not match number of labels provided')
+
+}
+
+for (i in 1:length(jsons)) {
+
+  now<-Sys.time()
+  injson<-jsons[i]
+  inlabel<-labels[i]
+  message('[',now,'][Message] Processing .json file ', file.path(injson), ' with label ', inlabel)
+
+  if (file.exists(file.path(injson))) {
+
+    mjson<-fromJSON(file = file.path(injson))
     mkeyall<-c('unmapped', 'supplementary', 'secondary', 'primary', 'on-target', 'off-target')
     mvalueall<-c(mjson$BAM_UNMAP,mjson$BAM_SUPP,mjson$BAM_SEC,mjson$BAM_PRIM,mjson$BAM_ONTARGET,mjson$BAM_OFFTARGET)
-    malignerall<-rep('minimap2',length(mkeyall))
-    
-    mall<-data.frame(x=mkeyall,y=mvalueall,z=malignerall,stringsAsFactors = FALSE)
-    listall[['m']]<-mall
-      
+    mlabelall<-rep(inlabel,length(mkeyall))
+
+    mall<-data.frame(x=mkeyall,y=mvalueall,z=mlabelall,stringsAsFactors = FALSE)
+    listall[[inlabel]]<-mall
+
     mkeyerr<-c('match', 'mismatch', 'deletion', 'insertion', 'soft-clipped')
     mvalueerr<-c(mjson$BAM_CMATCH, mjson$BAM_CDIFF, mjson$BAM_CDEL, mjson$BAM_CINS, mjson$BAM_CSOFT_CLIP)
-    malignererr<-rep('minimap2',length(mkeyerr))
-    
-    merror<-data.frame(x=malignererr,y=mvalueerr,z=mkeyerr,stringsAsFactors = FALSE)
-    listerr[['m']]<-merror
+    mlabelerr<-rep(inlabel,length(mkeyerr))
 
-    mstats<-data.frame(x=mjson$BAM_LEN, y=mjson$BAM_QUAL, w=mjson$BAM_PID, z=c('minimap2'),stringsAsFactors = FALSE)
-    liststats[['m']]<-mstats
+    merror<-data.frame(x=mlabelerr,y=mvalueerr,z=mkeyerr,stringsAsFactors = FALSE)
+    listerr[[inlabel]]<-merror
+
+    mstats<-data.frame(x=mjson$BAM_LEN, y=mjson$BAM_QUAL, w=mjson$BAM_PID, z=inlabel,stringsAsFactors = FALSE)
+    liststats[[inlabel]]<-mstats
     
     mcovkeys<-grep(':', names(mjson), value=TRUE)
     mtmplist<-list()
@@ -73,99 +92,21 @@ if (! is.null(opt$minimap2)) {
       
       y<-as.numeric(as.character(unlist(mjson[mk])))
       x<-rep(mk, length(y))
-      z<-rep('minimap2',length(y))       
+      z<-rep(inlabel,length(y))       
       mtmplist[[mk]]<-data.frame(x=x,y=y,z=z,stringsAsFactors = FALSE)
     }
-    
-    listcov[['m']]<-do.call(rbind,mtmplist)
-  }
-}
 
-if (! is.null(opt$ngmlr)) {
+    listcov[[inlabel]]<-do.call(rbind,mtmplist)
   
+  } else {
 
-  now<-Sys.time()
-  message('[',now,'][Message] Processing .json file from ngmlr')
-  
-  if (file.exists(file.path(opt$ngmlr))) {
-    njson<-fromJSON(file = file.path(opt$ngmlr))
-    nkeyall<-c('unmapped', 'supplementary', 'secondary', 'primary', 'on-target', 'off-target')
-    nvalueall<-c(njson$BAM_UNMAP,njson$BAM_SUPP,njson$BAM_SEC,njson$BAM_PRIM,njson$BAM_ONTARGET,njson$BAM_OFFTARGET)
-    nalignerall<-rep('ngmlr',length(nkeyall))
-    
-    nall<-data.frame(x=nkeyall,y=nvalueall,z=nalignerall,stringsAsFactors = FALSE)
-    listall[['n']]<-nall
-    
-    nkeyerr<-c('match', 'mismatch', 'deletion', 'insertion', 'soft-clipped')
-    nvalueerr<-c(njson$BAM_CMATCH, njson$BAM_CDIFF, njson$BAM_CDEL, njson$BAM_CINS, njson$BAM_CSOFT_CLIP)
-    nalignererr<-rep('ngmlr',length(nkeyerr))
-    
-    nerror<-data.frame(x=nalignererr,y=nvalueerr,z=nkeyerr,stringsAsFactors = FALSE)
-    listerr[['n']]<-nerror
+    now<-Sys.time()
+    stop('[',now,'][Error] .json file ', file.path(injson), ' does not exist')
 
-    nstats<-data.frame(x=njson$BAM_LEN, y=njson$BAM_QUAL, w=njson$BAM_PID, z=c('ngmlr'),stringsAsFactors = FALSE)
-    liststats[['n']]<-nstats
-   
-    ncovkeys<-grep(':', names(njson), value=TRUE)
-    ntmplist<-list()
-    
-    for (nk in ncovkeys) {
-      
-      y<-as.numeric(as.character(unlist(njson[nk])))
-      x<-rep(nk, length(y))
-      z<-rep('ngmlr',length(y))       
-      ntmplist[[nk]]<-data.frame(x=x,y=y,z=z,stringsAsFactors = FALSE)
-    }
-    
-    listcov[['n']]<-do.call(rbind,ntmplist)
-    
   }
+
 }
 
-#if (! is.null(opt$last)) {
-
-  #now<-Sys.time()
-  #message('[',now,'][Message] Processing .json file from last')
-
-  #if (file.exists(file.path(opt$last))) {
-    #ljson<-fromJSON(file = file.path(opt$last))
-    #lkeyall<-c('unmapped', 'supplementary', 'secondary', 'primary', 'on-target', 'off-target')
-    #lvalueall<-c(ljson$BAM_UNMAP,ljson$BAM_SUPP,ljson$BAM_SEC,ljson$BAM_PRIM,ljson$BAM_ONTARGET,ljson$BAM_OFFTARGET)
-    #lalignerall<-rep('last',length(lkeyall))
-
-    #lall<-data.frame(x=lkeyall,y=lvalueall,z=lalignerall,stringsAsFactors = FALSE)
-    #listall[['l']]<-lall
-
-    #lkeyerr<-c('match', 'mismatch', 'deletion', 'insertion', 'soft-clipped')
-    #lvalueerr<-c(ljson$BAM_CMATCH, ljson$BAM_CDIFF, ljson$BAM_CDEL, ljson$BAM_CINS, ljson$BAM_CSOFT_CLIP)
-    #lalignererr<-rep('ngmlr',length(lkeyerr))
-
-    #lerror<-data.frame(x=lalignererr,y=lvalueerr,z=lkeyerr,stringsAsFactors = FALSE)
-    #listerr[['l']]<-lerror
-
-    #lstats<-data.frame(x=ljson$BAM_LEN, y=ljson$BAM_QUAL, w=ljson$BAM_PID, z=c('last'),stringsAsFactors = FALSE)
-    #liststats[['l']]<-lstats
-
-    #lcovkeys<-grep(':', names(ljson), value=TRUE)
-    #ltmplist<-list()
-
-    #for (lk in lcovkeys) {
-
-      #y<-as.numeric(as.character(unlist(ljson[lk])))
-      #x<-rep(lk, length(y))
-      #z<-rep('last',length(y))
-      #ltmplist[[lk]]<-data.frame(x=x,y=y,z=z,stringsAsFactors = FALSE)
-    #}
-
-    #listcov[['l']]<-do.call(rbind,ltmplist)
-
-  #}
-#}
-
-if (length(listall) == 0) {
-  now<-Sys.time()
-  stop('[',now,'][Error] At least one .json from TREADMILL BASIC is required')
-}
 
 
 now<-Sys.time()
@@ -192,7 +133,7 @@ pall<-ggplot(dfall, aes(x=as.numeric(x), y=y, fill=z))+
   xlab('read type')+
   theme(legend.title = element_blank(), plot.title = element_text(hjust = 0.5))+
   ggtitle('Overall statistics')+
-  facet_zoom(xlim=c(4,6),ylim=c(0,dfall$y[which(dfall$x=='on-target')]+100), horizontal=FALSE, zoom.data=zoom)+
+  facet_zoom(xlim=c(4.5,6.5),ylim=c(0,dfall$y[which(dfall$x=='on-target')]+100), horizontal=FALSE, zoom.data=zoom)+
   geom_text(data=dfall_mod, aes(label = label), position=position_dodge(width=.3), size=2,vjust = -0.5)+
   scale_x_continuous(
     breaks = 1:length(unique(dfall$x)),
@@ -238,41 +179,52 @@ p_qual_vs_pid<-ggplot(data=dfstats, aes(x=w, y=y)) +
   geom_hline(data=qualmean,aes(yintercept = xmean), linetype='dashed', col='darkgreen')+
   scale_color_continuous(low="darkblue",high="darkred")+
   guides(alpha="none",col=guide_legend(title="Density"))+
-  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
-  facet_wrap(~z, scales = "free")+
+  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"), strip.background =element_rect(fill="grey20"), strip.text = element_text(colour = 'white'), plot.title = element_text(hjust = 0.5))+
+  facet_wrap(~z, scales = "fixed")+
   ggtitle('% identity vs quality, on-target reads')
 
 
-p_qual_vs_len<-ggplot(data=dfstats, aes(x=x, y=y)) + 
-  geom_point(size = 0.6)+ stat_density2d(aes(col=..level.., alpha=..level..))+
-  geom_rug(sides="t", size=0.05, col=rgb(.8,0,0,alpha=.3)) + 
-  geom_rug(sides="r", size=0.05, col=rgb(0,0,.8,alpha=.3)) + 
-  scale_x_continuous("length (#bp)") + 
-  scale_y_continuous("quality (phred)") + 
+
+p_length<-ggplot(data=dfstats, aes(x=x, fill=z)) + 
+  geom_histogram(position="dodge", bins=50)+
+  geom_vline(data=lenmean, aes(xintercept = xmean, color=z),linetype='dashed', show.legend=FALSE)+
+  scale_fill_brewer(palette='Dark2') + 
   theme_bw()+
-  geom_vline(data=lenmean, aes(xintercept = xmean),linetype='dashed', col='darkgreen')+
-  geom_hline(data=qualmean,aes(yintercept = xmean), linetype='dashed', col='darkgreen')+
-  scale_color_continuous(low="darkblue",high="darkred")+
-  guides(alpha="none",col=guide_legend(title="Density"))+
-  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
-  facet_wrap(~z, scales = "free")+
-  ggtitle('Length vs quality, on-target reads')
+  scale_x_continuous("read length (#bps)") + 
+  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_blank(),plot.title = element_text(hjust = 0.5)) +
+  ggtitle('Read length distribution, on-target reads')
+
+#p_len_vs_pid<-ggplot(data=dfstats, aes(x=w, y=x)) + 
+#  geom_point(size = 0.6)+ stat_density2d(aes(col=..level.., alpha=..level..))+
+#  geom_rug(sides="t", size=0.05, col=rgb(.8,0,0,alpha=.3)) + 
+#  geom_rug(sides="r", size=0.05, col=rgb(0,0,.8,alpha=.3)) + 
+#  scale_x_continuous("% identity") + 
+#  scale_y_continuous("length (#bp)") + 
+#  theme_bw()+
+#  geom_vline(data=idmean, aes(xintercept = xmean),linetype='dashed', col='darkgreen')+
+#  geom_hline(data=lenmean,aes(yintercept = xmean), linetype='dashed', col='darkgreen')+  
+#  scale_color_continuous(low="darkblue",high="darkred")+
+#  guides(alpha="none",col=guide_legend(title="Density"))+
+#  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="grey20"), strip.text = element_text(colour = 'white'), plot.title = element_text(hjust = 0.5))+
+#  facet_wrap(~z, scales = "free")+
+#  ggtitle('% identity vs length, on-target reads')
+
+#p_qual_vs_len<-ggplot(data=dfstats, aes(x=x, y=y)) + 
+#  geom_point(size = 0.6)+ stat_density2d(aes(col=..level.., alpha=..level..))+
+#  geom_rug(sides="t", size=0.05, col=rgb(.8,0,0,alpha=.3)) + 
+#  geom_rug(sides="r", size=0.05, col=rgb(0,0,.8,alpha=.3)) + 
+#  scale_x_continuous("length (#bp)") + 
+#  scale_y_continuous("quality (phred)") + 
+#  theme_bw()+
+#  geom_vline(data=lenmean, aes(xintercept = xmean),linetype='dashed', col='darkgreen')+
+#  geom_hline(data=qualmean,aes(yintercept = xmean), linetype='dashed', col='darkgreen')+
+#  scale_color_continuous(low="darkblue",high="darkred")+
+#  guides(alpha="none",col=guide_legend(title="Density"))+
+#  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="grey20"), strip.text = element_text(colour = 'white'), plot.title = element_text(hjust = 0.5))+
+#  facet_wrap(~z, scales = "free")+
+#  ggtitle('Length vs quality, on-target reads')
   
 
-p_len_vs_pid<-ggplot(data=dfstats, aes(x=w, y=x)) + 
-  geom_point(size = 0.6)+ stat_density2d(aes(col=..level.., alpha=..level..))+
-  geom_rug(sides="t", size=0.05, col=rgb(.8,0,0,alpha=.3)) + 
-  geom_rug(sides="r", size=0.05, col=rgb(0,0,.8,alpha=.3)) + 
-  scale_x_continuous("% identity") + 
-  scale_y_continuous("length (#bp)") + 
-  theme_bw()+
-  geom_vline(data=idmean, aes(xintercept = xmean),linetype='dashed', col='darkgreen')+
-  geom_hline(data=lenmean,aes(yintercept = xmean), linetype='dashed', col='darkgreen')+  
-  scale_color_continuous(low="darkblue",high="darkred")+
-  guides(alpha="none",col=guide_legend(title="Density"))+
-  theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"),strip.background =element_rect(fill="white"),plot.title = element_text(hjust = 0.5))+
-  facet_wrap(~z, scales = "free")+
-  ggtitle('% identity vs length, on-target reads')
 
 #coverage per region
 
@@ -290,13 +242,13 @@ pcov<-ggplot(dfcov, aes(x=x, y=y, fill=z)) +
 
 pdf(file.path(opt$output), height=20, width=13, onefile=TRUE)
 grid.newpage()
-pushViewport(viewport(layout = grid.layout(10, 10)))
+pushViewport(viewport(layout = grid.layout(8, 10)))
 print(pall, vp = vplayout(1:2, 1:5))
 print(perr, vp = vplayout(1:2, 6:10))
-print(p_qual_vs_len, vp = vplayout(3:4, 2:9))
-print(p_qual_vs_pid, vp = vplayout(5:6, 2:9))
-print(p_len_vs_pid, vp = vplayout(7:8, 2:9))
-print(pcov, vp = vplayout(9:10, 1:10))
+print(p_qual_vs_pid, vp = vplayout(3:4, 2:9))
+print(p_length, vp = vplayout(5:6, 2:9))
+#print(p_len_vs_pid, vp = vplayout(7:8, 2:9))
+print(pcov, vp = vplayout(7:8, 1:10))
 dev.off()
 
 options(warn = defaultW)
