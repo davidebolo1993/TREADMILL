@@ -148,6 +148,8 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 			plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=tuple(col), markeredgecolor='k', markersize=6)
 
 		plt.title('Estimated number of clusters: ' + str(n_clusters_))
+		plt.xlabel('Longitude')
+		plt.ylabel('Latitude')
 		plt.tight_layout()
 		plt.savefig(os.path.abspath(plot + '/' + plotregion + '.pdf'))
 

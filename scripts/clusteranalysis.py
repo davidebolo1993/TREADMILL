@@ -178,6 +178,7 @@ def main():
 	plt.figure(figsize=(args.width_dendogram,args.height_dendogram))
 	plt.title('Hierarchical Clustering Dendogram')
 	hierarchy.dendrogram(linkage_matrix)
+	plt.ylabel('Cluster Dissimilarity Index')
 	plt.savefig(OUTD)
 
 
@@ -225,8 +226,8 @@ def main():
 		colors = cm.nipy_spectral(cluster_labels.astype(float) / n_clusters)
 		axs[i,1].scatter(silhouette[:, 0], silhouette[:, 1], marker='.', s=30, lw=0, alpha=0.7,c=colors, edgecolor='k')
 		axs[i,1].set_title('Cluster plot with number of clusters = ' + str(n_clusters))
-		axs[i,1].get_xaxis().set_ticks([])
-		axs[i,1].get_yaxis().set_ticks([])
+		axs[i,1].set_xlabel('Feature space (1st feature)')
+		axs[i,1].set_ylabel('Feature space (2nd feature)')
 
 	plt.tight_layout()
 	plt.savefig(OUTS)
