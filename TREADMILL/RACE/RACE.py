@@ -424,7 +424,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster,t
 
 			seqdict=dict()
 
-			header='>treadmill_reef_' + REGION + '_' + repeat + '_' + str(min_) + '_flank_' + str(flank)
+			header='>treadmill_race_' + REGION + '_' + repeat + '_' + str(min_) + '_flank_' + str(flank)
 			sequence=leftflank+refseq+rightflank
 			seqdict[header]=sequence
 			reps=min_
@@ -434,7 +434,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster,t
 				seqtoadd=(len(sequence)/100)*(100-sim)
 				reptoadd=round(seqtoadd/len(repeat))
 				reps+=reptoadd
-				header='>treadmill_reef_' + REGION + '_' + repeat + '_' + str(reps) + '_flank_' + str(flank)
+				header='>treadmill_race_' + REGION + '_' + repeat + '_' + str(reps) + '_flank_' + str(flank)
 				sequence=leftflank+refseq+(repeat*(reps-min_))+rightflank
 				seqdict[header]=sequence
 
