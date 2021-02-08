@@ -161,43 +161,58 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 
 		groups=set(cluster_.labels_)
 
-		for g in groups:
+		if all([x == -1 for x in groups]): #DBSCAN failed to cluster
 
-			if g == -1:
+			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+			print('[' + now + ']' + '[Warning] Failed to cluster strings with current settings. Unclustered strings are stored in the output folder')
 
-				continue
+			outstrings=os.path.abspath(OUTDIR + '/unclustered.txt')
 
-			else:
+			with open(outstrings, 'w') as outs:
 
-				group=list(np.take(data,np.where(cluster_.labels_ == g))[0])
+				for k,v in readsdict.items():
 
-				#remove long outliers from data using Interquartile Range Method
+					outs.write('>' + k + '\n' + v + '\n')
 
-				lens_=[len(x) for x in group]
-				q25,q75 = np.percentile(lens_, 25), np.percentile(lens_, 75)
-				iqr = q75 - q25
-				cut_off = iqr*3.0 #this is considered a good cut-off for real outliers
+		else:
 
-				if cut_off < 1: #basically, near 0. Outliers are not true outliers
+			for g in groups:
 
-					if len(group) >= mingroupsize:
+				if g == -1:
 
-						result.append(group)
+					continue
 
-				else: #cut-off is valid
+				else:
 
-					lower, upper = q25 - cut_off, q75 + cut_off
-					newgroup=[]
+					group=list(np.take(data,np.where(cluster_.labels_ == g))[0])
 
-					for el1,el2 in zip(group,lens_):
+					#remove long outliers from data using Interquartile Range Method
 
-						if el2 >= lower and el2 <= upper:
+					lens_=[len(x) for x in group]
+					q25,q75 = np.percentile(lens_, 25), np.percentile(lens_, 75)
+					iqr = q75 - q25
+					cut_off = iqr*3.0 #this is considered a good cut-off for real outliers
 
-							newgroup.append(el1)
+					if cut_off < 1: #basically, near 0. Outliers are not true outliers
 
-					if len(newgroup) >= mingroupsize:
+						if len(group) >= mingroupsize:
 
-						result.append(newgroup)
+							result.append(group)
+
+					else: #cut-off is valid
+
+						lower, upper = q25 - cut_off, q75 + cut_off
+						newgroup=[]
+
+						for el1,el2 in zip(group,lens_):
+
+							if el2 >= lower and el2 <= upper:
+
+								newgroup.append(el1)
+
+						if len(newgroup) >= mingroupsize:
+
+							result.append(newgroup)
 
 	return result,metric
 
@@ -322,12 +337,7 @@ def Map(a_instance,Slist,Qlist,sequences,flank,finalBAM,store):
 					Aldict['MD'] = hit.MD
 					Aldict['cs'] = hit.cs
 
-					finalBAM.append(Aldict)
-				
-			else:
-
-				pass
-				
+					finalBAM.append(Aldict)				
 				
 		except StopIteration: #unmapped sequence
 			
@@ -597,6 +607,7 @@ def run(parser,args):
 		sys.exit(1)
 
 
+	global OUTDIR
 	OUTDIR=os.path.dirname(os.path.abspath(args.output))
 
 	if not os.path.exists(OUTDIR):
