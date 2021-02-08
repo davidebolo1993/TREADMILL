@@ -330,7 +330,7 @@ def Map(a_instance,Slist,Qlist,sequences,flank,finalBAM,store):
 					Aldict['QNAME'] = name
 					Aldict['RNAME'] = hit.ctg
 					Aldict['POS'] = hit.r_st				
-					Aldict['MAPQ'] = hit.mapq
+					Aldict['MAPQ'] = 60
 					Aldict['CIGAR'] = cigstr
 					Aldict['SEQ'] = seq
 					Aldict['QUAL'] = qual
