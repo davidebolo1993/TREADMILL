@@ -223,6 +223,12 @@ suppressPackageStartupMessages(library(tseries))
 # mw <- 1
 
 
+cptfn <- function(data, pen) { ##https://rpubs.com/richkt/269908
+  ans <- cpt.mean(data, test.stat="Normal", method = "PELT", penalty = "Manual", pen.value = pen) 
+  length(cpts(ans)) +1
+}
+
+
 defaultW <- getOption("warn")
 options(warn = -1)
 
