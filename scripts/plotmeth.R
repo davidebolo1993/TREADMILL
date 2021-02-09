@@ -468,7 +468,7 @@ for (row in 1:nrow(BED)) {
 
   region_to_plot<-gsub(":", "_", region)
 
-  pdf(file.path(opt$outputdir, paste0(region, '.pdf')), height=10, width=15)
+  pdf(file.path(opt$outputdir, paste0(region_to_plot, '.pdf')), height=10, width=15)
 
   if (!is.null(PLOT2)) {
 
