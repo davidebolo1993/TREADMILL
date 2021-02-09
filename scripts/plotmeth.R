@@ -483,8 +483,8 @@ for (row in 1:nrow(BED)) {
     kpLines(kp, data.panel=1, data=GRMS1, col='darkred', lwd = 1.5,r0=0.1, r1=0.9)
     kpLines(kp, data.panel=2, data=GRMS2,col='darkblue', lwd = 1.5,r0=0.1, r1=0.9)
     kpAddMainTitle(kp, paste0('Methylation profile of ', region))
-    kpAddLabels(kp, data.panel=1,labels = expression('Methylation frequency '['(hap1)']), r0=0.85, r1=1.05,cex=.6,label.margin = .07, srt=90)
-    kpAddLabels(kp, data.panel=2,labels = expression('Methylation frequency '['(hap2)']), r0=-0.05, r1=0.15,cex=.6,label.margin = .07, srt=90)
+    kpAddLabels(kp, data.panel=1,labels = expression('Methylation frequency '['(hap1)']), r0=0.65, r1=0.95,cex=.6,label.margin = .07, srt=90)
+    kpAddLabels(kp, data.panel=2,labels = expression('Methylation frequency '['(hap2)']), r0=0.05, r1=0.35,cex=.6,label.margin = .07, srt=90)
   
   } else {
 
@@ -495,7 +495,7 @@ for (row in 1:nrow(BED)) {
     kpPoints(kp, data.panel=1, data=GRMV1, cex=.4,pch='o', r0=0.1, r1=0.9)
     kpLines(kp, data.panel=1, data=GRMS1, col='darkred', lwd = 1.5,r0=0.1, r1=0.9)
     kpAddMainTitle(kp, paste0('Methylation profile of ', region))
-    kpAddLabels(kp, data.panel=1,labels = expression('Methylation frequency '['(hap1)']), r0=0.75, r1=1.05,cex=.8,label.margin = .07, srt=90)
+    kpAddLabels(kp, data.panel=1,labels = expression('Methylation frequency '['(hap1)']), r0=0.65, r1=0.95,cex=.8,label.margin = .07, srt=90)
   
   }
 
