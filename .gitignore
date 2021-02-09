@@ -4,3 +4,4 @@ dist/*
 scripts/JointSLMTruncI.o
 scripts/JointSLMTruncI.so
 TREADMILL/TRAP/consensus
+scripts/JointSLMTruncI.f
