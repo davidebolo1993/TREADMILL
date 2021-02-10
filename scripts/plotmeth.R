@@ -234,9 +234,9 @@ options(warn = -1)
 
 option_list = list(
   make_option(c('-p', '--haplotype1'), action='store', type='character', help='.tsv file containing methylation frequencies for haplotype 1 [required]'),
-  make_option(c('-q', '--haplotype2'), action='store', type='character', help='.tsv file containing methylation frequencies for haplotype 2', default=NULL),
+  make_option(c('-q', '--haplotype2'), action='store', type='character', help='.tsv file containing methylation frequencies for haplotype 2 [required]'),
   make_option(c('-o', '--outputdir'), action='store', type='character', help='output directory [required]'),
-  make_option(c('-b', '--bed'), action='store', type='character', help='.bed file with regions to restrict the analysis to [required]'),
+  make_option(c('-b', '--bed'), action='store', type='character', help='.bed file with a region to restrict the analysis to [required]'),
   make_option(c('-r', '--release'), action='store', type='character', help='genome release [hg38]', default = 'hg38')
 )
 
@@ -263,16 +263,8 @@ BED<-fread(file.path(opt$bed), sep='\t', header=FALSE)
 now<-Sys.time()
 message('[',now,'][Message] Reading methylation frequency files')
 M1<-fread(file.path(opt$haplotype1), sep='\t', header=TRUE)
+M2<-fread(file.path(opt$haplotype2), sep='\t', header=TRUE)
 
-if (! is.null(opt$haplotype2)) {
-
-  M2<-fread(file.path(opt$haplotype2), sep='\t', header=TRUE)
-
-} else {
-
-  M2<-NULL
-
-}
 
 #create output folder if it does not exist
 
@@ -311,22 +303,20 @@ for (row in 1:nrow(BED)) {
   if (nrow(subM1) == 0) {
 
     now<-Sys.time()
-    stop('[',now,'][Error] Missing region in haplotype 1 methylation frequency file')
+    error('[',now,'][Error] Missing region in haplotype 1 methylation frequency file')
 
   }
 
-  if (! is.null( M2)) {
+  subM2<-data.table(M2[grep(region,M2$chrom),])
 
-    subM2<-data.table(M2[grep(region,M2$chrom),])
+  if (nrow(subM2) == 0) {
 
-    if (nrow(subM2) == 0) {
+    now<-Sys.time()
+    error('[',now,'][Error] Missing region in haplotype 2 methylation frequency file')
 
-      now<-Sys.time()
-      stop('[',now,'][Error] Missing region in haplotype 2 methylation frequency file')
+  }
 
-    }
-
-  } else {
+  if (all.equal(M1,M2)) {
 
     subM2<-NULL
 
@@ -372,8 +362,6 @@ for (row in 1:nrow(BED)) {
     subM2<-do.call(rbind,mergedM2)
 
   }
-
-
 
   #haplotype1, merge if multiple chromosomes in the same matrix
 
@@ -512,7 +500,6 @@ for (row in 1:nrow(BED)) {
     kpAddMainTitle(kp, paste0('Methylation profile of ', region))
     kpAddLabels(kp, data.panel=1,labels = bquote('Methylation frequency '['(hap1)']), r0=0.65, r1=0.95,cex=.8,label.margin = .07, srt=90)
     kpAddLabels(kp, data.panel=2,labels = bquote('Methylation frequency '['(hap2)']), r0=0.05, r1=0.35,cex=.8,label.margin = .07, srt=90)
-
   
   } else {
 
