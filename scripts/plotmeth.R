@@ -233,8 +233,8 @@ defaultW <- getOption("warn")
 options(warn = -1)
 
 option_list = list(
-  make_option(c('-p', '--haplotype1'), action='store', type='character', help='.tsv file containing methylation frequencies for haplotype 1 [required]'),
-  make_option(c('-q', '--haplotype2'), action='store', type='character', help='.tsv file containing methylation frequencies for haplotype 2 [required]'),
+  make_option(c('-p', '--allele1'), action='store', type='character', help='.tsv file containing methylation frequencies for allele 1 [required]'),
+  make_option(c('-q', '--allele2'), action='store', type='character', help='.tsv file containing methylation frequencies for allele 2 [required]'),
   make_option(c('-o', '--outputdir'), action='store', type='character', help='output directory [required]'),
   make_option(c('-b', '--bed'), action='store', type='character', help='.bed file with a region to restrict the analysis to [required]'),
   make_option(c('-r', '--release'), action='store', type='character', help='genome release [hg38]', default = 'hg38')
@@ -262,8 +262,8 @@ BED<-fread(file.path(opt$bed), sep='\t', header=FALSE)
 
 now<-Sys.time()
 message('[',now,'][Message] Reading methylation frequency files')
-M1<-fread(file.path(opt$haplotype1), sep='\t', header=TRUE)
-M2<-fread(file.path(opt$haplotype2), sep='\t', header=TRUE)
+M1<-fread(file.path(opt$allele1), sep='\t', header=TRUE)
+M2<-fread(file.path(opt$allele2), sep='\t', header=TRUE)
 
 
 #create output folder if it does not exist
@@ -498,8 +498,8 @@ for (row in 1:nrow(BED)) {
     kpLines(kp, data.panel=1, data=GRMS1, col='darkred', lwd = 1.5,r0=0.1, r1=0.9)
     kpLines(kp, data.panel=2, data=GRMS2,col='darkblue', lwd = 1.5,r0=0.1, r1=0.9)
     kpAddMainTitle(kp, paste0('Methylation profile of ', region))
-    kpAddLabels(kp, data.panel=1,labels = bquote('Methylation frequency '['(hap1)']), r0=0.65, r1=0.95,cex=.8,label.margin = .07, srt=90)
-    kpAddLabels(kp, data.panel=2,labels = bquote('Methylation frequency '['(hap2)']), r0=0.05, r1=0.35,cex=.8,label.margin = .07, srt=90)
+    kpAddLabels(kp, data.panel=1,labels = bquote('Methylation frequency '['(allele1)']), r0=0.65, r1=0.95,cex=.8,label.margin = .07, srt=90)
+    kpAddLabels(kp, data.panel=2,labels = bquote('Methylation frequency '['(allele2)']), r0=0.05, r1=0.35,cex=.8,label.margin = .07, srt=90)
   
   } else {
 
@@ -510,7 +510,7 @@ for (row in 1:nrow(BED)) {
     kpPoints(kp, data.panel=1, data=GRMV1, cex=.4,pch=19, r0=0.1, r1=0.9)
     kpLines(kp, data.panel=1, data=GRMS1, col='darkred', lwd = 1.5,r0=0.1, r1=0.9)
     kpAddMainTitle(kp, paste0('Methylation profile of ', region))
-    kpAddLabels(kp, data.panel=1,labels = bquote('Methylation frequency '['(hap1)']), r0=0.65, r1=0.95,cex=.8,label.margin = .07, srt=90)
+    kpAddLabels(kp, data.panel=1,labels = bquote('Methylation frequency '['(allele1)']), r0=0.65, r1=0.95,cex=.8,label.margin = .07, srt=90)
   
   }
 
