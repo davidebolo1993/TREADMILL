@@ -304,6 +304,9 @@ for (row in 1:nrow(BED)) {
   #grep region
 
   subM1<-data.table(M1[grep(region,M1$chrom),])
+  flanking<-as.numeric(unlist(strsplit(subM1$chrom[1],"_"))[7])
+  start<-start-flanking
+  end<-end+flanking
 
   if (nrow(subM1) == 0) {
 
@@ -333,12 +336,17 @@ for (row in 1:nrow(BED)) {
 
   mergedM1<-list()
   splittedM1<-split(subM1, by="chrom")
+  last<-as.numeric(unlist(strsplit(unique(splittedM1[[length(splittedM1)]]$chrom),"_"))[9])
+
 
   for (tab in splittedM1) {
 
     chrom_long<-unique(tab$chrom)
     ie<-as.numeric(unlist(strsplit(chrom_long, "_"))[9])
-    mergedM1[[chrom_long]]<-tab[!tab$pos > ie,]
+    toadd<-last-ie
+    index_to_mod<-which(tab$pos > ie)
+    tab$pos[index_to_mod] <- tab$pos[index_to_mod] + toadd
+    mergedM1[[chrom_long]]<-tab
 
   }
 
@@ -348,12 +356,16 @@ for (row in 1:nrow(BED)) {
 
     mergedM2<-list()
     splittedM2<-split(subM2, by="chrom")
+    last<-as.numeric(unlist(strsplit(unique(splittedM2[[length(splittedM2)]]$chrom),"_"))[9])
 
     for (tab in splittedM2) {
 
       chrom_long<-unique(tab$chrom)
       ie<-as.numeric(unlist(strsplit(chrom_long, "_"))[9])
-      mergedM2[[chrom_long]]<-tab[!tab$pos > ie,]
+      toadd<-last-ie
+      index_to_mod<-which(tab$pos > ie)
+      tab$pos[index_to_mod] <- tab$pos[index_to_mod] + toadd
+      mergedM2[[chrom_long]]<-tab
 
     }
 
@@ -362,11 +374,13 @@ for (row in 1:nrow(BED)) {
   }
 
 
+
   #haplotype1, merge if multiple chromosomes in the same matrix
 
   if (length(unique(subM1$chrom)) != 1) {
 
     M1res <- subM1[,.(chromosome=region,start=unique(pos), end=unique(pos), methylated_frequency=weighted.mean(x=modification_frequency,w=coverage)),by=pos]
+    setorderv(M1res, c("pos"), c(1))
 
   } else {
 
@@ -393,10 +407,16 @@ for (row in 1:nrow(BED)) {
   pen.vals <- seq(0, 10,.1)
   elbowplotData <- unlist(lapply(pen.vals, function(p) cptfn(data = M1res$methylated_frequency, pen = p)))
   penalty<-pen.vals[which(diff(elbowplotData) == 0)[1]]
-  cptm_CP <- cpt.mean(M1res$methylated_frequency,, penalty='Manual',pen.value=penalty,method='PELT', class=TRUE) 
+  cptm_CP <- cpt.mean(M1res$methylated_frequency, penalty='Manual',pen.value=penalty,method='PELT', class=TRUE) 
   indexes<-c(0,cptm_CP@cpts)
   vals<-cptm_CP@param.est$mean
   svals<-rep(vals,diff(indexes))
+  t1<-kpss.test(M1res$methylated_frequency, null="Trend")
+  kpss1_2<-paste0("p = ", t1$p.value)
+  kpss1_3<-paste0("KPSS trend = ", t1$statistic)
+
+  now<-Sys.time()
+  message('[',now,'][Message] KPSS Test for Trend Stationarity on haplotype 1. ', kpss1_2, '. ', kpss1_3)
 
   M1pos<-rescale(M1res$start, c(start,end))
   M1methvals<-data.frame(chromosome=subchrom, start=M1pos, end=M1pos, y=M1res$methylated_frequency)
@@ -416,6 +436,7 @@ for (row in 1:nrow(BED)) {
     if (length(unique(subM2$chrom)) != 1) {
 
       M2res <- subM2[,.(chromosome=region, start=unique(pos), end=unique(pos), methylated_frequency=weighted.mean(x=modification_frequency,w=coverage)),by=pos]
+      setorderv(M2res, c("pos"), c(1))
 
     } else {
 
@@ -441,10 +462,16 @@ for (row in 1:nrow(BED)) {
     pen.vals <- seq(0, 10,.1)
     elbowplotData <- unlist(lapply(pen.vals, function(p) cptfn(data = M2res$methylated_frequency, pen = p)))
     penalty<-pen.vals[which(diff(elbowplotData) == 0)[1]]
-    cptm_CP <- cpt.mean(M2res$methylated_frequency,, penalty='Manual',pen.value=penalty,method='PELT', class=TRUE) 
+    cptm_CP <- cpt.mean(M2res$methylated_frequency, penalty='Manual',pen.value=penalty,method='PELT', class=TRUE) 
     indexes<-c(0,cptm_CP@cpts)
     vals<-cptm_CP@param.est$mean
     svals<-rep(vals,diff(indexes))
+    t2<-kpss.test(M2res$methylated_frequency, null="Trend")
+    kpss2_2<-paste0("p = ", t2$p.value)
+    kpss2_3<-paste0("KPSS trend = ", t2$statistic)
+
+    now<-Sys.time()
+    message('[',now,'][Message] KPSS Test for Trend Stationarity on haplotype 2. ', kpss2_2, '. ', kpss2_3)
 
     M2pos<-rescale(M2res$start, c(start,end))
     M2methvals<-data.frame(chromosome=subchrom, start=M2pos, end=M2pos, y=M2res$methylated_frequency)
@@ -455,11 +482,11 @@ for (row in 1:nrow(BED)) {
     GRMV2<-makeGRangesFromDataFrame(M2methvals, keep.extra.columns = TRUE)
     GRMS2<-makeGRangesFromDataFrame(M2methseg, keep.extra.columns = TRUE)
 
-    PLOT2<-NA
+    PLOT2<-TRUE
 
   }
 
-  zoom.region <- toGRanges(data.frame(subchrom, start-10, end+10))
+  zoom.region <- toGRanges(data.frame(subchrom, start-50, end+50))
 
   #plot
 
@@ -475,27 +502,28 @@ for (row in 1:nrow(BED)) {
     kp <- plotKaryotype(genome=opt$release, plot.type = 2, zoom=zoom.region)
     kpDataBackground(kp, data.panel=1, col='grey95', r0=0.1, r1=0.9)
     kpDataBackground(kp, data.panel = 2,col='grey95',r0=0.1, r1=0.9)
-    kpAddBaseNumbers(kp, add.units=TRUE,minor.ticks=TRUE,minor.tick.dist=10,major.ticks=TRUE, tick.dist=100)
+    kpAddBaseNumbers(kp, add.units=TRUE,minor.ticks=TRUE,minor.tick.dist=50,major.ticks=TRUE, tick.dist=500)
     kpAxis(kp, data.panel=1,r0=0.1, r1=0.9)
     kpAxis(kp, data.panel=2,r0=0.1, r1=0.9)
-    kpPoints(kp, data.panel=1, data=GRMV1, cex=.4,pch='o', r0=0.1, r1=0.9)
-    kpPoints(kp, data.panel=2, data=GRMV2, cex=.4,pch='o', r0=0.1, r1=0.9)
+    kpPoints(kp, data.panel=1, data=GRMV1, cex=.4,pch=19, r0=0.1, r1=0.9)
+    kpPoints(kp, data.panel=2, data=GRMV2, cex=.4,pch=19, r0=0.1, r1=0.9)
     kpLines(kp, data.panel=1, data=GRMS1, col='darkred', lwd = 1.5,r0=0.1, r1=0.9)
     kpLines(kp, data.panel=2, data=GRMS2,col='darkblue', lwd = 1.5,r0=0.1, r1=0.9)
     kpAddMainTitle(kp, paste0('Methylation profile of ', region))
-    kpAddLabels(kp, data.panel=1,labels = expression('Methylation frequency '['(hap1)']), r0=0.65, r1=0.95,cex=.6,label.margin = .07, srt=90)
-    kpAddLabels(kp, data.panel=2,labels = expression('Methylation frequency '['(hap2)']), r0=0.05, r1=0.35,cex=.6,label.margin = .07, srt=90)
+    kpAddLabels(kp, data.panel=1,labels = bquote('Methylation frequency '['(hap1)']), r0=0.65, r1=0.95,cex=.8,label.margin = .07, srt=90)
+    kpAddLabels(kp, data.panel=2,labels = bquote('Methylation frequency '['(hap2)']), r0=0.05, r1=0.35,cex=.8,label.margin = .07, srt=90)
+
   
   } else {
 
     kp <- plotKaryotype(genome=opt$release, plot.type = 1, zoom=zoom.region)
     kpDataBackground(kp, data.panel=1, col='grey95', r0=0.1, r1=0.9)
-    kpAddBaseNumbers(kp, add.units=TRUE,minor.ticks=TRUE,minor.tick.dist=10,major.ticks=TRUE, tick.dist=100)
+    kpAddBaseNumbers(kp, add.units=TRUE,minor.ticks=TRUE,minor.tick.dist=50,major.ticks=TRUE, tick.dist=500)
     kpAxis(kp, data.panel=1,r0=0.1, r1=0.9)
-    kpPoints(kp, data.panel=1, data=GRMV1, cex=.4,pch='o', r0=0.1, r1=0.9)
+    kpPoints(kp, data.panel=1, data=GRMV1, cex=.4,pch=19, r0=0.1, r1=0.9)
     kpLines(kp, data.panel=1, data=GRMS1, col='darkred', lwd = 1.5,r0=0.1, r1=0.9)
     kpAddMainTitle(kp, paste0('Methylation profile of ', region))
-    kpAddLabels(kp, data.panel=1,labels = expression('Methylation frequency '['(hap1)']), r0=0.65, r1=0.95,cex=.8,label.margin = .07, srt=90)
+    kpAddLabels(kp, data.panel=1,labels = bquote('Methylation frequency '['(hap1)']), r0=0.65, r1=0.95,cex=.8,label.margin = .07, srt=90)
   
   }
 
