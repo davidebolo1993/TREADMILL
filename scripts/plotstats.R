@@ -116,6 +116,7 @@ message('[',now,'][Message] Plotting')
 
 dfall<-do.call(rbind,listall)
 dfall$x<-factor(dfall$x,levels=unique(dfall$x))
+dfall$z<-factor(dfall$z,levels=labels)
 dfall_2<-subset(dfall,x=='on-target' | x =='off-target')
 dfall_mod1 <- ddply(dfall_2, .(z), transform, percent = y/sum(y) * 100)
 dfall_3<-subset(dfall,x!='on-target' & x !='off-target')
@@ -144,6 +145,7 @@ pall<-ggplot(dfall, aes(x=as.numeric(x), y=y, fill=z))+
 
 dferr<-do.call(rbind,listerr)
 dferr$x<-factor(dferr$x,levels=unique(dferr$x))
+#dferr$z<-factor(dferr$z,levels=labels)
 
 dferr <- ddply(dferr, .(x), transform, percent = y/sum(y) * 100)
 dferr <- ddply(dferr, .(x), transform, pos = (cumsum(y) - 0.5 * y))
@@ -161,7 +163,7 @@ perr<-ggplot(dferr, aes(x=x, y=y, fill=z)) +
 
 
 dfstats<-do.call(rbind, liststats)
-
+dfstats$z<-factor(dfstats$z,levels=labels)
 #pre-compute means per group
 
 qualmean<- ddply(dfstats, .(z), summarise, xmean=mean(y))
@@ -182,8 +184,6 @@ p_qual_vs_pid<-ggplot(data=dfstats, aes(x=w, y=y)) +
   theme(legend.position='bottom', legend.background=element_blank(),legend.direction="horizontal", legend.title=element_text(face="bold.italic"), strip.background =element_rect(fill="grey20"), strip.text = element_text(colour = 'white'), plot.title = element_text(hjust = 0.5))+
   facet_wrap(~z, scales = "fixed")+
   ggtitle('% identity vs quality, on-target reads')
-
-
 
 p_length<-ggplot(data=dfstats, aes(x=x, fill=z)) + 
   geom_histogram(position="dodge", bins=50)+
@@ -230,7 +230,7 @@ p_length<-ggplot(data=dfstats, aes(x=x, fill=z)) +
 
 dfcov<-do.call(rbind,listcov)
 dfcov$x<-factor(dfcov$x,levels=unique(dfcov$x))
-
+dfcov$z<-factor(dfcov$z,levels=labels)
 pcov<-ggplot(dfcov, aes(x=x, y=y, fill=z)) +
   geom_boxplot(position=position_dodge(0.3), width=0.2/length(unique(dfcov$x)))+
   scale_fill_brewer(palette='Dark2') + theme_bw()+
