@@ -22,7 +22,6 @@ suppressPackageStartupMessages(library(scales))
 suppressPackageStartupMessages(library(changepoint))
 suppressPackageStartupMessages(library(tseries))
 
-
 #trying to use changepoint detection with elbow method in R
 
 # ParamEstSeq <- function(DataMatrix,omega) {
@@ -392,9 +391,9 @@ for (row in 1:nrow(BED)) {
   #callsh1 <- SegResults(rbind(as.numeric(M1res$methylated_frequency)),calls)
   #M1res$segmentation<- as.numeric(t(callsh1)[,1])
 
-  pen.vals <- seq(0, 10,.1)
+  pen.vals <- seq(0, 20,.1)
   elbowplotData <- unlist(lapply(pen.vals, function(p) cptfn(data = M1res$methylated_frequency, pen = p)))
-  penalty<-pen.vals[which(diff(elbowplotData) == 0)[1]]
+  penalty<-pen.vals[which(diff(elbowplotData) == -1)[1]]
   cptm_CP <- cpt.mean(M1res$methylated_frequency, penalty='Manual',pen.value=penalty,method='PELT', class=TRUE) 
   indexes<-c(0,cptm_CP@cpts)
   vals<-cptm_CP@param.est$mean
@@ -447,9 +446,9 @@ for (row in 1:nrow(BED)) {
     #callsh2 <- SegResults(rbind(as.numeric(M2res$methylated_frequency)),calls)
     #M2res$segmentation<- as.numeric(t(callsh2)[,1])
 
-    pen.vals <- seq(0, 10,.1)
+    pen.vals <- seq(0, 20,.1)
     elbowplotData <- unlist(lapply(pen.vals, function(p) cptfn(data = M2res$methylated_frequency, pen = p)))
-    penalty<-pen.vals[which(diff(elbowplotData) == 0)[1]]
+    penalty<-pen.vals[which(diff(elbowplotData) == -1)[1]]
     cptm_CP <- cpt.mean(M2res$methylated_frequency, penalty='Manual',pen.value=penalty,method='PELT', class=TRUE) 
     indexes<-c(0,cptm_CP@cpts)
     vals<-cptm_CP@param.est$mean
