@@ -205,8 +205,7 @@ tombo resquiggle ${singlef5dir} ${decoyfa} --processes ${threads} --corrected-gr
 echo "Calling allele-specific methylations with DeepSignal"
 
 deepsignal call_mods --input_path ${singlef5dir} --model_path ${dmodel} --result_file ${outdir}/deepsignal.modcalls.tsv --reference_path ${decoyfa} --corrected_group RawGenomeCorrected_001 --nproc ${threads} --is_gpu no
-echo -e "chrom\tpos\tstrand\tpos_in_strand\tprob_0_sum\tprob_1_sum\tcount_modified\tcount_unmodified\tcoverage\tmodification_frequency\tk_mer" > ${outdir}/a1.deepsignal.modfreqs.tsv
-echo -e "chrom\tpos\tstrand\tpos_in_strand\tprob_0_sum\tprob_1_sum\tcount_modified\tcount_unmodified\tcoverage\tmodification_frequency\tk_mer" > ${outdir}/a2.deepsignal.modfreqs.tsv
+echo -e "chrom\tpos\tstrand\tpos_in_strand\tprob_0_sum\tprob_1_sum\tcount_modified\tcount_unmodified\tcoverage\tmodification_frequency\tk_mer\tallele_name" > ${outdir}/deepsignal.modfreqs.tsv
 
 zcat ${alleletsv} | awk '{print >> $1".treadmill.txt"; close($1".treadmill.txt")}'
 names=$(ls *.treadmill.txt)
@@ -214,29 +213,18 @@ names=$(ls *.treadmill.txt)
 for txt in ${names}; do
 
   awk '{print >> "reads"$3".txt"; close("reads"$3".txt")}' ${txt}
-  cut -f 2 reads1.txt | sort | uniq > names1.txt && rm reads1.txt
-  cut -f 2 reads2.txt | sort | uniq > names2.txt && rm reads2.txt
 
-  grep -f names1.txt ${outdir}/deepsignal.modcalls.tsv > regioncalls.tmp.tsv
-  python ${scriptmeth} --input_path regioncalls.tmp.tsv --result_file regionfreqs.tmp.tsv --prob_cf 0 && rm regioncalls.tmp.tsv
-  cat regionfreqs.tmp.tsv >> ${outdir}/a1.deepsignal.modfreqs.tsv
+  groups=$(ls reads*.txt)
 
-  isdiff=$(cmp names1.txt names2.txt)
+  for reads in ${groups}; do
 
-  rm names1.txt
-
-  if [ -z ${isdiff} ]; then #if is empty, then a single allele and we do not have to split
-
-    cat regionfreqs.tmp.tsv >> ${outdir}/a2.deepsignal.modfreqs.tsv && rm regionfreqs.tmp.tsv && rm names2.txt
-
-  else 
-
-    rm regionfreqs.tmp.tsv # the one from the other allele has already been stored properly
-    grep -f names2.txt ${outdir}/deepsignal.modcalls.tsv > regioncalls.tmp.tsv && rm names2.txt
+    cut -f 2 ${reads} | sort | uniq > names.txt
+    grep -f names.txt ${outdir}/deepsignal.modcalls.tsv > regioncalls.tmp.tsv && rm names.txt
     python ${scriptmeth} --input_path regioncalls.tmp.tsv --result_file regionfreqs.tmp.tsv --prob_cf 0 && rm regioncalls.tmp.tsv
-    cat regionfreqs.tmp.tsv >> ${outdir}/a2.deepsignal.modfreqs.tsv && rm regionfreqs.tmp.tsv
+    cat regionfreqs.tmp.tsv | awk -v var=${reads} 'FS=OFS="\t"''{print $0, var}' >> ${outdir}/deepsignal.modfreqs.tsv
+    rm ${reads}
 
-  fi
+  done
 
   rm ${txt}
 

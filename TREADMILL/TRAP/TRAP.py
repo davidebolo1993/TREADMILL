@@ -339,6 +339,8 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,d
 
 		if subgroups:
 
+			counter=3
+
 			otherkeys=set(chain.from_iterable([x.split('/') for x in list(GL) if (getKey.split('/')[0] not in x and getKey.split('/')[1] not in x)]))
 			
 			for key in otherkeys:
@@ -349,12 +351,19 @@ def ParseGroups(BIN,OUT,match,mismatch,gapopen,gapextend,treshold,substitution,d
 
 				else:
 
+					originalall_sub='group' + str(listA.index(dictA[key])+1)
+					names_sub=list(dictR[keyR][originalall_sub].keys())
+					allnames+=names_sub
+					allpos+=[str(counter)]*len(names_sub)
+					allreg+=[str(keyR)]*len(names_sub)
 					subg=listA[listA.index(dictA[key])]
 					SN,SI=FuzzyMatch(subg[0],sMotif,substitution,deletion,insertion,maxedit)
 					subperc=round((subg[2]/dictR[keyR]['coverage'])*100,2)
 
 					sns.append(SN)
 					sis.append(subperc)
+
+				counter+=1
 
 		if len(sns) == 0:
 
@@ -409,7 +418,6 @@ def run(parser,args):
 		now=datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 		print('[' + now + ']' + '[Error] Invalid BIN file')
 		sys.exit(1)
-
 
 	OUT=os.path.abspath(args.output)
 
