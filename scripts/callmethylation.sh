@@ -221,7 +221,7 @@ for txt in ${names}; do
     cut -f 2 ${reads} | sort | uniq > names.txt
     grep -f names.txt ${outdir}/deepsignal.modcalls.tsv > regioncalls.tmp.tsv && rm names.txt
     python ${scriptmeth} --input_path regioncalls.tmp.tsv --result_file regionfreqs.tmp.tsv --prob_cf 0 && rm regioncalls.tmp.tsv
-    cat regionfreqs.tmp.tsv | awk -v var=${reads} 'FS=OFS="\t"''{print $0, var}' >> ${outdir}/deepsignal.modfreqs.tsv
+    cat regionfreqs.tmp.tsv | awk -v var=${reads} 'FS=OFS="\t"''{print $0, var}' >> ${outdir}/deepsignal.modfreqs.tsv && rm regionfreqs.tmp.tsv
     rm ${reads}
 
   done
