@@ -32,7 +32,7 @@ while getopts ":d:sr:t:F:T:m:p:o:h" opt; do
       out=$OPTARG
       ;;
     h )
-      echo "Usage: cmd [-h] -d <fast5.in.dir> -r <fastq.in.dir> -F <treadmill.in.decoy.fa> -T <treadmill.in.reads.tsv> -o <output.dir> -t <threads.int> -m <deepsignal.model.cpkt> -p <deepsignal.callfrequency.py> -s"
+      echo "Usage: cmd [-h] -d <fast5.in.dir> -r <fastq.out.dir/fastq.in.dir> -F <treadmill.in.decoy.fa> -T <treadmill.in.reads.tsv.gz> -o <output.dir> -t <threads.int> -m <deepsignal.model.cpkt> -p <deepsignal.callfrequency.py> -s <is.single.fale/is.single.true>"
       exit 1
       ;;
     \? )
@@ -46,7 +46,7 @@ while getopts ":d:sr:t:F:T:m:p:o:h" opt; do
   esac
 done
 
-if [ $OPTIND -eq 1 ]; then echo "Usage: cmd [-h] -d <fast5.in.dir> -r <fastq.out.dir/fastq.in.file> -F <treadmill.in.decoy.fa> -T <treadmill.in.reads.tsv> -o <output.dir> -t <threads.int> -m <deepsignal.model.cpkt> -p <deepsignal.callfrequency.py> -s" && exit 1; fi
+if [ $OPTIND -eq 1 ]; then echo "Usage: cmd [-h] -d <fast5.in.dir> -r <fastq.out.dir/fastq.in.dir> -F <treadmill.in.decoy.fa> -T <treadmill.in.reads.tsv.gz> -o <output.dir> -t <threads.int> -m <deepsignal.model.cpkt> -p <deepsignal.callfrequency.py> -s <is.single.fale/is.single.true>" && exit 1; fi
 
 shift $((OPTIND -1))
 

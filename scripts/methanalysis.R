@@ -16,12 +16,10 @@ if (!requireNamespace('gtools', quietly = TRUE))
   install.packages('gtools',repos='http://cran.us.r-project.org')
 if (!requireNamespace('RColorBrewer', quietly = TRUE))
   install.packages('RColorBrewer',repos='http://cran.us.r-project.org')
-if (!requireNamespace('ggplotify', quietly = TRUE))
-  install.packages('ggplotify',repos='http://cran.us.r-project.org')
-if (!requireNamespace('ggpubr', quietly = TRUE))
-  install.packages('ggpubr',repos='http://cran.us.r-project.org')
-if (!requireNamespace('karyoploteR', quietly = TRUE))
-  BiocManager::install('karyoploteR')
+if (!requireNamespace('grid', quietly = TRUE))
+  install.packages('grid',repos='http://cran.us.r-project.org')
+if (!requireNamespace('ggplot2', quietly = TRUE))
+  install.packages('ggplot2',repos='http://cran.us.r-project.org')
 
 suppressPackageStartupMessages(library(optparse))
 suppressPackageStartupMessages(library(data.table))
@@ -31,8 +29,8 @@ suppressPackageStartupMessages(library(changepoint))
 suppressPackageStartupMessages(library(tseries))
 suppressPackageStartupMessages(library(gtools))
 suppressPackageStartupMessages(library(RColorBrewer))
-suppressPackageStartupMessages(library(ggplotify))
-suppressPackageStartupMessages(library(ggpubr))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(grid))
 
 
 cptfn <- function(data, pen) { ##https://rpubs.com/richkt/269908
@@ -40,6 +38,9 @@ cptfn <- function(data, pen) { ##https://rpubs.com/richkt/269908
   length(cpts(ans)) +1
 }
 
+define_region <- function(row, col) {
+  viewport(layout.pos.row = row, layout.pos.col = col)
+}
 
 defaultW <- getOption("warn")
 options(warn = -1)
@@ -47,9 +48,8 @@ options(warn = -1)
 option_list = list(
   make_option(c('-f', '--frequencies'), action='store', type='character', help='.tsv file containing methylation frequencies as from TREADMILL/scripts/callmethylation.sh [required]'),
   make_option(c('-o', '--outputdir'), action='store', type='character', help='output directory [required]'),
-  make_option(c('-b', '--bed'), action='store', type='character', help='.bed file with one or more regions to restrict the analysis to [required]'),
-  make_option(c('-r', '--release'), action='store', type='character', help='genome release [hg19]', default = 'hg19')
-)
+  make_option(c('-b', '--bed'), action='store', type='character', help='.bed file with one or more regions to restrict the analysis to [required]')
+  )
 
 opt = parse_args(OptionParser(option_list=option_list))
 
@@ -95,6 +95,8 @@ for (row in 1:nrow(BED)) {
   start<-start-flanking
   end<-end+flanking
 
+  #stop if region not in table
+
   if (nrow(subM) == 0) {
 
     now<-Sys.time()
@@ -105,21 +107,24 @@ for (row in 1:nrow(BED)) {
   #split by allele
 
   subs<-split(subM, by="allele_name")
-  subs<-setNames(lapply(sort(names(subs)), FUN = function(n) subs[[n]]), mixedsort(names(subs))) #sort so that the first 2 are main genotype and others are mosaics, if any
+  subs<-setNames(lapply(sort(names(subs)), FUN = function(n) subs[[n]]), mixedsort(names(subs))) #sort so that the first 2 are main genotype and others are subgroups
 
   #iterate over alleles
-  counter<-0
-  qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
-  col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
-  plotlist<-list()
+  counter<-1
+  col_vector<- brewer.pal(n = 8, name = "Dark2") #no more than 8 elements, but should be enough
+  region_to_plot<-gsub(":", "_", region)
+  pdf(file.path(opt$outputdir, paste0(region_to_plot, ".pdf")), height=10, width=20, onefile=FALSE)
+  grid.newpage()
+  pushViewport(viewport(layout = grid.layout(length(subs), 20)))
 
   for (subM1 in subs) {
 
-    counter<-counter+1
-    allelename<-paste0("allele ",counter)
+    allelename<-paste0("allele #",counter)
     mergedM1<-list()
     splittedM1<-split(subM1, by="chrom")
     last<-as.numeric(unlist(strsplit(unique(splittedM1[[length(splittedM1)]]$chrom),"_"))[9])
+
+    #this allows to normalize coordinates among different chromosomes having different lengths
 
     for (tab in splittedM1) {
 
@@ -136,74 +141,62 @@ for (row in 1:nrow(BED)) {
 
     if (length(unique(subM1$chrom)) != 1) {
 
-     M1res <- subM1[,.(chromosome=region,start=unique(pos), end=unique(pos), methylated_frequency=weighted.mean(x=modification_frequency,w=coverage)),by=pos]
+      M1res <- subM1[,.(chromosome=region,start=unique(pos), end=unique(pos), methylated_frequency=weighted.mean(x=modification_frequency,w=coverage)),by=pos]
       setorderv(M1res, c("pos"), c(1))
 
     } else {
 
-     M1res<-subM1[,.(chromosome=region, start=pos, end=pos, methylated_frequency=modification_frequency), by=pos]
+      M1res<-subM1[,.(chromosome=region, start=pos, end=pos, methylated_frequency=modification_frequency), by=pos]
 
     }
 
-    now<-Sys.time()
-    message('[',now,'][Message] Performing changepoint detection analysis on ', allelename, ', region ', region)
+    #calculate p for trend Stationarity
 
-    pen.vals <- seq(0, 20,.1)
-    elbowplotData <- unlist(lapply(pen.vals, function(p) cptfn(data = M1res$methylated_frequency, pen = p)))
-    penalty<-pen.vals[which(diff(elbowplotData) == -1)[1]]
-    cptm_CP <- cpt.mean(M1res$methylated_frequency, penalty='Manual',pen.value=penalty,method='PELT', class=TRUE) 
-    indexes<-c(0,cptm_CP@cpts)
-    vals<-cptm_CP@param.est$mean
-    svals<-rep(vals,diff(indexes))
     t1<-kpss.test(M1res$methylated_frequency, null="Trend")
     kpss1_2<-paste0("p = ", t1$p.value)
     kpss1_3<-paste0("KPSS trend = ", t1$statistic)
-
     now<-Sys.time()
-    message('[',now,'][Message] KPSS Test for Trend Stationarity on ', allelename, ': ', kpss1_2, '. ', kpss1_3)
+    message('[',now,'][Message] KPSS Test for Trend Stationarity on ', allelename, ', region ', region, ': ', kpss1_2, '. ', kpss1_3)
+    message('[',now,'][Message] Performing changepoint detection analysis on ', allelename, ', region ', region)
+
+    pen.vals <- seq(0, 10,.1)
+    elbowplotData <- unlist(lapply(pen.vals, function(p) cptfn(data = M1res$methylated_frequency, pen = p)))
+    elbowframe<-data.frame(x=pen.vals,y=elbowplotData, stringsAsFactors = FALSE)
+
+    #We use first non-large step we see in the elbowplot Data (-1)
+    
+    penalty<-pen.vals[which(diff(elbowplotData) == -1)[1]]
+    
+    #Compute changepoint
+
+    cptm_CP <- cpt.mean(M1res$methylated_frequency, penalty='Manual',pen.value=penalty,method='PELT')
+    indexes<-c(0,cptm_CP@cpts)
+    vals<-cptm_CP@param.est$mean
+    svals<-rep(vals,diff(indexes))
+
+    #tables for plotting
 
     M1pos<-rescale(M1res$start, c(start,end))
-    M1methvals<-data.frame(chromosome=subchrom, start=M1pos, end=M1pos, y=M1res$methylated_frequency)
-    M1methseg<-data.frame(chromosome=subchrom, start=M1pos, end=M1pos, y=svals)
-
-    #convert to GRanges for visualization
-
-    GRMV1<-makeGRangesFromDataFrame(M1methvals, keep.extra.columns = TRUE)
-    GRMS1<-makeGRangesFromDataFrame(M1methseg, keep.extra.columns = TRUE)
-
-    zoom.region <- toGRanges(data.frame(subchrom, start-50, end+50))
+    M1methvals<-data.frame(chromosome=subchrom, start=M1pos, end=M1pos, y=M1res$methylated_frequency, z=svals)
 
     now<-Sys.time()
     message('[',now,'][Message] Plotting')
 
-    #plot
+    p1<-ggplot(M1methvals) + geom_point(aes(x=start,y=y)) + geom_line(aes(x=start,y=z),col=col_vector[counter]) + theme_classic() + scale_y_continuous(limits=c(0,1)) + labs(x="Genomic coordinates (rescaled)", y= "Methylation frequency") + ggtitle(paste0("Methylation profile of ", allelename)) + theme(plot.title=element_text(hjust=0.5))
+    p2<-ggplot(elbowframe, aes(x=x,y=y)) + geom_point() + geom_line() + theme_bw() + labs(x="PELT penalty parameter", y= "# cpts") + geom_vline(xintercept=penalty, col=col_vector[counter]) + geom_hline(yintercept=elbowplotData[which(pen.vals==penalty)], col=col_vector[counter]) + annotate(geom="text", x=9,y=max(elbowplotData)-10, label=paste0("# cpts = ", elbowplotData[which(pen.vals==penalty)])) +  annotate(geom="text", x=5,y=max(elbowplotData)-10, label=paste0("penalty = ", penalty)) + ggtitle(paste0("Elbow plot for ", allelename)) + theme(plot.title=element_text(hjust=0.5)) 
 
-    plotlist[[counter]]<-as.ggplot(expression(kp <- plotKaryotype(genome=opt$release, plot.type = 1, zoom=zoom.region),
-    kpDataBackground(kp, data.panel=1, col='grey95', r0=0.1, r1=0.9),
-    kpAddBaseNumbers(kp, add.units=TRUE,minor.ticks=TRUE,minor.tick.dist=50,major.ticks=TRUE, tick.dist=500),
-    kpAxis(kp, data.panel=1,r0=0.1, r1=0.9),
-    kpPoints(kp, data.panel=1, data=GRMV1, cex=.4,pch=19, r0=0.1, r1=0.9),
-    kpLines(kp, data.panel=1, data=GRMS1, col=col_vector[counter], lwd = 1.5,r0=0.1, r1=0.9),
-    kpAddMainTitle(kp, paste0('Methylation profile of ', allelename)),
-    kpAddLabels(kp, data.panel=1,labels = 'Methylation frequency', r0=0.65, r1=0.95,cex=.8,label.margin = .07, srt=90)))
+    print(p1, vp=define_region(counter, 1:15))
+    print(p2, vp=define_region(counter, 16:20))
+
+    counter<-counter+1
 
   }
 
-  #combine multiple alleles plot for the same regions
-
-  region_to_plot<-gsub(":", "_", region)
-  ptot<-ggarrange(plotlist=plotlist, labels=LETTERS[1:counter], nrow=counter)
-  ggsave(file.path(opt$outputdir, paste0(region_to_plot, ".pdf")), width=15, height=7*counter)
+  dev.off()
 
 }
 
 now<-Sys.time()
 message('[',now,'][Message] Done')
-
-if (file.exists("Rplots.pdf")) {
-
-  invisible(file.remove("Rplots.pdf"))
-
-}
 
 options(warn = defaultW)
