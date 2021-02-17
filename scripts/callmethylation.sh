@@ -172,12 +172,23 @@ mkdir -p ${outdir}
 
 if [ ${is_single} == "false" ]; then 
 
+  if [ -f ont-guppy/bin/guppy_basecaller ]; then
+
+    wget https://mirror.oxfordnanoportal.com/software/analysis/ont-guppy_4.4.2_linux64.tar.gz
+    tar -xzf ont-guppy_4.4.2_linux64.tar.gz
+    basecaller=$(readlink -f ont-guppy/bin/guppy_basecaller)
+
+  fi
+
   echo "Converting multi-fast5 to single-fast5"
   singlef5dir="${outdir}/single_fast5"
   multi_to_single_fast5 -i ${fast5dir} -s ${singlef5dir} -t ${threads} --recursive
   echo "Guppy basecalling"
   singlefqdir="${outdir}/single_fastq"
-  /opt/ont/minknow/guppy/bin/guppy_basecaller -i ${singlef5dir} -r -s ${singlefqdir} --config dna_r9.4.1_450bps_hac.cfg --cpu_threads_per_caller ${threads}
+  #cpu
+  ${basecaller} -i ${singlef5dir} -r -s ${singlefqdir} --config dna_r9.4.1_450bps_hac.cfg --cpu_threads_per_caller ${threads}
+  #this should work using gpu
+  #${basecaller} -i ${singlef5dir} -r -s ${singlefqdir} --config dna_r9.4.1_450bps_hac.cfg --gpu_runners_per_device ${threads} -x cuda:all
 
 else
 
@@ -204,7 +215,9 @@ tombo resquiggle ${singlef5dir} ${decoyfa} --processes ${threads} --corrected-gr
 
 echo "Calling allele-specific methylations with DeepSignal"
 
+#cpu
 deepsignal call_mods --input_path ${singlef5dir} --model_path ${dmodel} --result_file ${outdir}/deepsignal.modcalls.tsv --reference_path ${decoyfa} --corrected_group RawGenomeCorrected_001 --nproc ${threads} --is_gpu no
+#modify the above command coherently to instraction from deepsignal to get calls using GPU instead of CPU
 echo -e "chrom\tpos\tstrand\tpos_in_strand\tprob_0_sum\tprob_1_sum\tcount_modified\tcount_unmodified\tcoverage\tmodification_frequency\tk_mer\tallele_name" > ${outdir}/deepsignal.modfreqs.tsv
 
 zcat ${alleletsv} | awk '{print >> $1".treadmill.txt"; close($1".treadmill.txt")}'
