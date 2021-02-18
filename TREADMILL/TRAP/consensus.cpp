@@ -80,7 +80,6 @@ int main(int argc, char** argv) {
 	// but each subsequent alignment is going to be the same, and is only to increase the seed sequence's weight.
 	// so for each subsequent addition we save computation by just adding the same alignment onto the graph over and over.
 
-
 	 if (refnum > 0) {
 			
 		auto first_seed_aln = alignment_engine->align(reference_seq, graph);

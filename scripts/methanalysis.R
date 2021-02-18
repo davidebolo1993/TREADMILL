@@ -32,6 +32,7 @@ suppressPackageStartupMessages(library(RColorBrewer))
 suppressPackageStartupMessages(library(ggplot2))
 suppressPackageStartupMessages(library(grid))
 
+#functions that will be used later
 
 cptfn <- function(data, pen) { ##https://rpubs.com/richkt/269908
   ans <- cpt.mean(data, test.stat="Normal", method = "PELT", penalty = "Manual", pen.value = pen) 
@@ -48,26 +49,39 @@ options(warn = -1)
 option_list = list(
   make_option(c('-f', '--frequencies'), action='store', type='character', help='.tsv file containing methylation frequencies as from TREADMILL/scripts/callmethylation.sh [required]'),
   make_option(c('-o', '--outputdir'), action='store', type='character', help='output directory [required]'),
-  make_option(c('-b', '--bed'), action='store', type='character', help='.bed file with one or more regions to restrict the analysis to [required]')
+  make_option(c('-b', '--bed'), action='store', type='character', help='.bed file with one or more regions to restrict the analysis to [required]'),
+  make_option(c('-x', '--overwrite'), action='store', type='character', help='.tsv file with penalties that users want to apply to segmentation', default=NULL)
   )
 
 opt = parse_args(OptionParser(option_list=option_list))
 
 now<-Sys.time()
 message('[',now,'][Message] Reading input BED file')
+
+#read BED. This should be the same given as input to TREADMILL RACE
 BED<-fread(file.path(opt$bed), sep='\t', header=FALSE)
 
 now<-Sys.time()
 message('[',now,'][Message] Reading methylation frequency files')
+
+#read frequency TSV. This should have the same format of the TSV from callmethylation.sh script
 M<-fread(file.path(opt$frequencies), sep='\t', header=TRUE)
 
 #create output folder if it does not exist
-
 dir.create(file.path(opt$outputdir), showWarnings = FALSE)
 
-#process the meth frequencies based on BED lines
+if (! is.null(opt$overwrite)) {
 
+  F<-fread(file.path(opt$overwrite), sep='\t', header=TRUE)
+
+}
+
+penaltyfile<-list()
+
+#process the meth frequencies based on BED lines
 for (row in 1:nrow(BED)) {
+
+  penaltyregion<-list()
 
   chrom<-BED$V1[row]
 
@@ -117,6 +131,7 @@ for (row in 1:nrow(BED)) {
   grid.newpage()
   pushViewport(viewport(layout = grid.layout(length(subs), 20)))
 
+
   for (subM1 in subs) {
 
     allelename<-paste0("allele #",counter)
@@ -163,10 +178,24 @@ for (row in 1:nrow(BED)) {
     elbowplotData <- unlist(lapply(pen.vals, function(p) cptfn(data = M1res$methylated_frequency, pen = p)))
     elbowframe<-data.frame(x=pen.vals,y=elbowplotData, stringsAsFactors = FALSE)
 
+    allpenalties<-pen.vals[which(diff(elbowplotData) == -1)]
+
     #We use first non-large step we see in the elbowplot Data (-1)
-    
-    penalty<-pen.vals[which(diff(elbowplotData) == -1)[1]]
-    
+
+    if (! is.null(opt$overwrite)) {
+
+      subF<-data.table(F[grep(region,F$region),])
+      subFA<-data.table(F[grep(allelename,F$allele),])
+      penalty<-subFA$applied_penalty
+
+    } else {
+
+      penalty<-pen.vals[which(diff(elbowplotData) == -1)[1]]
+
+    }
+
+    penaltyregion[[counter]]<-cbind(region,allelename,penalty,paste(allpenalties,collapse=","))
+
     #Compute changepoint
 
     cptm_CP <- cpt.mean(M1res$methylated_frequency, penalty='Manual',pen.value=penalty,method='PELT')
@@ -194,7 +223,15 @@ for (row in 1:nrow(BED)) {
 
   dev.off()
 
+  regtab<-do.call(rbind,penaltyregion)
+  penaltyfile[[region]]<-regtab
+
 }
+
+alltab<-data.table(do.call(rbind,penaltyfile))
+colnames(alltab)<-c("region", "allele", "applied_penalty", "alternative_penalties")
+
+fwrite(alltab, file=file.path(opt$outputdir, "penalties.tsv"), sep="\t", quote=FALSE, col.names=TRUE, row.names = FALSE)
 
 now<-Sys.time()
 message('[',now,'][Message] Done')
