@@ -1,7 +1,5 @@
 #!/usr/bin/env Rscript
 
-if (!requireNamespace('BiocManager', quietly = TRUE))
-  install.packages('BiocManager',repos='http://cran.us.r-project.org')
 if (!requireNamespace('optparse', quietly = TRUE))
   install.packages('optparse',repos='http://cran.us.r-project.org')
 if (!requireNamespace('data.table', quietly = TRUE))
@@ -23,7 +21,6 @@ if (!requireNamespace('ggplot2', quietly = TRUE))
 
 suppressPackageStartupMessages(library(optparse))
 suppressPackageStartupMessages(library(data.table))
-suppressPackageStartupMessages(library(karyoploteR))
 suppressPackageStartupMessages(library(scales))
 suppressPackageStartupMessages(library(changepoint))
 suppressPackageStartupMessages(library(tseries))
