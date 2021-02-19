@@ -28,9 +28,9 @@ RUN curl -LO https://github.com/samtools/bcftools/releases/download/1.11/bcftool
 RUN conda install -y -n treadmillenv -c bioconda bedtools
 #install also r-base and its dependencies
 RUN conda install -y -n treadmillenv -c r r-base r-data.table r-scales r-tseries r-gtools r-rcolorbrewer r-ggplot2 r-rjson r-plyr
-RUN conda install -y -n treadmillenv -c bioconda r-optparse r-changepoint r-ggrepel
 RUN conda install -y -n treadmillenv -c conda-forge r-ggforce
-
+RUN conda install -y -n treadmillenv -c bioconda r-optparse r-changepoint
+RUN R -e "install.packages('ggrepel',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 #get TREADMILL
 RUN git clone --recursive https://github.com/davidebolo1993/TREADMILL.git && cd TREADMILL && ./configure && python setup.py install
 
