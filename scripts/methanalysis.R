@@ -128,7 +128,6 @@ for (row in 1:nrow(BED)) {
   grid.newpage()
   pushViewport(viewport(layout = grid.layout(length(subs), 20)))
 
-
   for (subM1 in subs) {
 
     allelename<-paste0("allele #",counter)
@@ -154,6 +153,8 @@ for (row in 1:nrow(BED)) {
     if (length(unique(subM1$chrom)) != 1) {
 
       M1res <- subM1[,.(chromosome=region,start=unique(pos), end=unique(pos), methylated_frequency=weighted.mean(x=modification_frequency,w=coverage)),by=pos]
+      #remove NA if any (have not seen this happening, but weighted.mean actually can return NaN)
+      M1res<-M1res[complete.cases(M1res), ]
       setorderv(M1res, c("pos"), c(1))
 
     } else {
