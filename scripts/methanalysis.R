@@ -8,37 +8,22 @@ if (!requireNamespace('scales', quietly = TRUE))
   install.packages('scales',repos='http://cran.us.r-project.org')
 if (!requireNamespace('changepoint', quietly = TRUE))
   install.packages('changepoint',repos='http://cran.us.r-project.org')
+if (!requireNamespace('EnvCpt', quietly = TRUE))
+  install.packages('EnvCpt',repos='http://cran.us.r-project.org')
 if (!requireNamespace('tseries', quietly = TRUE))
   install.packages('tseries',repos='http://cran.us.r-project.org')
 if (!requireNamespace('gtools', quietly = TRUE))
   install.packages('gtools',repos='http://cran.us.r-project.org')
-if (!requireNamespace('RColorBrewer', quietly = TRUE))
-  install.packages('RColorBrewer',repos='http://cran.us.r-project.org')
-if (!requireNamespace('grid', quietly = TRUE))
-  install.packages('grid',repos='http://cran.us.r-project.org')
-if (!requireNamespace('ggplot2', quietly = TRUE))
-  install.packages('ggplot2',repos='http://cran.us.r-project.org')
 
 suppressPackageStartupMessages(library(optparse))
 suppressPackageStartupMessages(library(data.table))
 suppressPackageStartupMessages(library(scales))
 suppressPackageStartupMessages(library(changepoint))
+suppressPackageStartupMessages(library(EnvCpt))
 suppressPackageStartupMessages(library(tseries))
 suppressPackageStartupMessages(library(gtools))
-suppressPackageStartupMessages(library(RColorBrewer))
-suppressPackageStartupMessages(library(ggplot2))
-suppressPackageStartupMessages(library(grid))
 
 #functions that will be used later
-
-cptfn <- function(data, pen) { ##https://rpubs.com/richkt/269908
-  ans <- cpt.mean(data, test.stat="Normal", method = "PELT", penalty = "Manual", pen.value = pen) 
-  length(cpts(ans)) +1
-}
-
-define_region <- function(row, col) {
-  viewport(layout.pos.row = row, layout.pos.col = col)
-}
 
 defaultW <- getOption("warn")
 options(warn = -1)
@@ -47,10 +32,13 @@ option_list = list(
   make_option(c('-f', '--frequencies'), action='store', type='character', help='.tsv file containing methylation frequencies as from TREADMILL/scripts/callmethylation.sh [required]'),
   make_option(c('-o', '--outputdir'), action='store', type='character', help='output directory [required]'),
   make_option(c('-b', '--bed'), action='store', type='character', help='.bed file with one or more regions to restrict the analysis to [required]'),
-  make_option(c('-x', '--overwrite'), action='store', type='character', help='.tsv file with penalties that users want to apply to segmentation', default=NULL)
+  make_option(c('-x', '--overwrite'), action='store', type='character', help='.tsv file with different minseglen that users want to apply to segmentation', default=NULL)
   )
 
 opt = parse_args(OptionParser(option_list=option_list))
+
+
+modelc<-"meancpt"
 
 now<-Sys.time()
 message('[',now,'][Message] Reading input BED file')
@@ -122,11 +110,9 @@ for (row in 1:nrow(BED)) {
 
   #iterate over alleles
   counter<-1
-  col_vector<- brewer.pal(n = 8, name = "Dark2") #no more than 8 elements, but should be enough
   region_to_plot<-gsub(":", "_", region)
-  pdf(file.path(opt$outputdir, paste0(region_to_plot, ".pdf")), height=10, width=20, onefile=FALSE)
-  grid.newpage()
-  pushViewport(viewport(layout = grid.layout(length(subs), 20)))
+  pdf(file.path(opt$outputdir, paste0(region_to_plot, ".pdf")), height=15, width=20, onefile=FALSE)
+  layout(matrix(1:(length(subs)*2), length(subs), 2, byrow = TRUE), widths=c(2,4))
 
   for (subM1 in subs) {
 
@@ -153,7 +139,6 @@ for (row in 1:nrow(BED)) {
     if (length(unique(subM1$chrom)) != 1) {
 
       M1res <- subM1[,.(chromosome=region,start=unique(pos), end=unique(pos), methylated_frequency=weighted.mean(x=modification_frequency,w=coverage)),by=pos]
-      #remove NA if any (have not seen this happening, but weighted.mean actually can return NaN)
       M1res<-M1res[complete.cases(M1res), ]
       setorderv(M1res, c("pos"), c(1))
 
@@ -172,48 +157,35 @@ for (row in 1:nrow(BED)) {
     message('[',now,'][Message] KPSS Test for Trend Stationarity on ', allelename, ', region ', region, ': ', kpss1_2, '. ', kpss1_3)
     message('[',now,'][Message] Performing changepoint detection analysis on ', allelename, ', region ', region)
 
-    pen.vals <- seq(0, 10,.1)
-    elbowplotData <- unlist(lapply(pen.vals, function(p) cptfn(data = M1res$methylated_frequency, pen = p)))
-    elbowframe<-data.frame(x=pen.vals,y=elbowplotData, stringsAsFactors = FALSE)
-
-    allpenalties<-pen.vals[which(diff(elbowplotData) == -1)]
-
-    #We use first non-large step we see in the elbowplot Data (-1)
-
     if (! is.null(opt$overwrite)) {
 
       subF<-data.table(F[grep(region,F$region),])
       subFA<-data.table(F[grep(allelename,F$allele),])
-      penalty<-subFA$applied_penalty
+      minseglen<-as.numeric(subFA$minseglen)
 
     } else {
 
-      penalty<-pen.vals[which(diff(elbowplotData) == -1)[1]]
+      minseglen<-100
 
     }
 
-    penaltyregion[[counter]]<-cbind(region,allelename,penalty,paste(allpenalties,collapse=","))
+    penaltyregion[[counter]]<-cbind(region,allelename,modelc,minseglen)
 
-    #Compute changepoint
-
-    cptm_CP <- cpt.mean(M1res$methylated_frequency, penalty='Manual',pen.value=penalty,method='PELT')
-    indexes<-c(0,cptm_CP@cpts)
-    vals<-cptm_CP@param.est$mean
-    svals<-rep(vals,diff(indexes))
-
-    #tables for plotting
-
-    M1pos<-rescale(M1res$start, c(start,end))
-    M1methvals<-data.frame(chromosome=subchrom, start=M1pos, end=M1pos, y=M1res$methylated_frequency, z=svals)
+    cpts<-envcpt(M1res$methylated_frequency, minseglen=minseglen)
+    model<-cpts[[modelc]]
 
     now<-Sys.time()
     message('[',now,'][Message] Plotting')
 
-    p1<-ggplot(M1methvals) + geom_point(aes(x=start,y=y)) + geom_line(aes(x=start,y=z),col=col_vector[counter]) + theme_classic() + scale_y_continuous(limits=c(0,1)) + labs(x="Genomic coordinates (rescaled)", y= "Methylation frequency") + ggtitle(paste0("Methylation profile of ", allelename)) + theme(plot.title=element_text(hjust=0.5))
-    p2<-ggplot(elbowframe, aes(x=x,y=y)) + geom_point() + geom_line() + theme_bw() + labs(x="PELT penalty parameter", y= "# cpts") + geom_vline(xintercept=penalty, col=col_vector[counter]) + geom_hline(yintercept=elbowplotData[which(pen.vals==penalty)], col=col_vector[counter]) + annotate(geom="text", x=9,y=max(elbowplotData)-10, label=paste0("# cpts = ", elbowplotData[which(pen.vals==penalty)])) +  annotate(geom="text", x=5,y=max(elbowplotData)-10, label=paste0("penalty = ", penalty)) + ggtitle(paste0("Elbow plot for ", allelename)) + theme(plot.title=element_text(hjust=0.5)) 
+    indices<-seq(0, length(M1res$start),length(M1res$start)/(5-1))
+    numbers<-seq(min(M1res$start),max(M1res$start),(max(M1res$start)-min(M1res$start))/(5-1))
 
-    print(p1, vp=define_region(counter, 1:15))
-    print(p2, vp=define_region(counter, 16:20))
+    plot(cpts, xaxt = "n", main="Changepoint analysis (overview)")
+    #axis(1,at=indices, labels=round(numbers))
+    plot(model, ylab="Methylation frequency", xaxt = "n", main=paste0("Methylation profile of ", allelename), ylim=c(-0.1,1.1))
+    #axis(1,at=indices, labels=round(numbers))
+    text(indices, -0.1, round(numbers))
+    axis(1, at=indices, NA, tck=.01)
 
     counter<-counter+1
 
@@ -227,9 +199,9 @@ for (row in 1:nrow(BED)) {
 }
 
 alltab<-data.table(do.call(rbind,penaltyfile))
-colnames(alltab)<-c("region", "allele", "applied_penalty", "alternative_penalties")
+colnames(alltab)<-c("region", "allele", "applied_model", "minseglen")
 
-fwrite(alltab, file=file.path(opt$outputdir, "penalties.tsv"), sep="\t", quote=FALSE, col.names=TRUE, row.names = FALSE)
+fwrite(alltab, file=file.path(opt$outputdir, "changepoints.tsv"), sep="\t", quote=FALSE, col.names=TRUE, row.names = FALSE)
 
 now<-Sys.time()
 message('[',now,'][Message] Done')
