@@ -4,12 +4,8 @@ if (!requireNamespace('optparse', quietly = TRUE))
   install.packages('optparse',repos='http://cran.us.r-project.org')
 if (!requireNamespace('data.table', quietly = TRUE))
   install.packages('data.table',repos='http://cran.us.r-project.org')
-if (!requireNamespace('scales', quietly = TRUE))
-  install.packages('scales',repos='http://cran.us.r-project.org')
 if (!requireNamespace('changepoint', quietly = TRUE))
   install.packages('changepoint',repos='http://cran.us.r-project.org')
-if (!requireNamespace('EnvCpt', quietly = TRUE))
-  install.packages('EnvCpt',repos='http://cran.us.r-project.org')
 if (!requireNamespace('tseries', quietly = TRUE))
   install.packages('tseries',repos='http://cran.us.r-project.org')
 if (!requireNamespace('gtools', quietly = TRUE))
@@ -17,11 +13,10 @@ if (!requireNamespace('gtools', quietly = TRUE))
 
 suppressPackageStartupMessages(library(optparse))
 suppressPackageStartupMessages(library(data.table))
-suppressPackageStartupMessages(library(scales))
 suppressPackageStartupMessages(library(changepoint))
-suppressPackageStartupMessages(library(EnvCpt))
 suppressPackageStartupMessages(library(tseries))
 suppressPackageStartupMessages(library(gtools))
+
 
 #functions that will be used later
 
@@ -38,18 +33,16 @@ option_list = list(
 opt = parse_args(OptionParser(option_list=option_list))
 
 
-modelc<-"meancpt"
-
 now<-Sys.time()
 message('[',now,'][Message] Reading input BED file')
 
-#read BED. This should be the same given as input to TREADMILL RACE
+#read BED. This msut be the same input given to TREADMILL RACE
 BED<-fread(file.path(opt$bed), sep='\t', header=FALSE)
 
 now<-Sys.time()
 message('[',now,'][Message] Reading methylation frequency files')
 
-#read frequency TSV. This should have the same format of the TSV from callmethylation.sh script
+#read frequency TSV. This must have the same format of the TSV from callmethylation.sh script
 M<-fread(file.path(opt$frequencies), sep='\t', header=TRUE)
 
 #create output folder if it does not exist
@@ -61,25 +54,14 @@ if (! is.null(opt$overwrite)) {
 
 }
 
-penaltyfile<-list()
+overviewfile<-list()
 
 #process the meth frequencies based on BED lines
 for (row in 1:nrow(BED)) {
 
-  penaltyregion<-list()
+  overviewregion<-list()
 
   chrom<-BED$V1[row]
-
-  if (isFALSE(startsWith(chrom, 'chr'))) {
-
-    subchrom<-paste0('chr', chrom)
-
-  } else {
-
-    subchrom<-chrom
-
-  }
-
   start<-BED$V2[row]
   end<-BED$V3[row]
   region<-paste0(chrom,':',start,'-',end)
@@ -91,8 +73,6 @@ for (row in 1:nrow(BED)) {
 
   subM<-data.table(M[grep(region,M$chrom),])
   flanking<-as.numeric(unlist(strsplit(subM$chrom[1],"_"))[7])
-  start<-start-flanking
-  end<-end+flanking
 
   #stop if region not in table
 
@@ -165,27 +145,55 @@ for (row in 1:nrow(BED)) {
 
     } else {
 
-      minseglen<-100
+      minseglen<-20
 
     }
 
-    penaltyregion[[counter]]<-cbind(region,allelename,modelc,minseglen)
+    overviewregion[[counter]]<-cbind(region,allelename,minseglen)
 
-    cpts<-envcpt(M1res$methylated_frequency, minseglen=minseglen)
-    model<-cpts[[modelc]]
+    segmentate<-cpt.meanvar(M1res$methylated_frequency,method="PELT",penalty = "MBIC", minseglen = minseglen)
 
-    now<-Sys.time()
-    message('[',now,'][Message] Plotting')
+    indexes<-c(0, segmentate@cpts)
+    segments<-rep(segmentate@param.est$mean,diff(indexes))
 
-    indices<-seq(0, length(M1res$start),length(M1res$start)/(5-1))
-    numbers<-seq(min(M1res$start),max(M1res$start),(max(M1res$start)-min(M1res$start))/(5-1))
+    groups<-rep(1,length(segments))
+    num<-segments[1]
+    thisgroup<-1
 
-    plot(cpts, xaxt = "n", main="Changepoint analysis (overview)")
-    #axis(1,at=indices, labels=round(numbers))
-    plot(model, ylab="Methylation frequency", xaxt = "n", main=paste0("Methylation profile of ", allelename), ylim=c(-0.1,1.1))
-    #axis(1,at=indices, labels=round(numbers))
-    text(indices, -0.1, round(numbers))
+    for (j in 2:length(segments)) {
+
+      if (segments[j] != num) {
+
+        thisgroup<-thisgroup+1
+        num<-segments[j]
+
+      }
+
+      groups[j]<-thisgroup
+
+    }
+
+    #plot methylation of each group
+
+    plot(segmentate@data.set,log2(M1res$start),pch=20,col=scales::alpha(rainbow(length(unique(groups)))[as.numeric(groups)], 0.5), xlab="",ylab="",xaxt = "n", ylim=c(round(min(log2(M1res$start)))-1, round(max(log2(M1res$start)))+1), xlim=c(0,1))
+    text(c(0,0.2,0.4,0.6,0.8,1.0),round(min(log2(M1res$start)))-1,c(0,0.2,0.4,0.6,0.8,1.0))
+    axis(1, at=c(0,0.2,0.4,0.6,0.8,1.0), NA, tck=.01)
+    title(xlab="Metylation frequencies", line=0.3)
+    title(main=paste0("Methylation groups in ", allelename), line=0.3)
+    mtext("Index (decoy reference, log2)",side=4,line=0.3,cex=.7)
+
+    #plot segmentation
+
+    indices<-seq(1, length(M1res$start),length.out=5)
+    numbers<-M1res$start[round(indices)]
+
+    plot(segmentate, xaxt = "n", ylim=c(-0.1,1.1), xlab="",  ylab="", main="")
+    text(indices, -0.1, numbers)
     axis(1, at=indices, NA, tck=.01)
+    title(xlab="Index (decoy reference)", line=0.3)
+    title(main=paste0("Methylation profile of ", allelename), line=0.3)
+    mtext("Methylation frequencies",side=4,line=0.3,cex=.7)
+
 
     counter<-counter+1
 
@@ -193,15 +201,15 @@ for (row in 1:nrow(BED)) {
 
   dev.off()
 
-  regtab<-do.call(rbind,penaltyregion)
-  penaltyfile[[region]]<-regtab
+  regtab<-do.call(rbind,overviewregion)
+  overviewfile[[region]]<-regtab
 
 }
 
-alltab<-data.table(do.call(rbind,penaltyfile))
-colnames(alltab)<-c("region", "allele", "applied_model", "minseglen")
+alltab<-data.table(do.call(rbind,overviewfile))
+colnames(alltab)<-c("region", "allele", "minseglen")
 
-fwrite(alltab, file=file.path(opt$outputdir, "changepoints.tsv"), sep="\t", quote=FALSE, col.names=TRUE, row.names = FALSE)
+fwrite(alltab, file=file.path(opt$outputdir, "overwrite.tsv"), sep="\t", quote=FALSE, col.names=TRUE, row.names = FALSE)
 
 now<-Sys.time()
 message('[',now,'][Message] Done')
