@@ -10,6 +10,8 @@ if (!requireNamespace('tseries', quietly = TRUE))
   install.packages('tseries',repos='http://cran.us.r-project.org')
 if (!requireNamespace('gtools', quietly = TRUE))
   install.packages('gtools',repos='http://cran.us.r-project.org')
+if (!requireNamespace('scales', quietly = TRUE))
+  install.packages('scales',repos='http://cran.us.r-project.org')
 
 suppressPackageStartupMessages(library(optparse))
 suppressPackageStartupMessages(library(data.table))
@@ -175,7 +177,7 @@ for (row in 1:nrow(BED)) {
 
     #plot methylation of each group
 
-    plot(segmentate@data.set,log2(M1res$start),pch=20,col=scales::alpha(rainbow(length(unique(groups)))[as.numeric(groups)], 0.5), xlab="",ylab="",xaxt = "n", ylim=c(round(min(log2(M1res$start)))-1, round(max(log2(M1res$start)))+1), xlim=c(0,1))
+    plot(segmentate@data.set,log2(M1res$start),pch=20,col=scales::alpha(rainbow(length(unique(groups)))[as.numeric(groups)],0.5), xlab="",ylab="",xaxt = "n", ylim=c(round(min(log2(M1res$start)))-1, round(max(log2(M1res$start)))+1), xlim=c(0,1))
     text(c(0,0.2,0.4,0.6,0.8,1.0),round(min(log2(M1res$start)))-1,c(0,0.2,0.4,0.6,0.8,1.0))
     axis(1, at=c(0,0.2,0.4,0.6,0.8,1.0), NA, tck=.01)
     title(xlab="Metylation frequencies", line=0.3)
