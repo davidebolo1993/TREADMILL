@@ -125,6 +125,7 @@ dfall_mod<-rbind(dfall_3,dfall_mod1)
 dfall_mod<- ddply(dfall_mod, .(z), transform, pos = (cumsum(y) - 0.5 * y))
 dfall_mod$label <- paste0(sprintf('%.3f', dfall_mod$percent), '%')
 dfall_mod$zoom <- TRUE
+upperlim<-max(dfall$y[which(dfall$x=='on-target')]+100,dfall$y[which(dfall$x=='off-target')]+100)
 
 pall<-ggplot(dfall, aes(x=as.numeric(x), y=y, fill=z))+
   geom_bar(stat='identity',width = .3,position="dodge")+
@@ -134,7 +135,7 @@ pall<-ggplot(dfall, aes(x=as.numeric(x), y=y, fill=z))+
   xlab('read type')+
   theme(legend.title = element_blank(), plot.title = element_text(hjust = 0.5))+
   ggtitle('Overall statistics')+
-  facet_zoom(xlim=c(4.5,6.5),ylim=c(0,dfall$y[which(dfall$x=='on-target')]+100), horizontal=FALSE, zoom.data=zoom)+
+  facet_zoom(xlim=c(4.5,6.5),ylim=c(0,upperlim), horizontal=FALSE, zoom.data=zoom)+
   geom_text(data=dfall_mod, aes(label = label), position=position_dodge(width=.3), size=2,vjust = -0.5)+
   scale_x_continuous(
     breaks = 1:length(unique(dfall$x)),
