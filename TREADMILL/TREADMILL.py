@@ -26,9 +26,9 @@ def main():
 
 	## RACE ##
 
-	parser_reef = subparsers.add_parser('RACE', help='ReAds ClusterEr. Extract on-target reads from a targeted nanopore experiment and group them by similarity. This module (1) a re-maps the original reads to synthetic chromosomes harboring repeat expansions and (2) cluster reads by similarity using either Density-Based Spatial Clustering of Applications with Noise (DBSCAN) or Agglomerative Hierarchical Clustering')
+	parser_race = subparsers.add_parser('RACE', help='ReAds ClusterEr. Extract on-target reads from a targeted nanopore experiment and group them by similarity. This module (1) a re-maps the original reads to synthetic chromosomes harboring repeat expansions and (2) cluster reads by similarity using either Density-Based Spatial Clustering of Applications with Noise (DBSCAN) or Agglomerative Hierarchical Clustering')
 
-	required = parser_reef.add_argument_group('Required I/O arguments')
+	required = parser_race.add_argument_group('Required I/O arguments')
 
 	required.add_argument('-fa', '--fastafile', help='reference genome in FASTA format', metavar='FASTA', required=True)
 	required.add_argument('-bam', '--bamfile', help='sorted BAM file', metavar='BAM', required=True)
@@ -36,7 +36,7 @@ def main():
 	required.add_argument('--motif', help='known repeated motif (one for each region in the BED file given to RACE)', nargs='+', action='append', required=True, metavar='MOTIF')
 	required.add_argument('-o', '--output', help='output binary map. Parent output folder will be created if it does not exist', metavar='BIN', required=True)
 
-	cluster = parser_reef.add_argument_group('Clustering parameters. By default, perform DBSCAN')
+	cluster = parser_race.add_argument_group('Clustering parameters. By default, perform DBSCAN')
 	
 	cluster.add_argument('--affinity', help='sequence similarity percentage within clustered reads [70.0]', type=float, default=70.0, metavar='')
 	cluster.add_argument('--support', help='minimum group support (retain only clusters with enough reads) [5]', default=5, type=int, metavar='')
@@ -45,7 +45,7 @@ def main():
 	cluster.add_argument('--threshold', help = 'cut dendogram at given threshold [None]', default=None, metavar='')
 	cluster.add_argument('--clusters', help = 'output specified number of clusters [None]', default=None, metavar='')
 	
-	additional = parser_reef.add_argument_group('Additional parameters')
+	additional = parser_race.add_argument_group('Additional parameters')
 
 	additional.add_argument('--maxsize', help='maximum number (approximate) of repeated motifs in the (synthetic) reference sequences [500]', type=int, default=500, metavar='')
 	additional.add_argument('--flanking', help='number of bases flanking repeats in the (synthetic) reference sequences [1000]', type=int, metavar='', default=1000)
@@ -54,7 +54,7 @@ def main():
 	additional.add_argument('--store', help='store the synthetic chromosomes used for the re-alignment step in FASTA file and the re-aligned BAM in the same folder used for the BIN file', action='store_true')
 	additional.add_argument('--plot', help='when using DBSCAN, store cluster plots in (one for each region) in the output folder', action='store_true')
 	
-	parser_reef.set_defaults(func=run_subtool)
+	parser_race.set_defaults(func=run_subtool)
 
 	## TRAP ##
 
