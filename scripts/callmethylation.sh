@@ -1,14 +1,18 @@
 #!/bin/bash
 
 is_single="false" #default is multi-fast5
+is_gpu="false" #default is using cpu, but this is definitely slow
 
-while getopts ":d:st:F:T:o:h" opt; do
+while getopts ":d:sgt:F:T:o:h" opt; do
   case ${opt} in
     d )
       fast5=$OPTARG
       ;;
     s )
-      is_single='true'
+      is_single="true"
+      ;;
+    g )
+      is_gpu="true"
       ;;
     t )
       threads=$OPTARG
@@ -23,7 +27,7 @@ while getopts ":d:st:F:T:o:h" opt; do
       out=$OPTARG
       ;;
     h )
-      echo "Usage: callmethylation.sh [-h] -d <fast5.in.dir> -F <treadmill.in.decoy.fa> -T <treadmill.in.reads.tsv.gz> -o <output.dir> -t <threads.int> -s <is.single.fast5.bool>"
+      echo "Usage: callmethylation.sh [-h] -d <fast5.in.dir> -F <treadmill.in.decoy.fa> -T <treadmill.in.reads.tsv.gz> -o <output.dir> -t <threads.int> -s <is.single.fast5.bool> -g <is.gpu.bool>"
       exit 1
       ;;
     \? )
@@ -37,7 +41,7 @@ while getopts ":d:st:F:T:o:h" opt; do
   esac
 done
 
-if [ $OPTIND -eq 1 ]; then echo "Usage: callmethylation.sh [-h] -d <fast5.in.dir> -F <treadmill.in.decoy.fa> -T <treadmill.in.reads.tsv.gz> -o <output.dir> -t <threads.int> -s <is.single.fast5.bool>" && exit 1; fi
+if [ $OPTIND -eq 1 ]; then echo "Usage: callmethylation.sh [-h] -d <fast5.in.dir> -F <treadmill.in.decoy.fa> -T <treadmill.in.reads.tsv.gz> -o <output.dir> -t <threads.int> -s <is.single.fast5.bool> -g <is.gpu.bool>" && exit 1; fi
 
 shift $((OPTIND -1))
 
@@ -45,15 +49,15 @@ shift $((OPTIND -1))
 
 #CHECK DEEPSIGNAL INSTALLATION
 
-deepsignal --help > /dev/null 2>&1
+deepsignal2 --help > /dev/null 2>&1
 
 if [ $? -eq 0 ]; then
    
-   echo "Found existing DeepSignal installation"
+   echo "Found existing DeepSignal2 installation"
 
 else
    
-   echo "Can't execute DeepSignal" && exit 1
+   echo "Can't execute DeepSignal2" && exit 1
 
 fi
 
@@ -75,7 +79,6 @@ fi
 
 #CHECK ONT_FAST5_API INSTALLATION (MULTI-READ/SUBSET)
 
-
 multi_to_single_fast5 --help > /dev/null 2>&1
 
 if [ $? -eq 0 ]; then
@@ -87,7 +90,6 @@ else
   echo "Can't execute ont_fast5_api" && exit 1
 
 fi
-
 
 #CHECK IF GDOWN EXISTS
 
@@ -102,7 +104,6 @@ else
   echo "Can't execute gdown" && exit 1
 
 fi
-
 
 #CHECK IF DEEPSIGNAL SCRIPT IS IN PATH
 
@@ -131,7 +132,6 @@ if [ ! -d ${fast5dir} ]; then #if this does not exist, skip
 
 fi
 
-
 #CHECK IF DECOY FASTA EXIST
 
 decoyfa=$(readlink -f ${tresfa})
@@ -154,10 +154,8 @@ if [ ! -f ${alleletsv} ]; then
 
 fi
 
-
 outdir=$(readlink -f ${out})
 mkdir -p ${outdir}
-
 
 #download Guppy basecaller if this does not exist
 
@@ -173,15 +171,13 @@ basecaller=$(readlink -f ont-guppy/bin/guppy_basecaller)
 
 #download model for DeepSignal if this does not exist
 
-if [ ! -f model.CpG.R9.4_1D.human_hx1.bn17.sn360.v0.1.7+/bn_17.sn_360.epoch_9.ckpt.index ]; then
+if [ ! -f model.dp2.CG.R9.4_1D.human_hx1.bn13_sn16.both_bilstm.b13_s16_epoch8.ckpt ]; then
 
-  gdown https://drive.google.com/uc?id=1meh07c9TsdIWelVTNW2M7ZKU6F-C4Muw
-  tar -xzf model.CpG.R9.4_1D.human_hx1.bn17.sn360.v0.1.7+.tar.gz
-  rm model.CpG.R9.4_1D.human_hx1.bn17.sn360.v0.1.7+.tar.gz
+  gdown https://drive.google.com/uc?id=16z1P9mzPOudjhaAlnELc7jiSZHUNadYx
 
 fi
 
-dmodel=$(readlink -f model.CpG.R9.4_1D.human_hx1.bn17.sn360.v0.1.7+/bn_17.sn_360.epoch_9.ckpt)
+dmodel=$(readlink -f model.dp2.CG.R9.4_1D.human_hx1.bn13_sn16.both_bilstm.b13_s16_epoch8.ckpt)
 
 ### IF MULTI-READ FAST5s, CONVERT TO SINGLE
 
@@ -198,12 +194,18 @@ else
 
 fi
 
-echo "Guppy basecalling with high-accuracy"
+echo "Guppy basecalling using the high-accuracy model"
 singlefqdir="${outdir}/single_fastq"
-${basecaller} -i ${singlef5dir} -r -s ${singlefqdir} --config dna_r9.4.1_450bps_hac.cfg --cpu_threads_per_caller ${threads}
-#this works using GPU if correctly configured (tested)
-#${basecaller} -i ${singlef5dir} -r -s ${singlefqdir} --config dna_r9.4.1_450bps_hac.cfg --gpu_runners_per_device ${threads} -x cuda:all
 
+if [ ${is_gpu} == "false" ]; then
+
+  ${basecaller} -i ${singlef5dir} -r -s ${singlefqdir} --config dna_r9.4.1_450bps_hac.cfg --cpu_threads_per_caller ${threads}
+
+else
+  
+  ${basecaller} -i ${singlef5dir} -r -s ${singlefqdir} --config dna_r9.4.1_450bps_hac.cfg --gpu_runners_per_device ${threads} -x cuda:all
+
+fi
 
 cat ${singlefqdir}/*.fastq > ${singlefqdir}/collapsed.fastq
 
@@ -213,17 +215,22 @@ zcat ${alleletsv} | cut -f 2 | sort | uniq > wanted.txt
 grep -f wanted.txt -A 3 ${singlefqdir}/collapsed.fastq | grep -v "^--" > ${singlefqdir}/filtered.fastq
 rm wanted.txt && rm ${singlefqdir}/collapsed.fastq
 
-echo "Pre-processing with Tombo"
+echo "Pre-processing with Tombo" #this should not be that slow for targeted runs
 
 tombo preprocess annotate_raw_with_fastqs --fast5-basedir ${singlef5dir} --fastq-filenames ${singlefqdir}/filtered.fastq --basecall-group Basecall_1D_000 --basecall-subgroup BaseCalled_template --overwrite --processes ${threads}
 tombo resquiggle ${singlef5dir} ${decoyfa} --processes ${threads} --corrected-group RawGenomeCorrected_001 --basecall-group Basecall_1D_000 --overwrite
 
-echo "Calling CpG methylation using DeepSignal"
+echo "Calling CpG methylation using DeepSignal2"
 
-#cpu
-deepsignal call_mods --input_path ${singlef5dir} --model_path ${dmodel} --result_file ${outdir}/deepsignal.modcalls.tsv --reference_path ${decoyfa} --corrected_group RawGenomeCorrected_001 --nproc ${threads} --is_gpu no
-#modify the above command coherently to get calls using GPU instead of CPU. This requires tensorflow-gpu installation as from DeepSignal instructions
-#deepsignal call_mods --input_path ${singlef5dir} --model_path ${dmodel} --result_file ${outdir}/deepsignal.modcalls.tsv --reference_path ${decoyfa} --corrected_group RawGenomeCorrected_001 --nproc ${threads} --is_gpu yes
+if [ ${is_gpu} == "false" ]; then
+
+  CUDA_VISIBLE_DEVICES=-1 deepsignal2 call_mods --input_path ${singlef5dir} --model_path ${dmodel} --result_file ${outdir}/deepsignal.modcalls.tsv --reference_path ${decoyfa} --corrected_group RawGenomeCorrected_001 --nproc ${threads} --motifs CG
+
+else
+
+  CUDA_VISIBLE_DEVICES=0 deepsignal2 call_mods --input_path ${singlef5dir} --model_path ${dmodel} --result_file ${outdir}/deepsignal.modcalls.tsv --reference_path ${decoyfa} --corrected_group RawGenomeCorrected_001 --nproc_gpu ${threads} --motifs CG
+
+fi
 
 echo -e "chrom\tpos\tstrand\tpos_in_strand\tprob_0_sum\tprob_1_sum\tcount_modified\tcount_unmodified\tcoverage\tmodification_frequency\tk_mer\tallele_name" > ${outdir}/deepsignal.modfreqs.tsv
 
@@ -242,7 +249,7 @@ for txt in ${names}; do
 
     cut -f 2 ${reads} | sort | uniq > names.txt
     grep -f names.txt ${outdir}/deepsignal.modcalls.tsv > regioncalls.tmp.tsv && rm names.txt
-    call_modification_frequency.py --input_path regioncalls.tmp.tsv --result_file regionfreqs.tmp.tsv --prob_cf 0 && rm regioncalls.tmp.tsv
+    call_modification_frequency.py --input_path regioncalls.tmp.tsv --result_file regionfreqs.tmp.tsv && rm regioncalls.tmp.tsv
     cat regionfreqs.tmp.tsv | awk -v var=${reads} 'FS=OFS="\t"''{print $0, var}' >> ${outdir}/deepsignal.modfreqs.tsv && rm regionfreqs.tmp.tsv
     rm ${reads}
 
