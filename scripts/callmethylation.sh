@@ -49,15 +49,15 @@ shift $((OPTIND -1))
 
 #CHECK DEEPSIGNAL INSTALLATION
 
-deepsignal2 --help > /dev/null 2>&1
+deepsignal --help > /dev/null 2>&1
 
 if [ $? -eq 0 ]; then
    
-   echo "Found existing DeepSignal2 installation"
+   echo "Found existing DeepSignal installation"
 
 else
    
-   echo "Can't execute DeepSignal2" && exit 1
+   echo "Can't execute DeepSignal" && exit 1
 
 fi
 
@@ -171,13 +171,15 @@ basecaller=$(readlink -f ont-guppy/bin/guppy_basecaller)
 
 #download model for DeepSignal if this does not exist
 
-if [ ! -f model.dp2.CG.R9.4_1D.human_hx1.bn13_sn16.both_bilstm.b13_s16_epoch8.ckpt ]; then
+if [ ! -f model.CpG.R9.4_1D.human_hx1.bn17.sn360.v0.1.7+/bn_17.sn_360.epoch_9.ckpt ]; then
 
-  gdown https://drive.google.com/uc?id=16z1P9mzPOudjhaAlnELc7jiSZHUNadYx
+  gdown https://drive.google.com/uc?id=1meh07c9TsdIWelVTNW2M7ZKU6F-C4Muw
+  tar -xzf model.CpG.R9.4_1D.human_hx1.bn17.sn360.v0.1.7+.tar.gz
+  rm model.CpG.R9.4_1D.human_hx1.bn17.sn360.v0.1.7+.tar.gz
 
 fi
 
-dmodel=$(readlink -f model.dp2.CG.R9.4_1D.human_hx1.bn13_sn16.both_bilstm.b13_s16_epoch8.ckpt)
+dmodel=$(readlink -f model.CpG.R9.4_1D.human_hx1.bn17.sn360.v0.1.7+/bn_17.sn_360.epoch_9.ckpt)
 
 ### IF MULTI-READ FAST5s, CONVERT TO SINGLE
 
@@ -220,15 +222,15 @@ echo "Pre-processing with Tombo" #this should not be that slow for targeted runs
 tombo preprocess annotate_raw_with_fastqs --fast5-basedir ${singlef5dir} --fastq-filenames ${singlefqdir}/filtered.fastq --basecall-group Basecall_1D_000 --basecall-subgroup BaseCalled_template --overwrite --processes ${threads}
 tombo resquiggle ${singlef5dir} ${decoyfa} --processes ${threads} --corrected-group RawGenomeCorrected_001 --basecall-group Basecall_1D_000 --overwrite
 
-echo "Calling CpG methylation using DeepSignal2"
+echo "Calling CpG methylation using DeepSignal"
 
 if [ ${is_gpu} == "false" ]; then
 
-  CUDA_VISIBLE_DEVICES=-1 deepsignal2 call_mods --input_path ${singlef5dir} --model_path ${dmodel} --result_file ${outdir}/deepsignal.modcalls.tsv --reference_path ${decoyfa} --corrected_group RawGenomeCorrected_001 --nproc ${threads} --motifs CG
+  deepsignal call_mods --input_path ${singlef5dir} --model_path ${dmodel} --result_file ${outdir}/deepsignal.modcalls.tsv --reference_path ${decoyfa} --corrected_group RawGenomeCorrected_001 --nproc ${threads}
 
 else
 
-  CUDA_VISIBLE_DEVICES=0 deepsignal2 call_mods --input_path ${singlef5dir} --model_path ${dmodel} --result_file ${outdir}/deepsignal.modcalls.tsv --reference_path ${decoyfa} --corrected_group RawGenomeCorrected_001 --nproc_gpu ${threads} --motifs CG
+  CUDA_VISIBLE_DEVICES=0 deepsignal call_mods --input_path ${singlef5dir} --model_path ${dmodel} --result_file ${outdir}/deepsignal.modcalls.tsv --reference_path ${decoyfa} --corrected_group RawGenomeCorrected_001 --nproc ${threads} --is_gpu yes
 
 fi
 
@@ -258,3 +260,4 @@ for txt in ${names}; do
   rm ${txt}
 
 done
+

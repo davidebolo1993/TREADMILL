@@ -19,11 +19,11 @@ RUN echo "source activate treadmillenv" > ~/.bashrc
 ENV PATH /miniconda/envs/treadmillenv/bin:$PATH
 
 #get htslib
-RUN curl -LO https://github.com/samtools/htslib/releases/download/1.11/htslib-1.11.tar.bz2 && tar -vxjf htslib-1.11.tar.bz2 && cd htslib-1.11 && make && make install
+RUN curl -LO https://github.com/samtools/htslib/releases/download/1.11/htslib-1.11.tar.bz2 && tar -vxjf htslib-1.11.tar.bz2 && cd htslib-1.11 && make && make install && cd ..
 #get samtools
-RUN curl -LO https://github.com/samtools/samtools/releases/download/1.11/samtools-1.11.tar.bz2 && tar -vxjf samtools-1.11.tar.bz2 && cd samtools-1.11 && make && make install
+RUN curl -LO https://github.com/samtools/samtools/releases/download/1.11/samtools-1.11.tar.bz2 && tar -vxjf samtools-1.11.tar.bz2 && cd samtools-1.11 && make && make install && cd ..
 #get bcftools
-RUN curl -LO https://github.com/samtools/bcftools/releases/download/1.11/bcftools-1.11.tar.bz2 && tar -vxjf bcftools-1.11.tar.bz2 && cd bcftools-1.11 && make && make install
+RUN curl -LO https://github.com/samtools/bcftools/releases/download/1.11/bcftools-1.11.tar.bz2 && tar -vxjf bcftools-1.11.tar.bz2 && cd bcftools-1.11 && make && make install && cd ..
 #install bedtools through miniconda
 RUN conda install -y -n treadmillenv -c bioconda bedtools
 #install also r-base and its dependencies
@@ -32,14 +32,14 @@ RUN conda install -y -n treadmillenv -c conda-forge r-ggforce
 RUN conda install -y -n treadmillenv -c bioconda r-optparse r-changepoint
 RUN R -e "install.packages('ggrepel',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 #get TREADMILL
-RUN git clone --recursive https://github.com/davidebolo1993/TREADMILL.git && cd TREADMILL && ./configure && python setup.py install
+RUN git clone --recursive https://github.com/davidebolo1993/TREADMILL.git && cd TREADMILL && ./configure && python setup.py install && cd ..
 
 #also install deepsignal in order to calculate methylation frequencies
 RUN conda create -y -n deepsignalenv python=3.6
 ENV PATH /miniconda/envs/deepsignalenv/bin:$PATH
 RUN conda install -y -n deepsignalenv -c bioconda ont-tombo ont-fast5-api
 RUN conda install -y -n deepsignalenv -c anaconda tensorflow==1.13.1
-RUN pip install deepsignal
+RUN git clone https://github.com/bioinfomaticsCSU/deepsignal.git && cd deepsignal && python setup.py install && cd scripts && chmod +x call_modification_frequency.py && echo "export PATH=$PWD:\$PATH" >> ~/.bashrc && cd ../..
 
 #Pull with:
 #sudo docker pull davidebolo1993/treadmill

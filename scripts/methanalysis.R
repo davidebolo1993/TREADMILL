@@ -101,7 +101,8 @@ for (row in 1:nrow(BED)) {
     allelename<-paste0("allele #",counter)
     mergedM1<-list()
     splittedM1<-split(subM1, by="chrom")
-    last<-as.numeric(unlist(strsplit(unique(splittedM1[[length(splittedM1)]]$chrom),"_"))[9])
+    n<-mixedsort(names(splittedM1)) #chromosome with less CGGs comes first
+    last<-as.numeric(unlist(strsplit(n[length(n)],"_"))[9])
 
     #this allows to normalize coordinates among different chromosomes having different lengths
 
@@ -112,7 +113,7 @@ for (row in 1:nrow(BED)) {
       toadd<-last-ie
       index_to_mod<-which(tab$pos > ie)
       tab$pos[index_to_mod] <- tab$pos[index_to_mod] + toadd
-      mergedM1[[chrom_long]]<-tab
+      mergedM1[[chrom_long]]<-tab[order(tab$pos),] #this is maybe not necessary, to re-order at this level
 
     }
 
