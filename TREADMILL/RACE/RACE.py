@@ -114,13 +114,13 @@ def decisiontree(readsdict,mingroupsize,cluster,tresh):
 		elif type(tresh) == float: #by threshold
 
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-			print('[' + now + ']' + '[Message] Cutting dendogram tree using threshold ' + str(tresh))
+			print('[' + now + ']' + '[Message] Cutting dendrogram tree using threshold ' + str(tresh))
 			agg = AgglomerativeClustering(n_clusters=None,distance_threshold=tresh,affinity='precomputed',linkage='average')
 
-		else: #is string. Compute full dendogram ans perform Silhouette analysis
+		else: #is string. Compute full dendrogram ans perform Silhouette analysis
 
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')			
-			print('[' + now + ']' + '[Message] Computing full dendogram and storing model to output file')
+			print('[' + now + ']' + '[Message] Computing full dendrogram and storing model to output file')
 			agg=AgglomerativeClustering(distance_threshold=0, n_clusters=None, affinity='precomputed', linkage='average')
 
 	cluster_=agg.fit(metric)
@@ -374,7 +374,7 @@ def ReMap(BAM,REF,BED,BIN,motifs,flank,maxsize,cores,sim,support,store,cluster,t
 			if type(tresh) == str:
 
 				now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-				print('[' + now + ']' + '[Error] Only one region at a time must be provided in BED when computing the full dendogram')
+				print('[' + now + ']' + '[Error] Only one region at a time must be provided in BED when computing the full dendrogram')
 				sys.exit(1)
 
 			else: #this is int or float
@@ -636,16 +636,16 @@ def run(parser,args):
 
 	if args.hierarchical_clustering:
 
-		if not args.threshold and not args.clusters and not args.dendogram:
+		if not args.threshold and not args.clusters and not args.dendrogram:
 
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-			print('[' + now + ']' + '[Error] When performing hierarchical clustering, one between --threshold, --clusters and --dendogram must be specified')
+			print('[' + now + ']' + '[Error] When performing hierarchical clustering, one between --threshold, --clusters and --dendrogram must be specified')
 			sys.exit(1)
 
-		elif (args.threshold and args.clusters) or (args.threshold and args.dendogram) or (args.clusters and args.dendogram):
+		elif (args.threshold and args.clusters) or (args.threshold and args.dendrogram) or (args.clusters and args.dendrogram):
 
 			now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-			print('[' + now + ']' + '[Error] When performing hierarchical clustering, only one between --threshold, --clusters and --dendogram must be specified')
+			print('[' + now + ']' + '[Error] When performing hierarchical clustering, only one between --threshold, --clusters and --dendrogram must be specified')
 			sys.exit(1)
 
 		else:
@@ -660,9 +660,9 @@ def run(parser,args):
 
 				tresh=int(args.clusters)
 
-			else: #args.dendogram
+			else: #args.dendrogram
 
-				tresh='dendogram'
+				tresh='dendrogram'
 				silout=os.path.abspath(OUTDIR + '/simmatrix.bin')
 
 	else: #DBSCAN string clustering
@@ -684,7 +684,7 @@ def run(parser,args):
 	binout.write(data)
 	binout.close()
 
-	if tresh=='dendogram':
+	if tresh=='dendrogram':
 
 		with open(silout, 'wb') as sout:
 

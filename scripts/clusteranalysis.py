@@ -97,22 +97,22 @@ def main():
 
 
 	'''
-	Get input and dump dendogram and silhouette analysis to file
+	Get input and dump dendrogram and silhouette analysis to file
 	'''
 
 
-	parser = argparse.ArgumentParser(prog='TREADMILL', description='''Plot dendogram and perform Silhouette analysis for agglomerative clustering''', epilog='''This program was developed by Davide Bolognini (https://github.com/davidebolo1993)''', formatter_class=CustomFormat) 
+	parser = argparse.ArgumentParser(prog='TREADMILL', description='''Plot dendrogram and perform Silhouette analysis for agglomerative clustering''', epilog='''This program was developed by Davide Bolognini (https://github.com/davidebolo1993)''', formatter_class=CustomFormat) 
 
 	required=parser.add_argument_group('Required I/O arguments')
 
-	required.add_argument('-d', '--dendogram', help='BIN file containing dendogram map', metavar='BIN', required=True)
+	required.add_argument('-d', '--dendrogram', help='BIN file containing dendrogram map', metavar='BIN', required=True)
 	required.add_argument('-s', '--similarity_matrix', help='BIN file containing the similarity matrix', metavar='BIN', required=True)
 	required.add_argument('-o', '--output', help='output folder', metavar='DIR', required=True)
 
 	additionals=parser.add_argument_group('Additional arguments')
 
-	additionals.add_argument('--width_dendogram', help='width of dendogram plot [30.0]', metavar='', default=30.0, type=float)
-	additionals.add_argument('--height_dendogram', help='height of dendogram plot [10.0]', metavar='', default=10.0, type=float)
+	additionals.add_argument('--width_dendrogram', help='width of dendrogram plot [30.0]', metavar='', default=30.0, type=float)
+	additionals.add_argument('--height_dendrogram', help='height of dendrogram plot [10.0]', metavar='', default=10.0, type=float)
 	additionals.add_argument('--width_silhouette', help='width of silhouette plot [10.0]', metavar='', default=10.0, type=float)
 	additionals.add_argument('--height_silhouette', help='height of silhouette plot [20.0]', metavar='', default=20.0, type=float)
 	additionals.add_argument('--maxclust', help='maximum number of clusters for silhouette analysis [6]', metavar='', default=6, type=int)
@@ -142,16 +142,16 @@ def main():
 		sys.exit(1)
 
 
-	OUTD=os.path.abspath(OUTDIR+ '/dendogram.pdf')
+	OUTD=os.path.abspath(OUTDIR+ '/dendrogram.pdf')
 	OUTS=os.path.abspath(OUTDIR + '/silhouette.pdf')
 	OUTT=os.path.abspath(OUTDIR + '/silhouettescores.tsv')
 
-	BIND=os.path.abspath(args.dendogram)
+	BIND=os.path.abspath(args.dendrogram)
 
 	if not os.path.exists(BIND):
 
 		now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-		print('[' + now + ']' + '[Error] Invalid dendogram BIN file')
+		print('[' + now + ']' + '[Error] Invalid dendrogram BIN file')
 		sys.exit(1)
 
 
@@ -164,19 +164,19 @@ def main():
 		sys.exit(1)
 
 
-	dendogram=open(BIND,'rb')
-	dendmodel = pickle.load(dendogram)
-	dendogram.close()
+	dendrogram=open(BIND,'rb')
+	dendmodel = pickle.load(dendrogram)
+	dendrogram.close()
 	silhouette=np.load(BINS)
 
 
 	now=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-	print('[' + now + ']' + '[Message] Extracting full dendogram and plotting')
+	print('[' + now + ']' + '[Message] Extracting full dendrogram and plotting')
 
 	linkage_matrix=LinkageMatrix(dendmodel)
 
-	plt.figure(figsize=(args.width_dendogram,args.height_dendogram))
-	plt.title('Hierarchical Clustering Dendogram')
+	plt.figure(figsize=(args.width_dendrogram,args.height_dendrogram))
+	plt.title('Hierarchical Clustering dendrogram')
 	hierarchy.dendrogram(linkage_matrix)
 	plt.ylabel('Cluster Dissimilarity Index')
 	plt.savefig(OUTD)

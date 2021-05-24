@@ -88,8 +88,8 @@ for j in ${error}; do
 				expected="$rn,$en"
 				echo -e ${i}"\t"${expected}"\t"${predicted}"\t"${l}X"\t"${j}%"\tDBSCAN" >> results_DBSCAN.txt
 
-				TREADMILL RACE -fa ${genome} -bam ${i}_laser_out/sim.srt.bam -bed ../../treadmill.bed --motif CGG -o ${i}_treadmill_out_DENDOGRAM/${i}.bin --similarity 90.0 --threads 4 --hierarchical_clustering --dendogram --store
-				python /home/davide/tools/TREADMILL/scripts/clusteranalysis.py -d ${i}_treadmill_out_DENDOGRAM/${i}.bin -s ${i}_treadmill_out_DENDOGRAM/simmatrix.bin -o ${i}_treadmill_out_SILHOUETTE
+				TREADMILL RACE -fa ${genome} -bam ${i}_laser_out/sim.srt.bam -bed ../../treadmill.bed --motif CGG -o ${i}_treadmill_out_dendrogram/${i}.bin --similarity 90.0 --threads 4 --hierarchical_clustering --dendrogram --store
+				python /home/davide/tools/TREADMILL/scripts/clusteranalysis.py -d ${i}_treadmill_out_dendrogram/${i}.bin -s ${i}_treadmill_out_dendrogram/simmatrix.bin -o ${i}_treadmill_out_SILHOUETTE
 				n_clusters=$(tail -n+2 ${i}_treadmill_out_SILHOUETTE/silhouettescores.tsv | cut -f 1 | head -1)
 				TREADMILL RACE -fa ${genome} -bam ${i}_laser_out/sim.srt.bam -bed ../../treadmill.bed --motif CGG -o ${i}_treadmill_out_AGGLOMERATIVE/${i}.bin --similarity 90.0 --threads 4 --hierarchical_clustering --clusters ${n_clusters} --store
 				TREADMILL TRAP -i ${i}_treadmill_out_AGGLOMERATIVE/${i}.bin -o ${i}_treadmill_out_AGGLOMERATIVE
@@ -213,8 +213,8 @@ for j in ${error}; do
 				expected="$rn,$en"
 				echo -e ${i}"\t"${expected}"\t"${predicted}"\t"${l}X"\t"${j}%"\tDBSCAN" >> results_DBSCAN.txt
 
-				TREADMILL RACE -fa ${genome} -bam ${i}_laser_out/sim.srt.bam -bed ../../treadmill.bed --motif CGG -o ${i}_treadmill_out_DENDOGRAM/${i}.bin --similarity 90.0 --threads 4 --hierarchical_clustering --dendogram --store
-				python /home/davide/tools/TREADMILL/scripts/clusteranalysis.py -d ${i}_treadmill_out_DENDOGRAM/${i}.bin -s ${i}_treadmill_out_DENDOGRAM/simmatrix.bin -o ${i}_treadmill_out_SILHOUETTE
+				TREADMILL RACE -fa ${genome} -bam ${i}_laser_out/sim.srt.bam -bed ../../treadmill.bed --motif CGG -o ${i}_treadmill_out_dendrogram/${i}.bin --similarity 90.0 --threads 4 --hierarchical_clustering --dendrogram --store
+				python /home/davide/tools/TREADMILL/scripts/clusteranalysis.py -d ${i}_treadmill_out_dendrogram/${i}.bin -s ${i}_treadmill_out_dendrogram/simmatrix.bin -o ${i}_treadmill_out_SILHOUETTE
 				n_clusters=$(tail -n+2 ${i}_treadmill_out_SILHOUETTE/silhouettescores.tsv | cut -f 1 | head -1)
 				TREADMILL RACE -fa ${genome} -bam ${i}_laser_out/sim.srt.bam -bed ../../treadmill.bed --motif CGG -o ${i}_treadmill_out_AGGLOMERATIVE/${i}.bin --similarity 90.0 --threads 4 --hierarchical_clustering --clusters ${n_clusters} --store
 				TREADMILL TRAP -i ${i}_treadmill_out_AGGLOMERATIVE/${i}.bin -o ${i}_treadmill_out_AGGLOMERATIVE
@@ -347,8 +347,8 @@ for j in ${error}; do
 				expected="$rn,$en"
 				echo -e ${i}"\t"${expected}"\t"${predicted}"\t"${l}X"\t"${j}%"\tDBSCAN" >> results_DBSCAN.txt
 
-				TREADMILL RACE -fa ${genome} -bam ${i}_laser_out/sim.srt.bam -bed ../../treadmill.bed --motif CGG -o ${i}_treadmill_out_DENDOGRAM/${i}.bin --similarity 95.0 --threads 4 --hierarchical_clustering --dendogram --store
-				python /home/davide/tools/TREADMILL/scripts/clusteranalysis.py -d ${i}_treadmill_out_DENDOGRAM/${i}.bin -s ${i}_treadmill_out_DENDOGRAM/simmatrix.bin -o ${i}_treadmill_out_SILHOUETTE
+				TREADMILL RACE -fa ${genome} -bam ${i}_laser_out/sim.srt.bam -bed ../../treadmill.bed --motif CGG -o ${i}_treadmill_out_dendrogram/${i}.bin --similarity 95.0 --threads 4 --hierarchical_clustering --dendrogram --store
+				python /home/davide/tools/TREADMILL/scripts/clusteranalysis.py -d ${i}_treadmill_out_dendrogram/${i}.bin -s ${i}_treadmill_out_dendrogram/simmatrix.bin -o ${i}_treadmill_out_SILHOUETTE
 				n_clusters=$(tail -n+2 ${i}_treadmill_out_SILHOUETTE/silhouettescores.tsv | cut -f 1 | head -1)
 				TREADMILL RACE -fa ${genome} -bam ${i}_laser_out/sim.srt.bam -bed ../../treadmill.bed --motif CGG -o ${i}_treadmill_out_AGGLOMERATIVE/${i}.bin --similarity 95.0 --threads 4 --hierarchical_clustering --clusters ${n_clusters} --store
 				TREADMILL TRAP -i ${i}_treadmill_out_AGGLOMERATIVE/${i}.bin -o ${i}_treadmill_out_AGGLOMERATIVE
