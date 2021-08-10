@@ -75,10 +75,10 @@ def main():
 
 	repeat=parser_trap.add_argument_group('Repeat profiling parameters')
 
-	repeat.add_argument('--substitution', help='substitution cost for weighted edit distance calculation [1.0]', metavar='', default=1.0, type=float)
-	repeat.add_argument('--deletion', help='deletion cost for weighted edit distance calculation [1.0]', metavar='', default=1.0, type=float)
-	repeat.add_argument('--insertion', help='insertion cost for weighted edit distance calculation [1.0]', metavar='', default=1.0, type=float)
-	repeat.add_argument('--maxedit', help='maximum edit distance score for approximate string matching. If the edit distance between the repeated motif and a substring is greater than this value, then this is ignored. Otherwise the substring is considered either a repeat interruption or an approximate repeat [1.0]', metavar='', default=1.0, type=float)
+	repeat.add_argument('--substitution', help='substitution cost for weighted edit distance calculation [1]', metavar='', default=1, type=int)
+	repeat.add_argument('--deletion', help='deletion cost for weighted edit distance calculation [1]', metavar='', default=1, type=int)
+	repeat.add_argument('--insertion', help='insertion cost for weighted edit distance calculation [1]', metavar='', default=1, type=int)
+	repeat.add_argument('--maxedit', help='maximum edit distance score for approximate string matching. If the edit distance between the repeated motif and a substring is greater than this value, then this is ignored. Otherwise the substring is considered either a repeat interruption or an approximate repeat [1]', metavar='', default=1, type=int)
 
 	additional = parser_trap.add_argument_group('Additional parameters')
 

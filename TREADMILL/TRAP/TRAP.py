@@ -15,10 +15,10 @@ from itertools import combinations_with_replacement,chain
 #additional modules
 
 import editdistance
-from weighted_levenshtein import lev
 import numpy as np
 import pandas as pd
 import pysam
+import regex #weighted approximate string matching
 
 CS_CPP=os.path.abspath(os.path.dirname(__file__) + '/consensus')
 
@@ -52,34 +52,18 @@ def FuzzyMatch(sequence,motif,substitution,deletion,insertion,maxedit):
 
 	dictI=Counter()
 
-	#create arrays of weights, tuned by users
+	#weighted calculation
 
-	insert_costs = np.ones(128, dtype=np.float64) #128 is the number of ASCII characters
-	insert_costs[:]=insertion
-	delete_costs = np.ones(128, dtype=np.float64)
-	delete_costs[:]=deletion
-	substitute_costs=np.ones((128, 128), dtype=np.float64)
-	substitute_costs[:]=substitution
+	r = regex.compile('(' + motif + '){'+ str(insertion) +'i+'+ str(deletion)+'d+'+str(substitution)+'s<='+str(maxedit)+'}')
+	res=r.findall(sequence)
 
-	occurences=[(r.start(0), r.end(0)) for r in re.finditer(motif, sequence)]
+	for el in res:
 
-	for i in range(len(occurences)-1): 
+		if el != motif:
 
-		if occurences[i][1] != occurences[i+1][0]: #aling sequences in between perfect matches
+			dictI[el] +=1 
 
-			subsequence=sequence[occurences[i][1]:occurences[i+1][0]] 
-			#now check the weighted levensthein between motif and subsequence
-			w_edit=lev(motif, subsequence, insert_costs=insert_costs, delete_costs=delete_costs,substitute_costs=substitute_costs)
-
-			if w_edit > maxedit:
-
-				continue
-
-			else:
-
-				dictI[subsequence] +=1
-
-	return len(occurences), ','.join(dictI.keys())+':'+','.join(str(x) for x in dictI.values())
+	return res.count(motif), ','.join(dictI.keys())+':'+','.join(str(x) for x in dictI.values())
 
 
 def VCFH(ctgs,BIN):
